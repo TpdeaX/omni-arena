@@ -107,4 +107,14 @@ export const Icons = {
     svgWrap('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>', s),
   upload: (s = 16) =>
     svgWrap('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', s),
+  plane3d: (s = 20) =>
+    svgWrap('<path d="M2 12l20-7-7 20-3-9-10-4z"/>', s),
+  gridMem: (s = 20) =>
+    svgWrap('<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1" fill="currentColor"/><rect x="17" y="3" width="4" height="5" rx="1"/><rect x="3" y="10" width="5" height="5" rx="1" fill="currentColor"/><rect x="10" y="10" width="5" height="5" rx="1"/><rect x="17" y="10" width="4" height="5" rx="1"/><rect x="3" y="17" width="5" height="4" rx="1"/><rect x="10" y="17" width="5" height="4" rx="1"/><rect x="17" y="17" width="4" height="4" rx="1" fill="currentColor"/>', s),
+  snake: (s = 20) =>
+    svgWrap('<path d="M4 17h5a3 3 0 0 0 3-3v-4a3 3 0 0 1 3-3h4"/><circle cx="19" cy="7" r="1.5" fill="currentColor"/>', s),
+  target2d: (s = 20) =>
+    svgWrap('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>', s),
+  close: (s = 16) =>
+    svgWrap('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s),
 };

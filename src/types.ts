@@ -9,12 +9,16 @@ export type GameModeId =
   | 'runner3d'
   | 'cube3d'
   | 'parkour3d'
+  | 'flight3d'
   | 'rhythm2d'
   | 'bullet2d'
   | 'puzzle2d'
   | 'twinstick2d'
   | 'parry2d'
   | 'tetris2d'
+  | 'memory2d'
+  | 'snake2d'
+  | 'sniper2d'
   | 'gauntlet'
   | 'ranked';
 

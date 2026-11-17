@@ -85,7 +85,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   gauntlet: {
     id: 'gauntlet',
     title: 'CIRCUITO TOTAL',
-    subtitle: '2D ↔ 3D · 10 Disciplinas',
+    subtitle: '2D ↔ 3D · 14 Disciplinas',
     dimension: '2D ↔ 3D',
     axis: 'all',
     accent: '#2563EB',
@@ -93,12 +93,12 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Dinámicos según fase (Ratón + WASD / DFJK)',
     controlsTouch: 'Controles adaptativos táctiles',
     description:
-      'La prueba total: rota cada 15s entre las 10 disciplinas 2D y 3D sin perder racha ni escudos. Velocidad creciente.',
+      'La prueba total: rota cada 15s entre las 14 disciplinas 2D y 3D sin perder racha ni escudos. Velocidad creciente.',
   },
   ranked: {
     id: 'ranked',
     title: 'PRUEBA CLASIFICATORIA',
-    subtitle: '10 Pruebas · 2m 30s',
+    subtitle: '14 Pruebas · 3m 30s',
     dimension: '2D ↔ 3D',
     axis: 'all',
     accent: '#0284C7',
@@ -106,7 +106,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Ratón + Teclado completo',
     controlsTouch: 'Controles adaptativos táctiles',
     description:
-      'Recorre los 10 desafíos en bloques de 15s para calibrar los 5 ejes de tu radar y subir tu rango oficial.',
+      'Recorre los 14 desafíos en bloques de 15s para calibrar los 5 ejes de tu radar y subir tu rango oficial.',
   },
   aim3d: {
     id: 'aim3d',
@@ -238,6 +238,58 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     description:
       'Combate táctico contra oleadas de enemigos que persiguen, cargan y se dividen. Usa el impulso con invulnerabilidad.',
   },
+  flight3d: {
+    id: 'flight3d',
+    title: 'VUELO DE PORTALES 3D',
+    subtitle: 'Navegación Espacial 3D',
+    dimension: '3D',
+    axis: 'agility',
+    accent: '#06B6D4',
+    accentSoft: 'rgba(6, 182, 212, 0.15)',
+    controlsPC: 'WASD / Flechas o Ratón para pilotar',
+    controlsTouch: 'Arrastra en pantalla para dirigir la nave',
+    description:
+      'Pilota una nave a través de anillos energéticos en profundidad 3D mientras esquivas meteoros veloces.',
+  },
+  memory2d: {
+    id: 'memory2d',
+    title: 'MEMORIA RELÁMPAGO',
+    subtitle: 'Matriz Visual y Trampas 2D',
+    dimension: '2D',
+    axis: 'logic',
+    accent: '#8B5CF6',
+    accentSoft: 'rgba(139, 92, 246, 0.15)',
+    controlsPC: 'Clic en los nodos recordados',
+    controlsTouch: 'Toca las celdas del patrón sin tocar trampas rojas',
+    description:
+      'Retén patrones crecientes de 3×3 hasta 5×5 en un destello y reprodúcelos evitando nodos trampa.',
+  },
+  snake2d: {
+    id: 'snake2d',
+    title: 'SERPIENTE NEÓN',
+    subtitle: 'Control Espacial Dinámico 2D',
+    dimension: '2D',
+    axis: 'reflex',
+    accent: '#10B981',
+    accentSoft: 'rgba(16, 185, 129, 0.15)',
+    controlsPC: 'WASD o Flechas para girar',
+    controlsTouch: 'Desliza arriba, abajo, izquierda o derecha',
+    description:
+      'Recoge orbes cian y bonus dorados a velocidad progresiva sin chocar con muros ni tu propia cola.',
+  },
+  sniper2d: {
+    id: 'sniper2d',
+    title: 'CAZADOR DE REFLEJOS',
+    subtitle: 'Puntería Instantánea 2D',
+    dimension: '2D',
+    axis: 'aim',
+    accent: '#F43F5E',
+    accentSoft: 'rgba(244, 63, 94, 0.15)',
+    controlsPC: 'Clic rápido en blancos cian y dorados',
+    controlsTouch: 'Toca los blancos antes de que cierre el anillo (evita rojos)',
+    description:
+      'Entrena velocidad de reacción en milisegundos y discriminación visual evitando señuelos rojos.',
+  },
 };
 
 export const STANDALONE_IDS: StandaloneGameId[] = [
@@ -245,10 +297,14 @@ export const STANDALONE_IDS: StandaloneGameId[] = [
   'runner3d',
   'cube3d',
   'parkour3d',
+  'flight3d',
   'rhythm2d',
   'parry2d',
   'bullet2d',
   'puzzle2d',
   'tetris2d',
   'twinstick2d',
+  'memory2d',
+  'snake2d',
+  'sniper2d',
 ];

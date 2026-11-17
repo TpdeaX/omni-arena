@@ -5,23 +5,31 @@ import { Aim3DGame } from './Aim3DGame';
 import { BlitzStacker2DGame } from './BlitzStacker2DGame';
 import { BulletHell2DGame } from './BulletHell2DGame';
 import { FlashParry2DGame } from './FlashParry2DGame';
+import { FlightPortals3DGame } from './FlightPortals3DGame';
+import { MemoryGrid2DGame } from './MemoryGrid2DGame';
+import { NeonSnake2DGame } from './NeonSnake2DGame';
 import { OrbitBreaker3DGame } from './OrbitBreaker3DGame';
+import { PrecisionTarget2DGame } from './PrecisionTarget2DGame';
 import { PuzzleMatrix2DGame } from './PuzzleMatrix2DGame';
 import { Rhythm2DGame } from './Rhythm2DGame';
 import { Runner3DGame } from './Runner3DGame';
 import { SkyVault3DGame } from './SkyVault3DGame';
 import { TwinStick2DGame } from './TwinStick2DGame';
 
-// Alternating 3D <-> 2D sequence across all 10 disciplines
+// Alternating 3D <-> 2D sequence across all 14 disciplines
 const SEQUENCE: StandaloneGameId[] = [
   'aim3d',
   'parry2d',
+  'flight3d',
+  'sniper2d',
   'parkour3d',
   'rhythm2d',
   'cube3d',
-  'tetris2d',
+  'memory2d',
   'runner3d',
   'bullet2d',
+  'snake2d',
+  'tetris2d',
   'twinstick2d',
   'puzzle2d',
 ];
@@ -36,6 +44,8 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new OrbitBreaker3DGame(isSlice);
     case 'parkour3d':
       return new SkyVault3DGame(isSlice);
+    case 'flight3d':
+      return new FlightPortals3DGame(isSlice);
     case 'rhythm2d':
       return new Rhythm2DGame(isSlice);
     case 'parry2d':
@@ -48,6 +58,12 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new BlitzStacker2DGame(isSlice);
     case 'twinstick2d':
       return new TwinStick2DGame(isSlice);
+    case 'memory2d':
+      return new MemoryGrid2DGame(isSlice);
+    case 'snake2d':
+      return new NeonSnake2DGame(isSlice);
+    case 'sniper2d':
+      return new PrecisionTarget2DGame(isSlice);
   }
 }
 

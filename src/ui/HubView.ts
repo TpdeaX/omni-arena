@@ -35,6 +35,14 @@ function modeIcon(id: GameModeId): string {
       return Icons.blocks(22);
     case 'twinstick2d':
       return Icons.twinStick(22);
+    case 'flight3d':
+      return Icons.plane3d(22);
+    case 'memory2d':
+      return Icons.gridMem(22);
+    case 'snake2d':
+      return Icons.snake(22);
+    case 'sniper2d':
+      return Icons.target2d(22);
     default:
       return Icons.omni(22);
   }
@@ -45,7 +53,7 @@ const DIFFICULTY_ORDER: DifficultyId[] = ['chill', 'standard', 'hyper', 'adaptiv
 export class HubView {
   private root: HTMLElement;
   private onLaunch: (modeId: GameModeId) => void;
-  private settingsOpen = false;
+  private activeModal: 'none' | 'settings' | 'cloud' = 'none';
   private dimFilter: 'all' | '3D' | '2D' = 'all';
   private cloudFeedback = '';
 
@@ -66,6 +74,10 @@ export class HubView {
     const diffInfo = DIFFICULTY_META[activeDiff];
     const cloudCfg = arenaCloudSync.reloadConfig();
     const cloudReady = arenaCloudSync.isConfigured();
+
+    const countTotal = STANDALONE_IDS.length;
+    const count3D = STANDALONE_IDS.filter((id) => GAME_CATALOG[id].dimension === '3D').length;
+    const count2D = STANDALONE_IDS.filter((id) => GAME_CATALOG[id].dimension === '2D').length;
 
     const filteredIds = STANDALONE_IDS.filter((id) => {
       if (this.dimFilter === 'all') return true;
@@ -144,12 +156,12 @@ export class HubView {
             </a>
             <span class="oa-brand-mark">${Icons.omni(22)}</span>
             <span class="oa-brand-name">OMNI ARENA</span>
-            <span class="oa-brand-tag">10 DISCIPLINAS · 2D + 3D</span>
+            <span class="oa-brand-tag">${countTotal} DISCIPLINAS · 2D + 3D</span>
           </div>
           <div class="oa-topbar-right">
             <a class="oa-eco-link" href="${resolveCompanionUrl('unumbral')}">UNUmbral</a>
-            <button type="button" class="oa-cloud-btn ${cloudReady ? 'is-live' : ''}" id="oa-hub-cloud" title="Sincronización Supabase">
-              ${Icons.cloud(15)}<span>${cloudReady ? `Nube · ${cloudCfg.spaceCode}` : 'Local'}</span>
+            <button type="button" class="oa-cloud-btn ${cloudReady ? 'is-live' : ''}" id="oa-hub-cloud" title="Sincronización Supabase y respaldos">
+              ${Icons.cloud(15)}<span>${cloudReady ? `Nube · ${cloudCfg.spaceCode}` : 'Nube'}</span>
             </button>
             <div class="oa-streak-pill" title="Racha diaria">${Icons.flame(16)}<span>${profile.dailyStreak} DÍAS</span></div>
             <div class="oa-lvl-pill">NV ${profile.level} · ${xpPct}%</div>
@@ -157,7 +169,7 @@ export class HubView {
               ${profile.settings.theme === 'day' ? Icons.moon(17) : Icons.sun(17)}
             </button>
             <button type="button" class="oa-icon-btn" id="oa-hub-mute" title="Silenciar">${profile.settings.muted ? Icons.volumeOff(18) : Icons.volumeOn(18)}</button>
-            <button type="button" class="oa-icon-btn" id="oa-hub-settings" title="Ajustes y Nube">${Icons.sliders(18)}</button>
+            <button type="button" class="oa-icon-btn" id="oa-hub-settings" title="Ajustes de juego">${Icons.sliders(18)}</button>
           </div>
         </header>
 
@@ -165,7 +177,7 @@ export class HubView {
           <div class="oa-hero-deck">
             <div class="oa-hero-copy">
               <h1>ENTRENA Y DOMINA TODAS LAS DIMENSIONES</h1>
-              <p>10 disciplinas entre disparos 3D, salto aéreo, deflector orbital, ritmo, reflejo en milisegundos, bloques y esquiva. Todo tu radar y ajustes se guardan en Supabase.</p>
+              <p>${countTotal} disciplinas entre disparos y vuelo 3D, salto aéreo, deflector orbital, ritmo, reflejo en milisegundos, memoria visual, serpiente, bloques y esquiva.</p>
             </div>
 
             <div class="oa-diff-block">
@@ -179,7 +191,7 @@ export class HubView {
             <div class="oa-hero-actions">
               <button type="button" class="oa-launch-primary" data-mode="gauntlet">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">2D ↔ 3D · 10 PRUEBAS</span>
+                  <span class="oa-launch-dim">2D ↔ 3D · ${countTotal} PRUEBAS</span>
                   <strong>CIRCUITO TOTAL</strong>
                   <span>Rotación cada 15s sin perder tu racha</span>
                 </div>
@@ -188,7 +200,7 @@ export class HubView {
 
               <button type="button" class="oa-launch-secondary" data-mode="ranked">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">10 PRUEBAS · 2m 30s</span>
+                  <span class="oa-launch-dim">${countTotal} PRUEBAS · 3m 30s</span>
                   <strong>PRUEBA CLASIFICATORIA</strong>
                   <span>Calibra tus 5 ejes de habilidad</span>
                 </div>
@@ -224,11 +236,11 @@ export class HubView {
 
         <section class="oa-disciplines-sec">
           <div class="oa-sec-head">
-            <h2>DISCIPLINAS DE ENTRENAMIENTO (10 MODOS)</h2>
+            <h2>DISCIPLINAS DE ENTRENAMIENTO (${countTotal} MODOS)</h2>
             <div class="oa-filter-tabs" role="tablist">
-              <button type="button" class="oa-filter-btn ${this.dimFilter === 'all' ? 'is-active' : ''}" data-filter="all">TODOS (10)</button>
-              <button type="button" class="oa-filter-btn ${this.dimFilter === '3D' ? 'is-active' : ''}" data-filter="3D">3D (4)</button>
-              <button type="button" class="oa-filter-btn ${this.dimFilter === '2D' ? 'is-active' : ''}" data-filter="2D">2D (6)</button>
+              <button type="button" class="oa-filter-btn ${this.dimFilter === 'all' ? 'is-active' : ''}" data-filter="all">TODOS (${countTotal})</button>
+              <button type="button" class="oa-filter-btn ${this.dimFilter === '3D' ? 'is-active' : ''}" data-filter="3D">3D (${count3D})</button>
+              <button type="button" class="oa-filter-btn ${this.dimFilter === '2D' ? 'is-active' : ''}" data-filter="2D">2D (${count2D})</button>
             </div>
           </div>
           <div class="oa-modes-grid">
@@ -248,11 +260,11 @@ export class HubView {
             : ''
         }
 
-        <div class="oa-overlay ${this.settingsOpen ? '' : 'is-hidden'}" id="oa-settings-overlay">
-          <div class="oa-modal oa-settings-modal" role="dialog" aria-modal="true" aria-label="Ajustes y nube Supabase">
+        <div class="oa-overlay ${this.activeModal === 'settings' ? '' : 'is-hidden'}" id="oa-settings-overlay">
+          <div class="oa-modal oa-settings-modal" role="dialog" aria-modal="true" aria-label="Ajustes de juego">
             <div class="oa-settings-head">
-              <h2>AJUSTES Y NUBE SUPABASE</h2>
-              <button type="button" class="oa-icon-btn" id="oa-close-settings">${Icons.check(18)}</button>
+              <h2>AJUSTES DE JUEGO</h2>
+              <button type="button" class="oa-icon-btn" id="oa-close-settings" aria-label="Cerrar ajustes">${Icons.close(16)}</button>
             </div>
 
             <label class="oa-setting-row">
@@ -279,8 +291,20 @@ export class HubView {
               <input type="checkbox" id="oa-set-shake" ${profile.settings.screenShake ? 'checked' : ''} />
             </label>
 
+            <div class="oa-modal-actions">
+              <button type="button" class="oa-btn oa-btn-danger" id="oa-reset-data">BORRAR PROGRESO</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="oa-overlay ${this.activeModal === 'cloud' ? '' : 'is-hidden'}" id="oa-cloud-overlay">
+          <div class="oa-modal oa-settings-modal" role="dialog" aria-modal="true" aria-label="Nube Supabase y Respaldos">
+            <div class="oa-settings-head">
+              <h2>NUBE SUPABASE Y RESPALDOS</h2>
+              <button type="button" class="oa-icon-btn" id="oa-close-cloud" aria-label="Cerrar nube">${Icons.close(16)}</button>
+            </div>
+
             <div class="oa-cloud-section">
-              <h3>Sincronización en Supabase</h3>
               <label class="oa-setting-row">
                 <span>Supabase Project URL</span>
                 <input type="url" id="oa-sb-url" value="${cloudCfg.supabaseUrl}" placeholder="https://tuproyecto.supabase.co" />
@@ -306,11 +330,6 @@ export class HubView {
                   <input type="file" id="oa-import-json" accept=".json,application/json" style="display:none" />
                 </label>
               </div>
-            </div>
-
-            <div class="oa-modal-actions">
-              <button type="button" class="oa-btn oa-btn-danger" id="oa-reset-data">BORRAR PROGRESO</button>
-              <button type="button" class="oa-btn oa-btn-primary" id="oa-save-settings">LISTO</button>
             </div>
           </div>
         </div>
@@ -363,21 +382,32 @@ export class HubView {
     });
 
     const settingsModal = this.root.querySelector('#oa-settings-overlay')!;
-    const openSettings = () => {
+    const cloudModal = this.root.querySelector('#oa-cloud-overlay')!;
+    this.root.querySelector('#oa-hub-settings')!.addEventListener('click', () => {
       synthAudio.uiClick();
-      this.settingsOpen = true;
+      this.activeModal = 'settings';
       settingsModal.classList.remove('is-hidden');
-    };
-    this.root.querySelector('#oa-hub-settings')!.addEventListener('click', openSettings);
-    this.root.querySelector('#oa-hub-cloud')!.addEventListener('click', openSettings);
+    });
+    this.root.querySelector('#oa-hub-cloud')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.activeModal = 'cloud';
+      cloudModal.classList.remove('is-hidden');
+    });
 
-    const closeSettings = () => {
-      this.settingsOpen = false;
+    const closeModals = () => {
+      this.activeModal = 'none';
       settingsModal.classList.add('is-hidden');
+      cloudModal.classList.add('is-hidden');
       this.render();
     };
-    this.root.querySelector('#oa-close-settings')!.addEventListener('click', closeSettings);
-    this.root.querySelector('#oa-save-settings')!.addEventListener('click', closeSettings);
+    this.root.querySelector('#oa-close-settings')!.addEventListener('click', closeModals);
+    this.root.querySelector('#oa-close-cloud')!.addEventListener('click', closeModals);
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeModals();
+    });
+    cloudModal.addEventListener('click', (e) => {
+      if (e.target === cloudModal) closeModals();
+    });
 
     this.root.querySelector<HTMLInputElement>('#oa-set-vol')!.addEventListener('input', (e) => {
       const v = parseFloat((e.target as HTMLInputElement).value);
@@ -455,7 +485,7 @@ export class HubView {
 
     this.root.querySelector('#oa-reset-data')!.addEventListener('click', () => {
       profileStore.resetAll();
-      this.settingsOpen = false;
+      this.activeModal = 'none';
       this.render();
     });
   }

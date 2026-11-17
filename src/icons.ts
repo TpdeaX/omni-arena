@@ -115,6 +115,14 @@ export const Icons = {
     svgWrap('<path d="M4 17h5a3 3 0 0 0 3-3v-4a3 3 0 0 1 3-3h4"/><circle cx="19" cy="7" r="1.5" fill="currentColor"/>', s),
   target2d: (s = 20) =>
     svgWrap('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>', s),
+  laserTrack: (s = 20) =>
+    svgWrap('<path d="M4 17c3-7 5-10 8-10s5 3 8-4"/><circle cx="12" cy="7" r="3"/><circle cx="12" cy="7" r="1" fill="currentColor"/>', s),
+  schulte: (s = 20) =>
+    svgWrap('<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>', s),
+  brainNBack: (s = 20) =>
+    svgWrap('<path d="M9.5 4A3.5 3.5 0 0 0 6 7.5c0 .7.2 1.3.5 1.9A3.5 3.5 0 0 0 5 12.5c0 1.4.8 2.6 2 3.2V19a2 2 0 0 0 2 2h1V4h-.5z"/><path d="M14.5 4A3.5 3.5 0 0 1 18 7.5c0 .7-.2 1.3-.5 1.9A3.5 3.5 0 0 1 19 12.5c0 1.4-.8 2.6-2 3.2V19a2 2 0 0 1-2 2h-1V4h.5z"/>', s),
+  sonicRing: (s = 20) =>
+    svgWrap('<circle cx="12" cy="12" r="9" stroke-dasharray="38 18"/><line x1="12" y1="12" x2="17" y2="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/>', s),
   close: (s = 16) =>
     svgWrap('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s),
 };

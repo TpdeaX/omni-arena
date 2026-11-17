@@ -19,6 +19,10 @@ export type GameModeId =
   | 'memory2d'
   | 'snake2d'
   | 'sniper2d'
+  | 'track2d'
+  | 'schulte2d'
+  | 'nback2d'
+  | 'pulse2d'
   | 'gauntlet'
   | 'ranked';
 

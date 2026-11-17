@@ -4,8 +4,10 @@ import { GameContext, MiniGame, RunMetrics, SkillAxis, StandaloneGameId } from '
 import { Aim3DGame } from './Aim3DGame';
 import { BlitzStacker2DGame } from './BlitzStacker2DGame';
 import { BulletHell2DGame } from './BulletHell2DGame';
+import { DualNBack2DGame } from './DualNBack2DGame';
 import { FlashParry2DGame } from './FlashParry2DGame';
 import { FlightPortals3DGame } from './FlightPortals3DGame';
+import { LaserTrack2DGame } from './LaserTrack2DGame';
 import { MemoryGrid2DGame } from './MemoryGrid2DGame';
 import { NeonSnake2DGame } from './NeonSnake2DGame';
 import { OrbitBreaker3DGame } from './OrbitBreaker3DGame';
@@ -13,20 +15,26 @@ import { PrecisionTarget2DGame } from './PrecisionTarget2DGame';
 import { PuzzleMatrix2DGame } from './PuzzleMatrix2DGame';
 import { Rhythm2DGame } from './Rhythm2DGame';
 import { Runner3DGame } from './Runner3DGame';
+import { SchulteGrid2DGame } from './SchulteGrid2DGame';
 import { SkyVault3DGame } from './SkyVault3DGame';
+import { SonicRing2DGame } from './SonicRing2DGame';
 import { TwinStick2DGame } from './TwinStick2DGame';
 
-// Alternating 3D <-> 2D sequence across all 14 disciplines
+// Alternating 3D <-> 2D sequence across all 18 disciplines
 const SEQUENCE: StandaloneGameId[] = [
   'aim3d',
-  'parry2d',
+  'schulte2d',
   'flight3d',
-  'sniper2d',
+  'track2d',
   'parkour3d',
-  'rhythm2d',
+  'pulse2d',
   'cube3d',
-  'memory2d',
+  'nback2d',
   'runner3d',
+  'parry2d',
+  'rhythm2d',
+  'sniper2d',
+  'memory2d',
   'bullet2d',
   'snake2d',
   'tetris2d',
@@ -48,16 +56,24 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new FlightPortals3DGame(isSlice);
     case 'rhythm2d':
       return new Rhythm2DGame(isSlice);
+    case 'pulse2d':
+      return new SonicRing2DGame(isSlice);
     case 'parry2d':
       return new FlashParry2DGame(isSlice);
     case 'bullet2d':
       return new BulletHell2DGame(isSlice);
     case 'puzzle2d':
       return new PuzzleMatrix2DGame(isSlice);
+    case 'schulte2d':
+      return new SchulteGrid2DGame(isSlice);
+    case 'nback2d':
+      return new DualNBack2DGame(isSlice);
     case 'tetris2d':
       return new BlitzStacker2DGame(isSlice);
     case 'twinstick2d':
       return new TwinStick2DGame(isSlice);
+    case 'track2d':
+      return new LaserTrack2DGame(isSlice);
     case 'memory2d':
       return new MemoryGrid2DGame(isSlice);
     case 'snake2d':

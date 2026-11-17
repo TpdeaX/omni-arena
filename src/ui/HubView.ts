@@ -43,6 +43,14 @@ function modeIcon(id: GameModeId): string {
       return Icons.snake(22);
     case 'sniper2d':
       return Icons.target2d(22);
+    case 'track2d':
+      return Icons.laserTrack(22);
+    case 'schulte2d':
+      return Icons.schulte(22);
+    case 'nback2d':
+      return Icons.brainNBack(22);
+    case 'pulse2d':
+      return Icons.sonicRing(22);
     default:
       return Icons.omni(22);
   }
@@ -78,6 +86,8 @@ export class HubView {
     const countTotal = STANDALONE_IDS.length;
     const count3D = STANDALONE_IDS.filter((id) => GAME_CATALOG[id].dimension === '3D').length;
     const count2D = STANDALONE_IDS.filter((id) => GAME_CATALOG[id].dimension === '2D').length;
+    const totalSecRanked = countTotal * 15;
+    const rankedDurationLabel = `${Math.floor(totalSecRanked / 60)}m ${String(totalSecRanked % 60).padStart(2, '0')}s`;
 
     const filteredIds = STANDALONE_IDS.filter((id) => {
       if (this.dimFilter === 'all') return true;
@@ -177,7 +187,7 @@ export class HubView {
           <div class="oa-hero-deck">
             <div class="oa-hero-copy">
               <h1>ENTRENA Y DOMINA TODAS LAS DIMENSIONES</h1>
-              <p>${countTotal} disciplinas entre disparos y vuelo 3D, salto aéreo, deflector orbital, ritmo, reflejo en milisegundos, memoria visual, serpiente, bloques y esquiva.</p>
+              <p>${countTotal} disciplinas de destreza e inteligencia: puntería 3D, rastreo continuo, N-Back, tabla Schulte, ritmo orbital, memoria visual, lógica y esquiva.</p>
             </div>
 
             <div class="oa-diff-block">
@@ -200,7 +210,7 @@ export class HubView {
 
               <button type="button" class="oa-launch-secondary" data-mode="ranked">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">${countTotal} PRUEBAS · 3m 30s</span>
+                  <span class="oa-launch-dim">${countTotal} PRUEBAS · ${rankedDurationLabel}</span>
                   <strong>PRUEBA CLASIFICATORIA</strong>
                   <span>Calibra tus 5 ejes de habilidad</span>
                 </div>

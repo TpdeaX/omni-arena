@@ -85,7 +85,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   gauntlet: {
     id: 'gauntlet',
     title: 'CIRCUITO TOTAL',
-    subtitle: '2D ↔ 3D · 14 Disciplinas',
+    subtitle: '2D ↔ 3D · 18 Disciplinas',
     dimension: '2D ↔ 3D',
     axis: 'all',
     accent: '#2563EB',
@@ -93,12 +93,12 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Dinámicos según fase (Ratón + WASD / DFJK)',
     controlsTouch: 'Controles adaptativos táctiles',
     description:
-      'La prueba total: rota cada 15s entre las 14 disciplinas 2D y 3D sin perder racha ni escudos. Velocidad creciente.',
+      'La prueba total: rota cada 15s entre las 18 disciplinas 2D y 3D sin perder racha ni escudos. Velocidad creciente.',
   },
   ranked: {
     id: 'ranked',
     title: 'PRUEBA CLASIFICATORIA',
-    subtitle: '14 Pruebas · 3m 30s',
+    subtitle: '18 Pruebas · 4m 30s',
     dimension: '2D ↔ 3D',
     axis: 'all',
     accent: '#0284C7',
@@ -106,7 +106,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Ratón + Teclado completo',
     controlsTouch: 'Controles adaptativos táctiles',
     description:
-      'Recorre los 14 desafíos en bloques de 15s para calibrar los 5 ejes de tu radar y subir tu rango oficial.',
+      'Recorre los 18 desafíos en bloques de 15s para calibrar los 5 ejes de tu radar y subir tu rango oficial.',
   },
   aim3d: {
     id: 'aim3d',
@@ -290,6 +290,58 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     description:
       'Entrena velocidad de reacción en milisegundos y discriminación visual evitando señuelos rojos.',
   },
+  track2d: {
+    id: 'track2d',
+    title: 'RASTREO QUIRÚRGICO',
+    subtitle: 'Seguimiento Motor Continuo 2D',
+    dimension: '2D',
+    axis: 'aim',
+    accent: '#EC4899',
+    accentSoft: 'rgba(236, 72, 153, 0.15)',
+    controlsPC: 'Sigue el núcleo móvil con el ratón sin tocar los señuelos rojos',
+    controlsTouch: 'Arrastra manteniendo el dedo sobre el núcleo móvil',
+    description:
+      'Entrena destreza fina manteniendo el puntero fijado sobre un núcleo errático a velocidad progresiva.',
+  },
+  schulte2d: {
+    id: 'schulte2d',
+    title: 'TABLA SCHULTE PRO',
+    subtitle: 'Lectura Periférica y Enfoque 2D',
+    dimension: '2D',
+    axis: 'logic',
+    accent: '#0EA5E9',
+    accentSoft: 'rgba(14, 165, 233, 0.15)',
+    controlsPC: 'Clic secuencial 1 → N fijando la vista en el centro',
+    controlsTouch: 'Toca los números en orden ascendente lo más rápido posible',
+    description:
+      'Expande tu campo visual y velocidad mental buscando secuencias numéricas de 4×4 y 5×5 sin perder precisión.',
+  },
+  nback2d: {
+    id: 'nback2d',
+    title: 'N-BACK CUÁNTICO',
+    subtitle: 'Memoria de Trabajo Dual N-Back',
+    dimension: '2D',
+    axis: 'logic',
+    accent: '#7C3AED',
+    accentSoft: 'rgba(124, 58, 237, 0.15)',
+    controlsPC: 'Tecla A/◀ (Posición) · L/▶ (Sonido) si coincide N pasos atrás',
+    controlsTouch: 'Pulsa Posición y/o Sonido cuando repita estímulo N pasos atrás',
+    description:
+      'El estándar científico para inteligencia fluida: compara posición y tono musical simultáneamente de 1-Back a 3-Back.',
+  },
+  pulse2d: {
+    id: 'pulse2d',
+    title: 'ANILLO SÓNICO',
+    subtitle: 'Sincronización Orbital y Pulso 2D',
+    dimension: '2D',
+    axis: 'rhythm',
+    accent: '#14B8A6',
+    accentSoft: 'rgba(20, 184, 166, 0.15)',
+    controlsPC: 'Espacio / Clic / J / K cuando la aguja cruce el arco',
+    controlsTouch: 'Toca la pantalla exactamente dentro del arco brillante',
+    description:
+      'Golpea arcos giratorios cada vez más estrechos al compás de la percusión electrónica y los cambios de giro.',
+  },
 };
 
 export const STANDALONE_IDS: StandaloneGameId[] = [
@@ -299,11 +351,15 @@ export const STANDALONE_IDS: StandaloneGameId[] = [
   'parkour3d',
   'flight3d',
   'rhythm2d',
+  'pulse2d',
   'parry2d',
   'bullet2d',
   'puzzle2d',
+  'schulte2d',
+  'nback2d',
   'tetris2d',
   'twinstick2d',
+  'track2d',
   'memory2d',
   'snake2d',
   'sniper2d',

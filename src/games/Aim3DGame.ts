@@ -107,7 +107,7 @@ export class Aim3DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '3D',
-      phaseLabel: '3D AIM LABS',
+      phaseLabel: 'PUNTERÍA TÁCTICA 3D',
       accent: '#FF4D38',
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
       subStat: 'PRECISIÓN 100%',

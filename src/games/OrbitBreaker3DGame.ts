@@ -91,7 +91,7 @@ export class OrbitBreaker3DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '3D',
-      phaseLabel: 'ORBIT BREAKER 3D',
+      phaseLabel: 'ROMPEÓRBITA 3D',
       accent: '#00E5FF',
       timeLeftSec: null,
       subStat: 'OLEADA 1 · BLOQUES 0',

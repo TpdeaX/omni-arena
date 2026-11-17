@@ -95,8 +95,8 @@ export class Rhythm2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'RHYTHM OVERDRIVE',
-      accent: '#00E5FF',
+      phaseLabel: 'RITMO SOBRECARGA',
+      accent: '#0891B2',
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
       subStat: `${this.bpm} BPM · PREC 100%`,
     });
@@ -188,16 +188,16 @@ export class Rhythm2DGame implements MiniGame {
     this.offsetAbsSum += absMs;
     this.hits += 1;
 
-    let label = 'GOOD';
+    let label = 'BIEN';
     let color = '#FFB800';
     let pts = 90;
     if (absMs <= 48) {
-      label = 'PERFECT';
+      label = 'PERFECTO';
       color = '#00E5FF';
       pts = 200;
       this.perfects += 1;
     } else if (absMs <= 98) {
-      label = 'GREAT';
+      label = 'GENIAL';
       color = '#A6FF00';
       pts = 140;
     }
@@ -322,7 +322,7 @@ export class Rhythm2DGame implements MiniGame {
         this.ctx.breakCombo();
         synthAudio.damage();
         this.judgeFx.push({
-          text: 'MISS',
+          text: 'FALLO',
           color: '#FF4D38',
           sub: 'TARDE',
           x: startX + n.lane * laneW + laneW / 2,
@@ -429,7 +429,7 @@ export class Rhythm2DGame implements MiniGame {
       g.font = '700 14px "Chakra Petch", sans-serif';
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.fillText(this.ctx.isTouch ? 'TAP' : LANE_KEYS[l], cx + laneW / 2, hitY + 34);
+      g.fillText(this.ctx.isTouch ? 'TOCA' : LANE_KEYS[l], cx + laneW / 2, hitY + 34);
     }
 
     // Notes

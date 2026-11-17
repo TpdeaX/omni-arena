@@ -1,6 +1,7 @@
 import { AXIS_META, DIFFICULTY_META, GAME_CATALOG, STANDALONE_IDS } from '../catalog';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
+import { arenaCloudSync } from '../services/CloudSync';
 import {
   computeOverallRating,
   getDailyTriad,
@@ -8,32 +9,32 @@ import {
   ratingToRank,
   xpForLevel,
 } from '../state/ProfileStore';
-import { DifficultyId, GameModeId, SkillAxis, StandaloneGameId } from '../types';
+import { DifficultyId, GameModeId, PlayerProfile, SkillAxis, StandaloneGameId } from '../types';
 import { resolveCompanionUrl } from '../utils/ecosystem';
 import { renderRadarSvg } from './RadarChart';
 
 function modeIcon(id: GameModeId): string {
   switch (id) {
     case 'aim3d':
-      return Icons.crosshair(20);
+      return Icons.crosshair(22);
     case 'runner3d':
-      return Icons.cube3d(20);
+      return Icons.cube3d(22);
     case 'cube3d':
-      return Icons.paddle3d(20);
+      return Icons.paddle3d(22);
     case 'parkour3d':
-      return Icons.parkour(20);
+      return Icons.parkour(22);
     case 'rhythm2d':
-      return Icons.music(20);
+      return Icons.music(22);
     case 'parry2d':
-      return Icons.parry(20);
+      return Icons.parry(22);
     case 'bullet2d':
-      return Icons.bolt(20);
+      return Icons.bolt(22);
     case 'puzzle2d':
-      return Icons.puzzle(20);
+      return Icons.puzzle(22);
     case 'tetris2d':
-      return Icons.blocks(20);
+      return Icons.blocks(22);
     case 'twinstick2d':
-      return Icons.twinStick(20);
+      return Icons.twinStick(22);
     default:
       return Icons.omni(22);
   }
@@ -46,6 +47,7 @@ export class HubView {
   private onLaunch: (modeId: GameModeId) => void;
   private settingsOpen = false;
   private dimFilter: 'all' | '3D' | '2D' = 'all';
+  private cloudFeedback = '';
 
   constructor(root: HTMLElement, onLaunch: (modeId: GameModeId) => void) {
     this.root = root;
@@ -54,6 +56,7 @@ export class HubView {
 
   public render(): void {
     const profile = profileStore.get();
+    document.documentElement.setAttribute('data-theme', profile.settings.theme ?? 'night');
     const overall = computeOverallRating(profile.ratings);
     const rank = ratingToRank(overall);
     const nextXp = xpForLevel(profile.level);
@@ -61,6 +64,8 @@ export class HubView {
     const triad = getDailyTriad();
     const activeDiff = profile.settings.difficulty ?? 'adaptive';
     const diffInfo = DIFFICULTY_META[activeDiff];
+    const cloudCfg = arenaCloudSync.reloadConfig();
+    const cloudReady = arenaCloudSync.isConfigured();
 
     const filteredIds = STANDALONE_IDS.filter((id) => {
       if (this.dimFilter === 'all') return true;
@@ -79,7 +84,10 @@ export class HubView {
         return `
         <button type="button" class="oa-mode-tile" data-mode="${id}" style="--tile-accent: ${desc.accent}; --tile-soft: ${desc.accentSoft}">
           <div class="oa-mode-top">
-            <span class="oa-mode-icon">${modeIcon(id)}</span>
+            <div class="oa-diamond-badge" style="--em-accent: ${desc.accent}">
+              <span class="oa-diamond-ring"></span>
+              <span class="oa-diamond-core">${modeIcon(id)}</span>
+            </div>
             <span class="oa-mode-dim">${desc.dimension}</span>
             ${
               isDaily
@@ -131,17 +139,25 @@ export class HubView {
       <div class="oa-hub">
         <header class="oa-topbar">
           <div class="oa-brand">
-            <span class="oa-brand-mark">${Icons.omni(24)}</span>
+            <a class="oa-dir-back" href="${resolveCompanionUrl('atelier')}" title="Volver al Directorio del Ecosistema">
+              ${Icons.arrowLeft(15)}<span>Directorio</span>
+            </a>
+            <span class="oa-brand-mark">${Icons.omni(22)}</span>
             <span class="oa-brand-name">OMNI ARENA</span>
-            <span class="oa-brand-tag">10 MODOS · 2D + 3D</span>
+            <span class="oa-brand-tag">10 DISCIPLINAS · 2D + 3D</span>
           </div>
           <div class="oa-topbar-right">
-            <a class="oa-eco-link" href="${resolveCompanionUrl('atelier')}">Atelier Diario</a>
             <a class="oa-eco-link" href="${resolveCompanionUrl('unumbral')}">UNUmbral</a>
+            <button type="button" class="oa-cloud-btn ${cloudReady ? 'is-live' : ''}" id="oa-hub-cloud" title="Sincronización Supabase">
+              ${Icons.cloud(15)}<span>${cloudReady ? `Nube · ${cloudCfg.spaceCode}` : 'Local'}</span>
+            </button>
             <div class="oa-streak-pill" title="Racha diaria">${Icons.flame(16)}<span>${profile.dailyStreak} DÍAS</span></div>
             <div class="oa-lvl-pill">NV ${profile.level} · ${xpPct}%</div>
+            <button type="button" class="oa-icon-btn" id="oa-hub-theme" title="Cambiar modo día/noche">
+              ${profile.settings.theme === 'day' ? Icons.moon(17) : Icons.sun(17)}
+            </button>
             <button type="button" class="oa-icon-btn" id="oa-hub-mute" title="Silenciar">${profile.settings.muted ? Icons.volumeOff(18) : Icons.volumeOn(18)}</button>
-            <button type="button" class="oa-icon-btn" id="oa-hub-settings" title="Ajustes">${Icons.sliders(18)}</button>
+            <button type="button" class="oa-icon-btn" id="oa-hub-settings" title="Ajustes y Nube">${Icons.sliders(18)}</button>
           </div>
         </header>
 
@@ -149,7 +165,7 @@ export class HubView {
           <div class="oa-hero-deck">
             <div class="oa-hero-copy">
               <h1>ENTRENA Y DOMINA TODAS LAS DIMENSIONES</h1>
-              <p>10 disciplinas entre shooters 3D, parkour aéreo, arkanoid, ritmo, parry en milisegundos, tetris blitz y bullet hell. Escoge dificultad fija o activa el modo IA dinámico.</p>
+              <p>10 disciplinas entre disparos 3D, salto aéreo, deflector orbital, ritmo, reflejo en milisegundos, bloques y esquiva. Todo tu radar y ajustes se guardan en Supabase.</p>
             </div>
 
             <div class="oa-diff-block">
@@ -163,9 +179,9 @@ export class HubView {
             <div class="oa-hero-actions">
               <button type="button" class="oa-launch-primary" data-mode="gauntlet">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">2D ↔ 3D · 10 JUEGOS</span>
-                  <strong>OMNI GAUNTLET</strong>
-                  <span>Rotación cada 15s sin perder tu combo</span>
+                  <span class="oa-launch-dim">2D ↔ 3D · 10 PRUEBAS</span>
+                  <strong>CIRCUITO TOTAL</strong>
+                  <span>Rotación cada 15s sin perder tu racha</span>
                 </div>
                 <span class="oa-launch-go">${Icons.play(20)}</span>
               </button>
@@ -173,7 +189,7 @@ export class HubView {
               <button type="button" class="oa-launch-secondary" data-mode="ranked">
                 <div class="oa-launch-meta">
                   <span class="oa-launch-dim">10 PRUEBAS · 2m 30s</span>
-                  <strong>TEST RANKED GLOBAL</strong>
+                  <strong>PRUEBA CLASIFICATORIA</strong>
                   <span>Calibra tus 5 ejes de habilidad</span>
                 </div>
                 <span class="oa-launch-go">${Icons.trophy(18)}</span>
@@ -233,9 +249,9 @@ export class HubView {
         }
 
         <div class="oa-overlay ${this.settingsOpen ? '' : 'is-hidden'}" id="oa-settings-overlay">
-          <div class="oa-modal oa-settings-modal">
+          <div class="oa-modal oa-settings-modal" role="dialog" aria-modal="true" aria-label="Ajustes y nube Supabase">
             <div class="oa-settings-head">
-              <h2>AJUSTES DE HARDWARE</h2>
+              <h2>AJUSTES Y NUBE SUPABASE</h2>
               <button type="button" class="oa-icon-btn" id="oa-close-settings">${Icons.check(18)}</button>
             </div>
 
@@ -245,7 +261,7 @@ export class HubView {
             </label>
 
             <label class="oa-setting-row">
-              <span>Sensibilidad 3D Aim (${profile.settings.aimSensitivity.toFixed(1)}x)</span>
+              <span>Sensibilidad 3D (${profile.settings.aimSensitivity.toFixed(1)}x)</span>
               <input type="range" id="oa-set-sens" min="0.4" max="2.2" step="0.1" value="${profile.settings.aimSensitivity}" />
             </label>
 
@@ -259,9 +275,38 @@ export class HubView {
             </label>
 
             <label class="oa-setting-row oa-setting-check">
-              <span>Vibración de cámara (Screen Shake)</span>
+              <span>Vibración de cámara al recibir impacto</span>
               <input type="checkbox" id="oa-set-shake" ${profile.settings.screenShake ? 'checked' : ''} />
             </label>
+
+            <div class="oa-cloud-section">
+              <h3>Sincronización en Supabase</h3>
+              <label class="oa-setting-row">
+                <span>Supabase Project URL</span>
+                <input type="url" id="oa-sb-url" value="${cloudCfg.supabaseUrl}" placeholder="https://tuproyecto.supabase.co" />
+              </label>
+              <label class="oa-setting-row">
+                <span>Supabase Anon Key</span>
+                <input type="text" id="oa-sb-key" value="${cloudCfg.supabaseAnonKey}" placeholder="eyJhbGciOi..." />
+              </label>
+              <label class="oa-setting-row">
+                <span>Código de espacio</span>
+                <input type="text" id="oa-sb-space" value="${cloudCfg.spaceCode}" placeholder="mi-espacio" />
+              </label>
+              ${this.cloudFeedback ? `<p class="oa-cloud-fb">${this.cloudFeedback}</p>` : ''}
+              <div class="oa-modal-actions">
+                <button type="button" class="oa-btn oa-btn-primary" id="oa-sb-save">${Icons.cloud(15)}<span>Guardar y subir</span></button>
+                <button type="button" class="oa-btn" id="oa-sb-pull">${Icons.download(15)}<span>Traer nube</span></button>
+                <button type="button" class="oa-btn" id="oa-sb-paste">Pegar llave</button>
+              </div>
+              <div class="oa-modal-actions">
+                <button type="button" class="oa-btn" id="oa-export-json">${Icons.download(14)}<span>Exportar .json</span></button>
+                <label class="oa-btn" style="cursor:pointer;">
+                  ${Icons.upload(14)}<span>Importar .json</span>
+                  <input type="file" id="oa-import-json" accept=".json,application/json" style="display:none" />
+                </label>
+              </div>
+            </div>
 
             <div class="oa-modal-actions">
               <button type="button" class="oa-btn oa-btn-danger" id="oa-reset-data">BORRAR PROGRESO</button>
@@ -303,6 +348,12 @@ export class HubView {
       });
     });
 
+    this.root.querySelector('#oa-hub-theme')!.addEventListener('click', () => {
+      const next = profileStore.get().settings.theme === 'day' ? 'night' : 'day';
+      profileStore.updateSettings({ theme: next });
+      this.render();
+    });
+
     this.root.querySelector('#oa-hub-mute')!.addEventListener('click', () => {
       const s = profileStore.get().settings;
       const next = !s.muted;
@@ -312,11 +363,13 @@ export class HubView {
     });
 
     const settingsModal = this.root.querySelector('#oa-settings-overlay')!;
-    this.root.querySelector('#oa-hub-settings')!.addEventListener('click', () => {
+    const openSettings = () => {
       synthAudio.uiClick();
       this.settingsOpen = true;
       settingsModal.classList.remove('is-hidden');
-    });
+    };
+    this.root.querySelector('#oa-hub-settings')!.addEventListener('click', openSettings);
+    this.root.querySelector('#oa-hub-cloud')!.addEventListener('click', openSettings);
 
     const closeSettings = () => {
       this.settingsOpen = false;
@@ -345,6 +398,59 @@ export class HubView {
     this.root.querySelector<HTMLInputElement>('#oa-set-shake')!.addEventListener('change', (e) => {
       const v = (e.target as HTMLInputElement).checked;
       profileStore.updateSettings({ screenShake: v });
+    });
+
+    this.root.querySelector('#oa-sb-save')!.addEventListener('click', async () => {
+      const url = this.root.querySelector<HTMLInputElement>('#oa-sb-url')!.value;
+      const key = this.root.querySelector<HTMLInputElement>('#oa-sb-key')!.value;
+      const space = this.root.querySelector<HTMLInputElement>('#oa-sb-space')!.value;
+      arenaCloudSync.saveConfig({ supabaseUrl: url, supabaseAnonKey: key, spaceCode: space, autoSync: true });
+      const res = await profileStore.pushNow();
+      this.cloudFeedback = res.message;
+      this.render();
+    });
+
+    this.root.querySelector('#oa-sb-pull')!.addEventListener('click', async () => {
+      const res = await profileStore.syncFromCloud(true);
+      this.cloudFeedback = res.message;
+      this.render();
+    });
+
+    this.root.querySelector('#oa-sb-paste')!.addEventListener('click', async () => {
+      const raw = window.prompt('Pega la llave rápida JSON copiada desde el Directorio:');
+      if (!raw) return;
+      if (arenaCloudSync.importToken(raw)) {
+        const res = await profileStore.syncFromCloud(true);
+        if (!res.updated) await profileStore.pushNow();
+        this.cloudFeedback = 'Configuración de Supabase aplicada y sincronizada.';
+      } else {
+        this.cloudFeedback = 'La llave rápida no es válida.';
+      }
+      this.render();
+    });
+
+    this.root.querySelector('#oa-export-json')!.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(profileStore.get(), null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `OMNI_ARENA_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    this.root.querySelector<HTMLInputElement>('#oa-import-json')!.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text()) as Partial<PlayerProfile>;
+        if (!parsed.ratings) throw new Error('invalid');
+        profileStore.replaceAll(parsed);
+        this.cloudFeedback = 'Respaldo restaurado y sincronizado.';
+      } catch {
+        this.cloudFeedback = 'Archivo JSON no válido.';
+      }
+      this.render();
     });
 
     this.root.querySelector('#oa-reset-data')!.addEventListener('click', () => {

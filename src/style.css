@@ -1,4 +1,5 @@
-:root {
+:root,
+:root[data-theme='night'] {
   --bg-void: #0b0e14;
   --bg-panel: #131822;
   --bg-elevated: #1a2130;
@@ -8,6 +9,7 @@
   --ink-secondary: #a2b1c7;
   --ink-muted: #6f8099;
   --accent-cyan: #00e5ff;
+  --accent-cyan-ink: #081018;
   --accent-red: #ff4d38;
   --accent-gold: #ffb800;
   --accent-lime: #a6ff00;
@@ -15,6 +17,23 @@
   --font-display: 'Chakra Petch', system-ui, sans-serif;
   --font-body: 'Barlow', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+:root[data-theme='day'] {
+  --bg-void: #f1f4f8;
+  --bg-panel: #ffffff;
+  --bg-elevated: #e9eef5;
+  --border-subtle: #dde4ee;
+  --border-strong: #c2cede;
+  --ink-primary: #141c2b;
+  --ink-secondary: #435066;
+  --ink-muted: #66758c;
+  --accent-cyan: #0284c7;
+  --accent-cyan-ink: #ffffff;
+  --accent-red: #dc2626;
+  --accent-gold: #d97706;
+  --accent-lime: #15803d;
+  --accent-violet: #6d28d9;
 }
 
 *,
@@ -190,7 +209,72 @@ button {
 
 .oa-icon-btn:hover {
   border-color: var(--accent-cyan);
-  background: #202a3d;
+  background: var(--bg-elevated);
+}
+
+.oa-dir-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-primary);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.oa-dir-back:hover {
+  border-color: var(--accent-cyan);
+}
+
+.oa-cloud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.oa-cloud-btn.is-live {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.oa-diamond-badge {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.oa-diamond-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 8px;
+  transform: rotate(45deg);
+  border: 4px solid var(--em-accent, var(--accent-cyan));
+  border-right-color: var(--border-strong);
+  border-bottom-color: var(--border-strong);
+  background: var(--bg-void);
+}
+
+.oa-diamond-core {
+  position: relative;
+  z-index: 1;
+  color: var(--em-accent, var(--accent-cyan));
+  display: grid;
+  place-items: center;
 }
 
 /* Command Grid (Hero + Radar) */
@@ -300,7 +384,8 @@ button {
 
 .oa-diff-pill.is-active {
   border-color: var(--diff-accent);
-  background: #1f283a;
+  background: var(--bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--diff-accent);
 }
 
 .oa-diff-pill.is-active span,
@@ -345,12 +430,12 @@ button {
 
 .oa-launch-primary {
   background: var(--accent-cyan);
-  color: #081018;
-  border: 1px solid #6bf0ff;
+  color: var(--accent-cyan-ink);
+  border: 1px solid var(--accent-cyan);
 }
 
 .oa-launch-primary:hover {
-  background: #33ecff;
+  filter: brightness(1.06);
   transform: translateY(-2px);
 }
 
@@ -524,7 +609,7 @@ button {
 
 .oa-mode-tile:hover {
   border-color: var(--tile-accent);
-  background: #171e2b;
+  background: var(--bg-elevated);
   transform: translateY(-2px);
 }
 
@@ -1249,6 +1334,16 @@ button {
   justify-content: flex-end;
 }
 
+.oa-cloud-section .oa-modal-actions {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.oa-cloud-section .oa-btn {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
+
 .oa-btn {
   display: inline-flex;
   align-items: center;
@@ -1264,8 +1359,8 @@ button {
 
 .oa-btn-primary {
   background: var(--accent-cyan);
-  border-color: #70f0ff;
-  color: #081018;
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan-ink);
 }
 
 .oa-btn-danger {
@@ -1401,11 +1496,39 @@ button {
   color: var(--ink-secondary);
 }
 
-.oa-setting-row select {
+.oa-setting-row select,
+.oa-setting-row input[type='text'],
+.oa-setting-row input[type='url'] {
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   padding: 8px 10px;
+}
+
+.oa-cloud-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.oa-cloud-section h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: var(--accent-cyan);
+}
+
+.oa-cloud-fb {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  font-size: 0.82rem;
+  color: var(--ink-primary);
 }
 
 .oa-setting-check {

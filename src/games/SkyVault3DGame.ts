@@ -104,7 +104,7 @@ export class SkyVault3DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '3D',
-      phaseLabel: 'SKY VAULT 3D',
+      phaseLabel: 'SALTO CELESTE 3D',
       accent: '#A6FF00',
       timeLeftSec: null,
       subStat: 'DIST 0m · GEMAS 0',

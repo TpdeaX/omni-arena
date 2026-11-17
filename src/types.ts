@@ -2,6 +2,8 @@ export type SkillAxis = 'aim' | 'rhythm' | 'logic' | 'reflex' | 'agility';
 
 export type DifficultyId = 'chill' | 'standard' | 'hyper' | 'adaptive';
 
+export type ThemeMode = 'day' | 'night';
+
 export type GameModeId =
   | 'aim3d'
   | 'runner3d'
@@ -46,7 +48,6 @@ export interface RunMetrics {
   wavesCleared?: number;
   durationSec: number;
   survived: boolean;
-  /** Per-axis performance normalized 0..1000 for rating updates */
   axisPerformances: Partial<Record<SkillAxis, number>>;
 }
 
@@ -67,6 +68,7 @@ export interface UserSettings {
   touchControls: 'auto' | 'always' | 'off';
   screenShake: boolean;
   difficulty: DifficultyId;
+  theme: ThemeMode;
 }
 
 export interface PlayerProfile {
@@ -80,6 +82,7 @@ export interface PlayerProfile {
   lastPlayedDay: string;
   dailyCompletedIds: StandaloneGameId[];
   settings: UserSettings;
+  updatedAt: number;
 }
 
 export interface GameContext {
@@ -87,21 +90,13 @@ export interface GameContext {
   isTouch: boolean;
   settings: UserSettings;
   difficulty: DifficultyId;
-  /** Current dynamic intensity multiplier (e.g. 0.78..1.80) */
   getIntensity: () => number;
-  /** Report live HUD state back to the Arena shell */
   setHud: (hud: Partial<HudState>) => void;
-  /** Report a shield/life hit; returns remaining shields */
   damage: (amount?: number) => number;
-  /** Heal shield */
   heal: (amount?: number) => void;
-  /** Add score & update combo (also nudges adaptive difficulty up) */
   addScore: (points: number, comboIncrement?: number) => void;
-  /** Reset combo on miss (also eases adaptive difficulty slightly) */
   breakCombo: () => void;
-  /** End the run immediately with metrics */
   finish: (metrics: Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'>) => void;
-  /** Trigger brief floating feedback in center/top */
   toast: (text: string, tone?: 'good' | 'warn' | 'bad' | 'accent') => void;
 }
 
@@ -110,7 +105,7 @@ export interface HudState {
   combo: number;
   shields: number;
   maxShields: number;
-  timeLeftSec: number | null; // null = endless/survival
+  timeLeftSec: number | null;
   phaseLabel: string;
   dimension: '2D' | '3D';
   accent: string;
@@ -124,7 +119,6 @@ export interface MiniGame {
   update(dt: number, elapsed: number): void;
   onResize(): void;
   setPaused(paused: boolean): void;
-  /** Snapshot partial metrics when switched out mid-run in Gauntlet/Ranked */
   getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'>;
   destroy(): void;
 }

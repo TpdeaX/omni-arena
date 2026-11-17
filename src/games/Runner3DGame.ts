@@ -84,7 +84,7 @@ export class Runner3DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '3D',
-      phaseLabel: 'HYPER TUNNEL 3D',
+      phaseLabel: 'TÚNEL HIPER 3D',
       accent: '#7B61FF',
       timeLeftSec: null,
       subStat: 'VEL 22 m/s · 0m',

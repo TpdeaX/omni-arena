@@ -111,7 +111,7 @@ export class TwinStick2DGame implements MiniGame {
       this.dashBtnEl = document.createElement('button');
       this.dashBtnEl.type = 'button';
       this.dashBtnEl.className = 'oa-touch-dash';
-      this.dashBtnEl.textContent = 'DASH';
+      this.dashBtnEl.textContent = 'IMPULSO';
       this.dashBtnEl.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         this.triggerDash();
@@ -130,10 +130,10 @@ export class TwinStick2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'TWIN-STICK ARENA',
-      accent: '#FF6B4A',
+      phaseLabel: 'ARENA DOBLE MANDO',
+      accent: '#EA580C',
       timeLeftSec: null,
-      subStat: 'BAJAS 0 · ESPACIO DASH',
+      subStat: 'BAJAS 0 · ESPACIO IMPULSO',
     });
   }
 
@@ -460,7 +460,7 @@ export class TwinStick2DGame implements MiniGame {
     }
 
     this.ctx.setHud({
-      subStat: `BAJAS ${this.kills} · ${this.spreadTimer > 0 ? 'TRIPLE ' + Math.ceil(this.spreadTimer) + 's' : 'DASH LISTO'}`,
+      subStat: `BAJAS ${this.kills} · ${this.spreadTimer > 0 ? 'TRIPLE ' + Math.ceil(this.spreadTimer) + 's' : 'IMPULSO LISTO'}`,
     });
 
     this.draw();

@@ -78,10 +78,10 @@ export class BlitzStacker2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'BLITZ STACKER',
-      accent: '#7B61FF',
+      phaseLabel: 'BLOQUES RELÁMPAGO',
+      accent: '#4F46E5',
       timeLeftSec: null,
-      subStat: 'LÍNEAS 0 · ESPACIO DROP · C HOLD',
+      subStat: 'LÍNEAS 0 · ESPACIO CAÍDA · C RESERVA',
     });
   }
 
@@ -92,8 +92,8 @@ export class BlitzStacker2DGame implements MiniGame {
       <button type="button" data-act="left">◀</button>
       <button type="button" data-act="rot">ROTAR</button>
       <button type="button" data-act="right">▶</button>
-      <button type="button" data-act="hold">HOLD</button>
-      <button type="button" data-act="drop">DROP</button>
+      <button type="button" data-act="hold">RESERVA</button>
+      <button type="button" data-act="drop">CAÍDA</button>
     `;
     this.touchPadEl.addEventListener('pointerdown', (e) => {
       const btn = (e.target as HTMLElement).closest('button');
@@ -391,7 +391,7 @@ export class BlitzStacker2DGame implements MiniGame {
     // Side previews: NEXT & HOLD (when horizontal room allows)
     if (ox > 96) {
       this.drawMiniBox(ox + boardW + 16, oy, 'SIGUIENTE', this.nextIndex, cell * 0.72);
-      this.drawMiniBox(ox - 102, oy, 'HOLD [C]', this.holdIndex, cell * 0.72);
+      this.drawMiniBox(ox - 102, oy, 'RESERVA [C]', this.holdIndex, cell * 0.72);
     }
   }
 

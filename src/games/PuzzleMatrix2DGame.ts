@@ -66,7 +66,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'MIND MATRIX',
+      phaseLabel: 'MATRIZ MENTAL',
       accent: '#FFB800',
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
       subStat: 'RESUELTOS 0 · RACHA 0',
@@ -165,7 +165,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
     const ink = STROOP_PALETTE[inkIdx];
 
     this.boardEl.innerHTML = `
-      <div class="oa-pz-type">TEST STROOP · TOCA EL COLOR DE LA TINTA</div>
+      <div class="oa-pz-type">RETO DE COLOR · TOCA EL COLOR DE LA TINTA</div>
       <div class="oa-pz-prompt" style="color: ${ink.hex}">${word}</div>
       <div class="oa-pz-options"></div>
     `;
@@ -242,7 +242,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
     }
 
     this.boardEl.innerHTML = `
-      <div class="oa-pz-type">MEMORIA CHIMP · PULSA 1 → ${this.chimpMax} EN ORDEN</div>
+      <div class="oa-pz-type">MEMORIA NUMÉRICA · PULSA 1 → ${this.chimpMax} EN ORDEN</div>
       <div class="oa-pz-grid oa-pz-grid-4x3"></div>
     `;
     const grid = this.boardEl.querySelector('.oa-pz-grid')!;
@@ -292,7 +292,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
     this.simonPlaying = true;
 
     this.boardEl.innerHTML = `
-      <div class="oa-pz-type">SIMON MATRIX · OBSERVA (${len} PASOS)</div>
+      <div class="oa-pz-type">SECUENCIA VISUAL · OBSERVA (${len} PASOS)</div>
       <div class="oa-pz-grid oa-pz-grid-3x3"></div>
     `;
     const grid = this.boardEl.querySelector('.oa-pz-grid')!;
@@ -339,7 +339,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
       if (this.destroyed) return;
       this.simonPlaying = false;
       this.roundStartMs = performance.now();
-      titleEl.textContent = `SIMON MATRIX · TU TURNO (${len} PASOS)`;
+      titleEl.textContent = `SECUENCIA VISUAL · TU TURNO (${len} PASOS)`;
     }, 240 + this.simonSeq.length * stepMs + 70);
     this.simonTimers.push(tReady);
   }

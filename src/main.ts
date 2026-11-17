@@ -7,19 +7,22 @@ import { HubView } from './ui/HubView';
 
 const root = document.getElementById('app')!;
 const settings = profileStore.get().settings;
+document.documentElement.setAttribute('data-theme', settings.theme ?? 'night');
 synthAudio.setConfig(settings.volume, settings.muted);
 
 let activeShell: GameShell | null = null;
+let currentHub: HubView | null = null;
 
 function showHub(): void {
   activeShell?.destroy();
   activeShell = null;
-  const hub = new HubView(root, launchMode);
-  hub.render();
+  currentHub = new HubView(root, launchMode);
+  currentHub.render();
 }
 
 function launchMode(modeId: GameModeId): void {
   activeShell?.destroy();
+  currentHub = null;
   activeShell = new GameShell(root, modeId, {
     onExitToHub: showHub,
     onReplay: launchMode,
@@ -28,6 +31,14 @@ function launchMode(modeId: GameModeId): void {
 }
 
 showHub();
+
+void profileStore.syncFromCloud(false).then((res) => {
+  if (res.updated && currentHub) {
+    const s = profileStore.get().settings;
+    synthAudio.setConfig(s.volume, s.muted);
+    currentHub.render();
+  }
+});
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

@@ -144,7 +144,7 @@ export class GameShell {
             <span class="oa-hud-combo" id="oa-hud-combo">x1</span>
           </div>
           <div class="oa-hud-stat">
-            <span class="oa-stat-label">SCORE</span>
+            <span class="oa-stat-label">PUNTOS</span>
             <span class="oa-hud-score" id="oa-hud-score">0</span>
           </div>
           <button type="button" class="oa-icon-btn" id="oa-btn-mute" title="Audio">${profile.settings.muted ? Icons.volumeOff(18) : Icons.volumeOn(18)}</button>

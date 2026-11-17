@@ -76,7 +76,7 @@ export class FlashParry2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'FLASH PARRY DUEL',
+      phaseLabel: 'DUELO DE REFLEJO',
       accent: '#FFB800',
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
       subStat: 'PARRIES 0 · ESPERA DESTELLO',

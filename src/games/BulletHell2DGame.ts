@@ -98,10 +98,10 @@ export class BulletHell2DGame implements MiniGame {
 
     this.ctx.setHud({
       dimension: '2D',
-      phaseLabel: 'BULLET HELL & GRAZE',
-      accent: '#A6FF00',
+      phaseLabel: 'LLUVIA Y ROCE',
+      accent: '#65A30D',
       timeLeftSec: null,
-      subStat: 'GRAZE 0 · SHIFT PREC.',
+      subStat: 'ROCES 0 · SHIFT PREC.',
     });
   }
 
@@ -288,7 +288,7 @@ export class BulletHell2DGame implements MiniGame {
     }
 
     this.ctx.setHud({
-      subStat: `GRAZE ${this.grazes} · BALAS ${this.bullets.length}`,
+      subStat: `ROCES ${this.grazes} · PROYECTILES ${this.bullets.length}`,
     });
 
     this.draw(focus);

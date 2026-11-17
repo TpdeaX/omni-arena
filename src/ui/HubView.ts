@@ -139,7 +139,7 @@ export class HubView {
       <div class="oa-hub">
         <header class="oa-topbar">
           <div class="oa-brand">
-            <a class="oa-dir-back" href="${resolveCompanionUrl('atelier')}" title="Volver al Directorio del Ecosistema">
+            <a class="oa-dir-back" href="${resolveCompanionUrl('directorio')}" title="Volver al Directorio del Ecosistema">
               ${Icons.arrowLeft(15)}<span>Directorio</span>
             </a>
             <span class="oa-brand-mark">${Icons.omni(22)}</span>

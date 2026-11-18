@@ -2156,11 +2156,14 @@ button {
 
 @media (max-width: 420px) {
   .eco-switch {
-    justify-content: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 6px;
   }
   .eco-switch-link {
     min-height: 40px;
-    padding: 4px 10px;
+    padding: 4px 8px;
+    font-size: 0.78rem;
   }
   .eco-label-ext {
     display: none;

@@ -130,21 +130,21 @@ class ArenaCloudSyncService {
     }
   }
 
-  public async pullProfile(): Promise<{
+  public async pullScope<T = unknown>(scope: string): Promise<{
     ok: boolean;
-    profile: Partial<PlayerProfile> | null;
+    payload: T | null;
     updatedAt: number;
     message: string;
   }> {
     this.reloadConfig();
     if (!this.isConfigured()) {
-      return { ok: false, profile: null, updatedAt: 0, message: 'Configura Supabase primero.' };
+      return { ok: false, payload: null, updatedAt: 0, message: 'Configura Supabase primero.' };
     }
     try {
       const res = await fetch(
         `${this.config.supabaseUrl}/rest/v1/ecosystem_state?space_code=eq.${encodeURIComponent(
           this.config.spaceCode
-        )}&scope=eq.arena_profile&select=payload,updated_at&limit=1`,
+        )}&scope=eq.${encodeURIComponent(scope)}&select=payload,updated_at&limit=1`,
         {
           method: 'GET',
           headers: {
@@ -154,19 +154,38 @@ class ArenaCloudSyncService {
         }
       );
       if (!res.ok) {
-        return { ok: false, profile: null, updatedAt: 0, message: `Error Supabase (${res.status})` };
+        return { ok: false, payload: null, updatedAt: 0, message: `Error Supabase (${res.status})` };
       }
-      const rows = (await res.json()) as Array<{ payload?: Partial<PlayerProfile>; updated_at?: number }>;
+      const rows = (await res.json()) as Array<{ payload?: T; updated_at?: number }>;
       const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
       return {
         ok: true,
-        profile: row?.payload ?? null,
+        payload: row?.payload ?? null,
         updatedAt: Number(row?.updated_at) || 0,
-        message: row ? 'Progreso descargado desde Supabase.' : 'Sin progreso previo en este espacio.',
+        message: row ? 'Datos descargados desde Supabase.' : 'Sin datos previos en este espacio.',
       };
     } catch {
-      return { ok: false, profile: null, updatedAt: 0, message: 'Error de red con Supabase.' };
+      return { ok: false, payload: null, updatedAt: 0, message: 'Error de red con Supabase.' };
     }
+  }
+
+  public async pullProfile(): Promise<{
+    ok: boolean;
+    profile: Partial<PlayerProfile> | null;
+    updatedAt: number;
+    message: string;
+  }> {
+    const res = await this.pullScope<Partial<PlayerProfile>>('arena_profile');
+    return {
+      ok: res.ok,
+      profile: res.payload,
+      updatedAt: res.updatedAt,
+      message: res.ok
+        ? res.payload
+          ? 'Progreso descargado desde Supabase.'
+          : 'Sin progreso previo en este espacio.'
+        : res.message,
+    };
   }
 }
 

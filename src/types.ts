@@ -4,6 +4,10 @@ export type DifficultyId = 'chill' | 'standard' | 'hyper' | 'adaptive';
 
 export type ThemeMode = 'day' | 'night';
 
+export type GameCategory = 'academy' | 'dexterity2d' | 'action3d' | 'circuit';
+
+export type HubTabId = 'academy' | 'dexterity2d' | 'action3d' | 'all';
+
 export type GameModeId =
   | 'aim3d'
   | 'runner3d'
@@ -23,22 +27,60 @@ export type GameModeId =
   | 'schulte2d'
   | 'nback2d'
   | 'pulse2d'
+  // Nuevas Academias (8)
+  | 'chess2d'
+  | 'checkers2d'
+  | 'poker2d'
+  | 'rubik3d'
+  | 'piano2d'
+  | 'raven2d'
+  | 'sudoku2d'
+  | 'hanoi2d'
+  // Circuitos
   | 'gauntlet'
   | 'ranked';
 
 export type StandaloneGameId = Exclude<GameModeId, 'gauntlet' | 'ranked'>;
 
+export interface ControlHint {
+  keys: string[];
+  touch: string;
+  action: string;
+  tone?: 'default' | 'primary' | 'danger';
+}
+
+export interface GuideExampleFrame {
+  svg: string;
+  caption: string;
+}
+
+export interface GuideExampleSpec {
+  frames: GuideExampleFrame[];
+}
+
+export interface GameGuideSpec {
+  objective: string;
+  howToPlay: string[];
+  controls: ControlHint[];
+  example: GuideExampleSpec;
+  practice: string;
+  challenge: string;
+}
+
 export interface GameDescriptor {
   id: GameModeId;
   title: string;
   subtitle: string;
-  dimension: '3D' | '2D' | '2D ↔ 3D';
+  dimension: '3D' | '2D' | '2D + 3D';
+  category: GameCategory;
   axis: SkillAxis | 'all';
   accent: string;
   accentSoft: string;
   controlsPC: string;
   controlsTouch: string;
   description: string;
+  keywords?: string[];
+  guide: GameGuideSpec;
 }
 
 export interface RunMetrics {
@@ -75,8 +117,11 @@ export interface UserSettings {
   aimSensitivity: number; // 0.3..2.5
   touchControls: 'auto' | 'always' | 'off';
   screenShake: boolean;
+  reduceMotion?: boolean;
   difficulty: DifficultyId;
   theme: ThemeMode;
+  hubTab?: HubTabId;
+  skipGuideFor?: Partial<Record<GameModeId, boolean>>;
 }
 
 export interface PlayerProfile {
@@ -96,10 +141,13 @@ export interface PlayerProfile {
 export interface GameContext {
   container: HTMLElement;
   isTouch: boolean;
+  practiceMode?: boolean;
   settings: UserSettings;
   difficulty: DifficultyId;
   getIntensity: () => number;
   setHud: (hud: Partial<HudState>) => void;
+  setControls?: (controls: ControlHint[]) => void;
+  onOpenGuide?: () => void;
   damage: (amount?: number) => number;
   heal: (amount?: number) => void;
   addScore: (points: number, comboIncrement?: number) => void;

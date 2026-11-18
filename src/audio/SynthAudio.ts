@@ -1,8 +1,23 @@
+export type InstrumentTimbre = 'piano' | 'organ' | 'soft' | 'bell';
+
+export function midiToFreq(midi: number): number {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+interface ActiveVoice {
+  stop: () => void;
+  startedAt: number;
+}
+
+const MAX_ACTIVE_VOICES = 12;
+
 class SynthAudioEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private volume = 0.65;
   private muted = false;
+  private activeVoices = new Map<string, ActiveVoice>();
+  private oneShotCounter = 0;
 
   public ensure(): AudioContext {
     if (!this.ctx) {
@@ -57,6 +72,185 @@ class SynthAudioEngine {
     g.connect(this.master);
     osc.start(t);
     osc.stop(t + duration + 0.02);
+  }
+
+  private evictOldestVoiceIfFull(): void {
+    while (this.activeVoices.size >= MAX_ACTIVE_VOICES) {
+      let oldestKey: string | null = null;
+      let oldestTime = Infinity;
+      for (const [key, voice] of this.activeVoices.entries()) {
+        if (voice.startedAt < oldestTime) {
+          oldestTime = voice.startedAt;
+          oldestKey = key;
+        }
+      }
+      if (!oldestKey) break;
+      const v = this.activeVoices.get(oldestKey);
+      this.activeVoices.delete(oldestKey);
+      v?.stop();
+    }
+  }
+
+  private createTimbreVoice(
+    key: string,
+    midi: number,
+    timbre: InstrumentTimbre,
+    startTime: number,
+    durationSec?: number
+  ): void {
+    const ctx = this.ensure();
+    if (!this.master) return;
+    const existing = this.activeVoices.get(key);
+    if (existing) {
+      this.activeVoices.delete(key);
+      existing.stop();
+    }
+    this.evictOldestVoiceIfFull();
+
+    const freq = midiToFreq(midi);
+    const outGain = ctx.createGain();
+    outGain.connect(this.master);
+
+    const oscs: OscillatorNode[] = [];
+    const addOsc = (type: OscillatorType, mult: number, amp: number) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq * mult, startTime);
+      g.gain.setValueAtTime(amp, startTime);
+      o.connect(g);
+      g.connect(outGain);
+      o.start(startTime);
+      oscs.push(o);
+    };
+
+    let releaseSec = 0.16;
+    if (timbre === 'piano') {
+      addOsc('triangle', 1, 0.72);
+      addOsc('sine', 2, 0.22);
+      addOsc('sine', 3, 0.08);
+      outGain.gain.setValueAtTime(0.0001, startTime);
+      outGain.gain.linearRampToValueAtTime(0.24, startTime + 0.008);
+      if (durationSec !== undefined) {
+        outGain.gain.exponentialRampToValueAtTime(0.001, startTime + Math.max(0.08, durationSec));
+      } else {
+        outGain.gain.exponentialRampToValueAtTime(0.09, startTime + 0.45);
+      }
+      releaseSec = 0.14;
+    } else if (timbre === 'organ') {
+      addOsc('sine', 1, 0.6);
+      addOsc('triangle', 2, 0.3);
+      addOsc('sine', 4, 0.12);
+      outGain.gain.setValueAtTime(0.0001, startTime);
+      outGain.gain.linearRampToValueAtTime(0.18, startTime + 0.015);
+      if (durationSec !== undefined) {
+        outGain.gain.setValueAtTime(0.18, startTime + Math.max(0.03, durationSec - 0.04));
+        outGain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+      }
+      releaseSec = 0.08;
+    } else if (timbre === 'soft') {
+      addOsc('sine', 1, 0.85);
+      addOsc('triangle', 0.5, 0.15);
+      outGain.gain.setValueAtTime(0.0001, startTime);
+      outGain.gain.linearRampToValueAtTime(0.22, startTime + 0.045);
+      if (durationSec !== undefined) {
+        outGain.gain.exponentialRampToValueAtTime(0.0001, startTime + Math.max(0.1, durationSec));
+      } else {
+        outGain.gain.setTargetAtTime(0.15, startTime + 0.06, 0.2);
+      }
+      releaseSec = 0.22;
+    } else {
+      // bell
+      addOsc('sine', 1, 0.7);
+      addOsc('sine', 2.0, 0.25);
+      addOsc('sine', 3.01, 0.14);
+      outGain.gain.setValueAtTime(0.0001, startTime);
+      outGain.gain.linearRampToValueAtTime(0.22, startTime + 0.004);
+      const decay = durationSec !== undefined ? Math.max(0.15, durationSec) : 1.1;
+      outGain.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
+      releaseSec = 0.18;
+    }
+
+    let stopped = false;
+    const stopImmediate = () => {
+      if (stopped) return;
+      stopped = true;
+      const now = ctx.currentTime;
+      try {
+        outGain.gain.cancelScheduledValues(now);
+        outGain.gain.setValueAtTime(Math.max(0.0001, outGain.gain.value), now);
+        outGain.gain.exponentialRampToValueAtTime(0.0001, now + releaseSec);
+        for (const o of oscs) {
+          o.stop(now + releaseSec + 0.02);
+        }
+      } catch {
+        // oscillator already stopped
+      }
+      this.activeVoices.delete(key);
+    };
+
+    this.activeVoices.set(key, {
+      stop: stopImmediate,
+      startedAt: startTime,
+    });
+
+    if (durationSec !== undefined) {
+      const endAt = startTime + durationSec + 0.04;
+      for (const o of oscs) {
+        o.stop(endAt);
+      }
+      const delayMs = Math.max(20, (endAt - ctx.currentTime) * 1000 + 30);
+      window.setTimeout(() => {
+        if (!stopped && this.activeVoices.get(key)?.startedAt === startTime) {
+          this.activeVoices.delete(key);
+        }
+      }, delayMs);
+    }
+  }
+
+  public playMidiNote(
+    midi: number,
+    durationSec = 0.65,
+    timbre: InstrumentTimbre = 'piano',
+    whenOffset = 0
+  ): void {
+    const ctx = this.ensure();
+    const t = ctx.currentTime + Math.max(0, whenOffset);
+    const key = `oneshot_${++this.oneShotCounter}`;
+    this.createTimbreVoice(key, midi, timbre, t, durationSec);
+  }
+
+  public playChord(
+    midis: number[],
+    durationSec = 0.85,
+    timbre: InstrumentTimbre = 'piano',
+    arpeggioStepSec = 0
+  ): void {
+    midis.forEach((m, idx) => {
+      this.playMidiNote(m, durationSec, timbre, idx * arpeggioStepSec);
+    });
+  }
+
+  public noteOn(id: string | number, midi: number, timbre: InstrumentTimbre = 'piano'): void {
+    const ctx = this.ensure();
+    const key = `held_${String(id)}`;
+    this.createTimbreVoice(key, midi, timbre, ctx.currentTime);
+  }
+
+  public noteOff(id: string | number): void {
+    const key = `held_${String(id)}`;
+    const voice = this.activeVoices.get(key);
+    if (voice) {
+      voice.stop();
+    }
+  }
+
+  public stopAllNotes(): void {
+    const entries = Array.from(this.activeVoices.values());
+    this.activeVoices.clear();
+    for (const v of entries) {
+      v.stop();
+    }
   }
 
   public playNoiseBurst(duration: number, gainPeak: number, highpassHz = 1200, when?: number): void {

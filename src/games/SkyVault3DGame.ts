@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { synthAudio } from '../audio/SynthAudio';
+import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 
 interface Platform3D {
@@ -138,11 +139,11 @@ export class SkyVault3DGame implements MiniGame {
     this.touchUiEl.className = 'oa-touch-parkour';
     this.touchUiEl.innerHTML = `
       <div class="oa-touch-dpad">
-        <button type="button" data-dir="up">▲</button>
+        <button type="button" data-dir="up" aria-label="Adelante">${Icons.arrowUp(18)}</button>
         <div class="oa-touch-dpad-mid">
-          <button type="button" data-dir="left">◀</button>
-          <button type="button" data-dir="down">▼</button>
-          <button type="button" data-dir="right">▶</button>
+          <button type="button" data-dir="left" aria-label="Izquierda">${Icons.arrowLeft(18)}</button>
+          <button type="button" data-dir="down" aria-label="Atrás">${Icons.arrowDown(18)}</button>
+          <button type="button" data-dir="right" aria-label="Derecha">${Icons.arrowRight(18)}</button>
         </div>
       </div>
       <button type="button" class="oa-touch-jump-big" data-act="jump">SALTAR x2</button>

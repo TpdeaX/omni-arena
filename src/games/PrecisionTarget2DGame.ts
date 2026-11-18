@@ -187,10 +187,29 @@ export class PrecisionTarget2DGame implements MiniGame {
       g.fill();
       g.globalAlpha = 1;
 
-      g.fillStyle = '#FFFFFF';
-      g.beginPath();
-      g.arc(t.x, t.y, 5, 0, Math.PI * 2);
-      g.fill();
+      if (t.kind === 'decoy') {
+        const xr = t.r * 0.48;
+        g.strokeStyle = '#FFFFFF';
+        g.lineWidth = 3;
+        g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(t.x - xr, t.y - xr);
+        g.lineTo(t.x + xr, t.y + xr);
+        g.moveTo(t.x + xr, t.y - xr);
+        g.lineTo(t.x - xr, t.y + xr);
+        g.stroke();
+
+        g.fillStyle = '#FCA5A5';
+        g.font = '700 12px "JetBrains Mono", monospace';
+        g.textAlign = 'center';
+        g.textBaseline = 'top';
+        g.fillText('NO', t.x, t.y + t.r + 6);
+      } else {
+        g.fillStyle = '#FFFFFF';
+        g.beginPath();
+        g.arc(t.x, t.y, 5, 0, Math.PI * 2);
+        g.fill();
+      }
     }
   }
 

@@ -1,0 +1,575 @@
+/* Estilos exclusivos para las academias de inteligencia pura:
+   Matrices Raven (raven2d), Sudoku Razonado (sudoku2d) y Torres de Hanói (hanoi2d) */
+
+.oa-intel-prep {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oa-intel-prep-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink-primary);
+}
+
+.oa-intel-prep-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+.oa-intel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oa-intel-label {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.oa-intel-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.oa-intel-pill {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.oa-intel-pill:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+}
+
+.oa-intel-pill[aria-pressed='true'],
+.oa-intel-pill.is-active {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.14);
+  color: var(--ink-primary);
+}
+
+.oa-intel-primary-btn {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--accent-cyan);
+  background: var(--accent-cyan);
+  color: var(--accent-cyan-ink);
+  font-family: var(--font-display);
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.oa-intel-primary-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.oa-intel-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.oa-intel-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.oa-intel-stat-chip {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-primary);
+}
+
+.oa-intel-stat-chip.is-danger {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.oa-intel-stat-chip.is-good {
+  border-color: var(--accent-lime);
+  color: var(--accent-lime);
+}
+
+/* ==================== RAVEN MATRIX 2D ==================== */
+
+.oa-raven-wrap {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.oa-raven-matrix {
+  width: 100%;
+  max-width: 390px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+}
+
+.oa-raven-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  position: relative;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.oa-raven-cell.is-target {
+  border: 2px dashed var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.08);
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.oa-raven-cell.is-row-focus {
+  border-color: var(--accent-gold);
+  box-shadow: inset 0 0 0 2px rgba(255, 184, 0, 0.35);
+}
+
+.oa-raven-cell.is-answered-good {
+  border: 2px solid var(--accent-lime);
+  background: rgba(21, 128, 61, 0.16);
+}
+
+.oa-raven-cell.is-answered-bad {
+  border: 2px solid var(--accent-red);
+  background: rgba(220, 38, 38, 0.16);
+}
+
+.oa-raven-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.oa-raven-options {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.oa-raven-options.is-six {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 420px;
+}
+
+.oa-raven-opt {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 68px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.oa-raven-opt:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.oa-raven-opt:disabled {
+  cursor: default;
+}
+
+.oa-raven-opt.is-correct {
+  border: 2px solid var(--accent-lime);
+  background: rgba(21, 128, 61, 0.18);
+}
+
+.oa-raven-opt.is-wrong {
+  border: 2px solid var(--accent-red);
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.oa-raven-opt-num {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+/* ==================== SUDOKU GUIDE 2D ==================== */
+
+.oa-sudoku-wrap {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.oa-sudoku-board {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  background: var(--border-strong);
+  border: 2px solid var(--ink-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.oa-sudoku-cell {
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.45rem);
+  transition: background-color 0.1s ease;
+}
+
+.oa-sudoku-board.is-size-4 .oa-sudoku-cell {
+  font-size: clamp(1.3rem, 3.2vw, 1.85rem);
+}
+
+.oa-sudoku-board.is-size-6 .oa-sudoku-cell {
+  font-size: clamp(1.1rem, 2.8vw, 1.6rem);
+}
+
+.oa-sudoku-cell.is-box-right {
+  border-right: 2px solid var(--ink-secondary);
+}
+
+.oa-sudoku-cell.is-box-bottom {
+  border-bottom: 2px solid var(--ink-secondary);
+}
+
+.oa-sudoku-cell.is-given {
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+}
+
+.oa-sudoku-cell.is-user {
+  color: var(--accent-cyan);
+}
+
+.oa-sudoku-cell.is-peer {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.oa-sudoku-cell.is-same-digit {
+  background: rgba(0, 229, 255, 0.16);
+}
+
+.oa-sudoku-cell.is-selected {
+  background: rgba(0, 229, 255, 0.26);
+  box-shadow: inset 0 0 0 2px var(--accent-cyan);
+}
+
+.oa-sudoku-cell.is-conflict {
+  background: rgba(220, 38, 38, 0.22);
+  color: var(--accent-red);
+}
+
+.oa-sudoku-notes {
+  width: 92%;
+  height: 92%;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-secondary);
+}
+
+.oa-sudoku-notes.is-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.oa-sudoku-notes.is-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.oa-sudoku-note-item.is-eliminated {
+  color: var(--accent-red);
+  text-decoration: line-through;
+}
+
+.oa-sudoku-pad {
+  width: 100%;
+  max-width: 440px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  gap: 6px;
+}
+
+.oa-sudoku-key {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oa-sudoku-key:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+}
+
+.oa-sudoku-key.is-complete {
+  opacity: 0.4;
+}
+
+/* ==================== HANOI LOGIC 2D ==================== */
+
+.oa-hanoi-wrap {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.oa-hanoi-stage {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 16px 12px 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.oa-hanoi-tower {
+  position: relative;
+  min-height: 230px;
+  padding: 10px 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.oa-hanoi-tower:hover {
+  border-color: var(--accent-cyan);
+}
+
+.oa-hanoi-tower.is-selected {
+  border: 2px solid var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.oa-hanoi-pole-area {
+  position: relative;
+  width: 100%;
+  height: 156px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.oa-hanoi-pole {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 148px;
+  border-radius: 4px 4px 0 0;
+  background: var(--border-strong);
+  z-index: 0;
+}
+
+.oa-hanoi-base {
+  width: 92%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--ink-muted);
+  z-index: 1;
+}
+
+.oa-hanoi-disk {
+  position: relative;
+  z-index: 2;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.oa-hanoi-disk.is-top-selected {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 14px rgba(0, 229, 255, 0.4);
+}
+
+.oa-hanoi-disk.is-trace-moved {
+  box-shadow: 0 0 0 2px var(--accent-gold);
+}
+
+.oa-hanoi-disk[data-disk='1'] { width: 32%; background: #0284c7; }
+.oa-hanoi-disk[data-disk='2'] { width: 44%; background: #16a34a; }
+.oa-hanoi-disk[data-disk='3'] { width: 56%; background: #ca8a04; }
+.oa-hanoi-disk[data-disk='4'] { width: 68%; background: #ea580c; }
+.oa-hanoi-disk[data-disk='5'] { width: 80%; background: #dc2626; }
+.oa-hanoi-disk[data-disk='6'] { width: 92%; background: #7c3aed; }
+
+.oa-hanoi-tower-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+}
+
+.oa-hanoi-tower-name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-hanoi-tower-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.oa-hanoi-tower-status.is-legal {
+  color: var(--accent-lime);
+}
+
+.oa-hanoi-tower-status.is-illegal {
+  color: var(--accent-red);
+}
+
+.oa-hanoi-stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.oa-hanoi-stack-frame {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--ink-secondary);
+}
+
+.oa-hanoi-stack-frame.is-top {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.14);
+  color: var(--ink-primary);
+  font-weight: 700;
+}
+
+:root[data-motion='reduced'] .oa-raven-opt,
+:root[data-motion='reduced'] .oa-hanoi-disk {
+  transition: none;
+}
+
+@media (max-width: 600px) {
+  .oa-raven-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .oa-hanoi-stage {
+    gap: 6px;
+    padding: 12px 6px 8px;
+  }
+  .oa-hanoi-tower {
+    min-height: 205px;
+    padding: 8px 4px;
+  }
+}

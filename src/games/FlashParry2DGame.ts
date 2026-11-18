@@ -22,7 +22,7 @@ interface ShockFx {
   life: number;
 }
 
-const LANE_NAMES = ['IZQ [A / ◀]', 'CENTRO [W / ▲]', 'DER [D / ▶]'];
+const LANE_NAMES = ['IZQ [A / Izq]', 'CENTRO [W / Arr]', 'DER [D / Der]'];
 
 export class FlashParry2DGame implements MiniGame {
   public readonly id = 'parry2d' as const;

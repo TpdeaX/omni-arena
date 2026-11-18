@@ -12,7 +12,8 @@ export class MemoryGrid2DGame implements MiniGame {
   private targetCells = new Set<number>();
   private trapCells = new Set<number>();
   private revealedCells = new Set<number>();
-  private phase: 'memorize' | 'recall' = 'memorize';
+  private wrongCell: number | null = null;
+  private phase: 'memorize' | 'recall' | 'reveal' = 'memorize';
   private phaseTimer = 1.2;
 
   private round = 1;
@@ -67,6 +68,7 @@ export class MemoryGrid2DGame implements MiniGame {
     this.targetCells = new Set(indices.slice(0, targetCount));
     this.trapCells = new Set(indices.slice(targetCount, targetCount + trapCount));
     this.revealedCells = new Set();
+    this.wrongCell = null;
     this.phase = 'memorize';
     const intensity = this.ctx.getIntensity();
     this.phaseTimer = Math.max(0.85, (1.55 + targetCount * 0.14) / Math.max(0.8, intensity));
@@ -79,7 +81,11 @@ export class MemoryGrid2DGame implements MiniGame {
     const statusText =
       this.phase === 'memorize'
         ? 'MEMORIZA LOS NODOS VIOLETA (EVITA LOS ROJOS)'
+        : this.phase === 'reveal'
+        ? 'SOLUCIÓN DEL PATRÓN (BORDE VERDE = OBJETIVO)'
         : `REPRODUCE EL PATRÓN (${this.revealedCells.size}/${this.targetCells.size})`;
+
+    const inputLocked = this.phase !== 'recall';
 
     this.boardEl.innerHTML = `
       <div class="oa-mem-head">
@@ -95,10 +101,13 @@ export class MemoryGrid2DGame implements MiniGame {
           if (this.phase === 'memorize') {
             if (isTarget) cls += ' is-target';
             else if (isTrap) cls += ' is-trap';
+          } else if (this.phase === 'reveal') {
+            if (idx === this.wrongCell) cls += ' is-wrong';
+            else if (isTarget) cls += ' is-reveal-target';
           } else if (isFound) {
             cls += ' is-found';
           }
-          return `<button type="button" class="${cls}" data-cell="${idx}" ${this.phase === 'memorize' ? 'disabled' : ''}></button>`;
+          return `<button type="button" class="${cls}" data-cell="${idx}" ${inputLocked ? 'disabled' : ''}></button>`;
         }).join('')}
       </div>
     `;
@@ -133,15 +142,15 @@ export class MemoryGrid2DGame implements MiniGame {
             this.combo = 0;
             this.ctx.breakCombo();
             synthAudio.damage();
-            btn.classList.add('is-wrong');
-            const dmg = this.trapCells.has(idx) ? 1 : 1;
-            const left = this.ctx.damage(dmg);
+            const left = this.ctx.damage(1);
             if (left <= 0) {
               this.ctx.finish(this.getMetrics(false));
               return;
             }
-            this.round = Math.max(1, this.round);
-            this.startRound();
+            this.wrongCell = idx;
+            this.phase = 'reveal';
+            this.phaseTimer = 1.1;
+            this.renderBoard();
           }
         });
       });
@@ -167,6 +176,12 @@ export class MemoryGrid2DGame implements MiniGame {
         this.phase = 'recall';
         this.renderBoard();
       }
+    } else if (this.phase === 'reveal') {
+      this.phaseTimer -= dt;
+      if (this.phaseTimer <= 0) {
+        this.round = Math.max(1, this.round);
+        this.startRound();
+      }
     }
 
     this.ctx.setHud({
@@ -180,7 +195,9 @@ export class MemoryGrid2DGame implements MiniGame {
     this.paused = paused;
   }
 
-  public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
+  public getMetrics(
+    survived = true
+  ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
     const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
     const logicScore = Math.min(980, 260 + this.hits * 26 + this.round * 45 - this.misses * 40);

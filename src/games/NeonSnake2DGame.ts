@@ -1,4 +1,5 @@
 import { synthAudio } from '../audio/SynthAudio';
+import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 
 interface Pt {
@@ -13,6 +14,7 @@ export class NeonSnake2DGame implements MiniGame {
   private wrapper!: HTMLDivElement;
   private canvas!: HTMLCanvasElement;
   private c2d!: CanvasRenderingContext2D;
+  private dpadEl: HTMLDivElement | null = null;
 
   private readonly cols = 20;
   private readonly rows = 14;
@@ -33,7 +35,7 @@ export class NeonSnake2DGame implements MiniGame {
   private readonly standaloneDuration = 60;
   private isGauntletSlice = false;
 
-  private touchStart: Pt | null = null;
+  private swipeAnchor: Pt | null = null;
   private paused = false;
   private destroyed = false;
 
@@ -47,16 +49,23 @@ export class NeonSnake2DGame implements MiniGame {
     this.wrapper.className = 'oa-stage oa-stage-2d';
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'oa-canvas-2d';
+    this.canvas.style.touchAction = 'none';
     this.wrapper.appendChild(this.canvas);
     this.ctx.container.appendChild(this.wrapper);
     this.c2d = this.canvas.getContext('2d')!;
+
+    if (this.ctx.isTouch) {
+      this.buildTouchDpad();
+    }
 
     this.resetSnake();
     this.onResize();
 
     window.addEventListener('keydown', this.onKeyDown);
-    this.wrapper.addEventListener('pointerdown', this.onPointerDown);
-    this.wrapper.addEventListener('pointerup', this.onPointerUp);
+    this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.canvas.addEventListener('pointermove', this.onPointerMove);
+    this.canvas.addEventListener('pointerup', this.onPointerUp);
+    this.canvas.addEventListener('pointercancel', this.onPointerUp);
 
     this.ctx.setHud({
       dimension: '2D',
@@ -65,6 +74,31 @@ export class NeonSnake2DGame implements MiniGame {
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
       subStat: 'ORBES 0 · LARGO 4',
     });
+  }
+
+  private buildTouchDpad(): void {
+    const dpad = document.createElement('div');
+    dpad.className = 'oa-snake-dpad';
+    dpad.innerHTML = `
+      <button type="button" class="oa-dpad-up" data-dir="up" aria-label="Arriba">${Icons.arrowUp(22)}</button>
+      <button type="button" class="oa-dpad-left" data-dir="left" aria-label="Izquierda">${Icons.arrowLeft(22)}</button>
+      <button type="button" class="oa-dpad-down" data-dir="down" aria-label="Abajo">${Icons.arrowDown(22)}</button>
+      <button type="button" class="oa-dpad-right" data-dir="right" aria-label="Derecha">${Icons.arrowRight(22)}</button>
+    `;
+    dpad.addEventListener('pointerdown', (e) => {
+      const btn = (e.target as HTMLElement).closest('button');
+      if (!btn || this.paused || this.destroyed) return;
+      e.preventDefault();
+      e.stopPropagation();
+      synthAudio.ensure();
+      const d = btn.dataset.dir;
+      if (d === 'up') this.setDirection(0, -1);
+      else if (d === 'down') this.setDirection(0, 1);
+      else if (d === 'left') this.setDirection(-1, 0);
+      else if (d === 'right') this.setDirection(1, 0);
+    });
+    this.dpadEl = dpad;
+    this.wrapper.appendChild(dpad);
   }
 
   private resetSnake(): void {
@@ -111,20 +145,24 @@ export class NeonSnake2DGame implements MiniGame {
   };
 
   private onPointerDown = (e: PointerEvent): void => {
-    this.touchStart = { x: e.clientX, y: e.clientY };
+    this.swipeAnchor = { x: e.clientX, y: e.clientY };
   };
 
-  private onPointerUp = (e: PointerEvent): void => {
-    if (!this.touchStart) return;
-    const dx = e.clientX - this.touchStart.x;
-    const dy = e.clientY - this.touchStart.y;
-    this.touchStart = null;
-    if (Math.hypot(dx, dy) < 16) return;
+  private onPointerMove = (e: PointerEvent): void => {
+    if (!this.swipeAnchor || this.paused || this.destroyed) return;
+    const dx = e.clientX - this.swipeAnchor.x;
+    const dy = e.clientY - this.swipeAnchor.y;
+    if (Math.hypot(dx, dy) < 24) return;
     if (Math.abs(dx) > Math.abs(dy)) {
       this.setDirection(dx > 0 ? 1 : -1, 0);
     } else {
       this.setDirection(0, dy > 0 ? 1 : -1);
     }
+    this.swipeAnchor = { x: e.clientX, y: e.clientY };
+  };
+
+  private onPointerUp = (): void => {
+    this.swipeAnchor = null;
   };
 
   public update(dt: number): void {
@@ -146,7 +184,10 @@ export class NeonSnake2DGame implements MiniGame {
     }
 
     const intensity = this.ctx.getIntensity();
-    const stepTime = Math.max(0.068, (0.135 - Math.min(0.04, this.hits * 0.002)) / Math.max(0.8, intensity));
+    const stepTime = Math.max(
+      0.068,
+      (0.135 - Math.min(0.04, this.hits * 0.002)) / Math.max(0.8, intensity)
+    );
     this.stepAcc += dt;
     while (this.stepAcc >= stepTime) {
       this.stepAcc -= stepTime;
@@ -164,7 +205,9 @@ export class NeonSnake2DGame implements MiniGame {
     const ny = head.y + this.dir.y;
 
     const hitWall = nx < 0 || nx >= this.cols || ny < 0 || ny >= this.rows;
-    const hitSelf = this.snake.some((s, i) => i < this.snake.length - 1 && s.x === nx && s.y === ny);
+    const hitSelf = this.snake.some(
+      (s, i) => i < this.snake.length - 1 && s.x === nx && s.y === ny
+    );
 
     if (hitWall || hitSelf) {
       this.misses += 1;
@@ -220,9 +263,11 @@ export class NeonSnake2DGame implements MiniGame {
     g.fillStyle = '#090E17';
     g.fillRect(0, 0, w, h);
 
-    const cell = Math.floor(Math.min(w / this.cols, h / this.rows) * 0.9);
+    const padBottom = this.ctx.isTouch ? 136 : 0;
+    const availH = Math.max(180, h - padBottom);
+    const cell = Math.floor(Math.min(w / this.cols, availH / this.rows) * 0.9);
     const ox = Math.floor((w - cell * this.cols) / 2);
-    const oy = Math.floor((h - cell * this.rows) / 2);
+    const oy = Math.floor((availH - cell * this.rows) / 2);
 
     g.strokeStyle = 'rgba(16, 185, 129, 0.12)';
     g.lineWidth = 1;
@@ -243,21 +288,30 @@ export class NeonSnake2DGame implements MiniGame {
     g.lineWidth = 2;
     g.strokeRect(ox, oy, this.cols * cell, this.rows * cell);
 
-    // Food
     g.fillStyle = '#38BDF8';
     g.beginPath();
-    g.arc(ox + (this.food.x + 0.5) * cell, oy + (this.food.y + 0.5) * cell, cell * 0.34, 0, Math.PI * 2);
+    g.arc(
+      ox + (this.food.x + 0.5) * cell,
+      oy + (this.food.y + 0.5) * cell,
+      cell * 0.34,
+      0,
+      Math.PI * 2
+    );
     g.fill();
 
-    // Bonus food
     if (this.bonusFood) {
       g.fillStyle = '#FBBF24';
       g.beginPath();
-      g.arc(ox + (this.bonusFood.x + 0.5) * cell, oy + (this.bonusFood.y + 0.5) * cell, cell * 0.38, 0, Math.PI * 2);
+      g.arc(
+        ox + (this.bonusFood.x + 0.5) * cell,
+        oy + (this.bonusFood.y + 0.5) * cell,
+        cell * 0.38,
+        0,
+        Math.PI * 2
+      );
       g.fill();
     }
 
-    // Snake
     this.snake.forEach((seg, idx) => {
       g.fillStyle = idx === 0 ? '#34D399' : '#059669';
       const pad = idx === 0 ? 2 : 3;
@@ -275,7 +329,9 @@ export class NeonSnake2DGame implements MiniGame {
     this.paused = paused;
   }
 
-  public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
+  public getMetrics(
+    survived = true
+  ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
     const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
     const reflexScore = Math.min(980, 260 + this.hits * 34 + this.maxCombo * 14 - this.misses * 40);
@@ -296,8 +352,11 @@ export class NeonSnake2DGame implements MiniGame {
   public destroy(): void {
     this.destroyed = true;
     window.removeEventListener('keydown', this.onKeyDown);
-    this.wrapper.removeEventListener('pointerdown', this.onPointerDown);
-    this.wrapper.removeEventListener('pointerup', this.onPointerUp);
+    this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas.removeEventListener('pointerup', this.onPointerUp);
+    this.canvas.removeEventListener('pointercancel', this.onPointerUp);
+    this.dpadEl?.remove();
     this.wrapper.remove();
   }
 }

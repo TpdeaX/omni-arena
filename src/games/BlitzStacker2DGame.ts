@@ -1,4 +1,5 @@
 import { synthAudio } from '../audio/SynthAudio';
+import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 
 type ShapeMatrix = number[][];
@@ -42,6 +43,8 @@ export class BlitzStacker2DGame implements MiniGame {
   private holdUsed = false;
 
   private dropTimer = 0;
+  private softDropHeld = false;
+  private softDropAcc = 0;
   private linesCleared = 0;
   private combo = 0;
   private maxCombo = 0;
@@ -89,12 +92,16 @@ export class BlitzStacker2DGame implements MiniGame {
     this.touchPadEl = document.createElement('div');
     this.touchPadEl.className = 'oa-touch-tetris';
     this.touchPadEl.innerHTML = `
-      <button type="button" data-act="left">◀</button>
-      <button type="button" data-act="rot">ROTAR</button>
-      <button type="button" data-act="right">▶</button>
-      <button type="button" data-act="hold">RESERVA</button>
-      <button type="button" data-act="drop">CAÍDA</button>
+      <button type="button" data-act="left">${Icons.arrowLeft(14)}<span>Izquierda</span></button>
+      <button type="button" data-act="rot">${Icons.rotateCw(14)}<span>Rotar</span></button>
+      <button type="button" data-act="right">${Icons.arrowRight(14)}<span>Derecha</span></button>
+      <button type="button" data-act="down">${Icons.arrowDown(14)}<span>Bajar</span></button>
+      <button type="button" data-act="drop">${Icons.bolt(14)}<span>Caída</span></button>
+      <button type="button" data-act="hold">${Icons.refresh(14)}<span>Reserva</span></button>
     `;
+    const stopSoftDrop = () => {
+      this.softDropHeld = false;
+    };
     this.touchPadEl.addEventListener('pointerdown', (e) => {
       const btn = (e.target as HTMLElement).closest('button');
       if (!btn || this.paused) return;
@@ -104,9 +111,17 @@ export class BlitzStacker2DGame implements MiniGame {
       if (act === 'left') this.move(-1, 0);
       if (act === 'right') this.move(1, 0);
       if (act === 'rot') this.rotatePiece();
+      if (act === 'down') {
+        this.softDropHeld = true;
+        this.softDropAcc = 0;
+        if (!this.move(0, 1)) this.lockPiece();
+      }
       if (act === 'hold') this.doHold();
       if (act === 'drop') this.hardDrop();
     });
+    this.touchPadEl.addEventListener('pointerup', stopSoftDrop);
+    this.touchPadEl.addEventListener('pointercancel', stopSoftDrop);
+    this.touchPadEl.addEventListener('pointerleave', stopSoftDrop);
     this.wrapper.appendChild(this.touchPadEl);
   }
 
@@ -131,7 +146,6 @@ export class BlitzStacker2DGame implements MiniGame {
     this.holdUsed = false;
 
     if (this.collides(this.currX, this.currY, this.currShape)) {
-      // Top-out emergency purge instead of instant death unless shields == 0
       this.combo = 0;
       this.ctx.breakCombo();
       synthAudio.damage();
@@ -227,7 +241,6 @@ export class BlitzStacker2DGame implements MiniGame {
       }
     }
 
-    // Check line clears
     const cleared: number[] = [];
     for (let r = ROWS - 1; r >= 0; r--) {
       if (this.board[r].every((cell) => cell !== null)) {
@@ -297,6 +310,18 @@ export class BlitzStacker2DGame implements MiniGame {
 
     if (this.flashTimer > 0) this.flashTimer -= dt;
 
+    if (this.softDropHeld) {
+      this.softDropAcc += dt;
+      while (this.softDropAcc >= 0.065) {
+        this.softDropAcc -= 0.065;
+        if (!this.move(0, 1)) {
+          this.lockPiece();
+          this.softDropHeld = false;
+          break;
+        }
+      }
+    }
+
     const intensity = this.ctx.getIntensity();
     const fallInterval = Math.max(0.14, 0.56 / intensity);
     this.dropTimer += dt;
@@ -323,21 +348,32 @@ export class BlitzStacker2DGame implements MiniGame {
     g.fillStyle = '#090C12';
     g.fillRect(0, 0, this.width, this.height);
 
-    const padBottom = this.ctx.isTouch ? 86 : 24;
-    const cell = Math.floor(Math.min((this.height - padBottom - 24) / ROWS, (this.width - 210) / COLS));
+    const narrowMode = this.width < 520;
+    const topStripH = narrowMode ? 58 : 0;
+    const padBottom = this.ctx.isTouch ? 86 : 18;
+    const horizMargin = narrowMode ? 24 : 210;
+    const cell = Math.max(
+      12,
+      Math.floor(Math.min((this.height - padBottom - topStripH - 18) / ROWS, (this.width - horizMargin) / COLS))
+    );
     const boardW = cell * COLS;
     const boardH = cell * ROWS;
     const ox = Math.floor((this.width - boardW) / 2);
-    const oy = Math.floor((this.height - padBottom - boardH) / 2);
+    const oy = topStripH + Math.floor((this.height - topStripH - padBottom - boardH) / 2);
 
-    // Well background
+    if (narrowMode) {
+      const stripW = Math.min(this.width - 20, Math.max(boardW, 240));
+      const sx = Math.floor((this.width - stripW) / 2);
+      this.drawCompactStripBox(sx, 8, stripW / 2 - 4, 46, 'RESERVA', this.holdIndex);
+      this.drawCompactStripBox(sx + stripW / 2 + 4, 8, stripW / 2 - 4, 46, 'SIGUIENTE', this.nextIndex);
+    }
+
     g.fillStyle = '#111722';
     g.fillRect(ox, oy, boardW, boardH);
     g.strokeStyle = '#2A364D';
     g.lineWidth = 2;
     g.strokeRect(ox - 1, oy - 1, boardW + 2, boardH + 2);
 
-    // Grid lines
     g.strokeStyle = '#182030';
     g.lineWidth = 1;
     for (let c = 1; c < COLS; c++) {
@@ -353,7 +389,6 @@ export class BlitzStacker2DGame implements MiniGame {
       g.stroke();
     }
 
-    // Placed blocks
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const col = this.board[r][c];
@@ -363,7 +398,6 @@ export class BlitzStacker2DGame implements MiniGame {
       }
     }
 
-    // Ghost piece
     const gy = this.ghostY();
     for (let r = 0; r < this.currShape.length; r++) {
       for (let c = 0; c < this.currShape[r].length; c++) {
@@ -372,7 +406,6 @@ export class BlitzStacker2DGame implements MiniGame {
       }
     }
 
-    // Active piece
     for (let r = 0; r < this.currShape.length; r++) {
       for (let c = 0; c < this.currShape[r].length; c++) {
         if (!this.currShape[r][c]) continue;
@@ -380,7 +413,6 @@ export class BlitzStacker2DGame implements MiniGame {
       }
     }
 
-    // Line clear flash
     if (this.flashTimer > 0) {
       g.fillStyle = `rgba(255,255,255,${this.flashTimer / 0.16})`;
       for (const r of this.flashRows) {
@@ -388,10 +420,46 @@ export class BlitzStacker2DGame implements MiniGame {
       }
     }
 
-    // Side previews: NEXT & HOLD (when horizontal room allows)
-    if (ox > 96) {
+    if (!narrowMode && ox > 96) {
       this.drawMiniBox(ox + boardW + 16, oy, 'SIGUIENTE', this.nextIndex, cell * 0.72);
       this.drawMiniBox(ox - 102, oy, 'RESERVA [C]', this.holdIndex, cell * 0.72);
+    }
+  }
+
+  private drawCompactStripBox(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    label: string,
+    idx: number | null
+  ): void {
+    const g = this.g;
+    g.fillStyle = '#111722';
+    g.strokeStyle = '#252F42';
+    g.lineWidth = 1;
+    g.fillRect(x, y, w, h);
+    g.strokeRect(x, y, w, h);
+
+    g.fillStyle = '#9FB0C7';
+    g.font = '700 10px "JetBrains Mono", monospace';
+    g.textAlign = 'left';
+    g.textBaseline = 'middle';
+    g.fillText(label, x + 8, y + h / 2);
+
+    if (idx === null) return;
+    const def = TETROMINOES[idx];
+    const miniCell = 10;
+    const pw = def.shape[0].length * miniCell;
+    const ph = def.shape.length * miniCell;
+    const sx = x + w - pw - 10;
+    const sy = y + (h - ph) / 2;
+    for (let r = 0; r < def.shape.length; r++) {
+      for (let c = 0; c < def.shape[r].length; c++) {
+        if (def.shape[r][c]) {
+          this.drawCell(sx + c * miniCell, sy + r * miniCell, miniCell, def.color, 1);
+        }
+      }
     }
   }
 
@@ -446,6 +514,7 @@ export class BlitzStacker2DGame implements MiniGame {
 
   public setPaused(paused: boolean): void {
     this.paused = paused;
+    if (paused) this.softDropHeld = false;
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {

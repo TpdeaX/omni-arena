@@ -1,4 +1,4 @@
-import { AXIS_META, GAME_CATALOG, STANDALONE_IDS } from '../catalog';
+import { ACADEMY_IDS, AXIS_META, CIRCUIT_IDS, GAME_CATALOG, STANDALONE_IDS } from '../catalog';
 import { arenaCloudSync } from '../services/CloudSync';
 import {
   GameModeId,
@@ -9,6 +9,12 @@ import {
   ThemeMode,
   UserSettings,
 } from '../types';
+import {
+  consumeIncomingEcoTheme,
+  publishArenaCatalogMeta,
+  readStoredEcoTheme,
+  writeStoredEcoTheme,
+} from '../utils/ecosystem';
 
 const STORAGE_KEY = 'omni_arena_profile_v1';
 
@@ -18,14 +24,31 @@ function todayStamp(): string {
 }
 
 function initialThemeFromEcosystem(): ThemeMode {
-  try {
-    const t = localStorage.getItem('umbral-theme');
-    if (t === 'light') return 'day';
-    if (t === 'dark') return 'night';
-  } catch {
-    // Ignore
+  const incoming = consumeIncomingEcoTheme();
+  if (incoming) return incoming;
+  const stored = readStoredEcoTheme();
+  if (stored) return stored;
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'day';
+    }
   }
   return 'night';
+}
+
+function initialReduceMotion(): boolean {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  return false;
+}
+
+function createZeroModeMap(): Record<GameModeId, number> {
+  const out = {} as Record<GameModeId, number>;
+  (Object.keys(GAME_CATALOG) as GameModeId[]).forEach((id) => {
+    out[id] = 0;
+  });
+  return out;
 }
 
 function defaultProfile(): PlayerProfile {
@@ -39,50 +62,8 @@ function defaultProfile(): PlayerProfile {
       reflex: 300,
       agility: 300,
     },
-    bestScores: {
-      aim3d: 0,
-      runner3d: 0,
-      cube3d: 0,
-      parkour3d: 0,
-      flight3d: 0,
-      rhythm2d: 0,
-      pulse2d: 0,
-      parry2d: 0,
-      bullet2d: 0,
-      puzzle2d: 0,
-      schulte2d: 0,
-      nback2d: 0,
-      tetris2d: 0,
-      twinstick2d: 0,
-      track2d: 0,
-      memory2d: 0,
-      snake2d: 0,
-      sniper2d: 0,
-      gauntlet: 0,
-      ranked: 0,
-    },
-    playCounts: {
-      aim3d: 0,
-      runner3d: 0,
-      cube3d: 0,
-      parkour3d: 0,
-      flight3d: 0,
-      rhythm2d: 0,
-      pulse2d: 0,
-      parry2d: 0,
-      bullet2d: 0,
-      puzzle2d: 0,
-      schulte2d: 0,
-      nback2d: 0,
-      tetris2d: 0,
-      twinstick2d: 0,
-      track2d: 0,
-      memory2d: 0,
-      snake2d: 0,
-      sniper2d: 0,
-      gauntlet: 0,
-      ranked: 0,
-    },
+    bestScores: createZeroModeMap(),
+    playCounts: createZeroModeMap(),
     history: [],
     dailyStreak: 0,
     lastPlayedDay: '',
@@ -93,8 +74,11 @@ function defaultProfile(): PlayerProfile {
       aimSensitivity: 1.0,
       touchControls: 'auto',
       screenShake: true,
+      reduceMotion: initialReduceMotion(),
       difficulty: 'adaptive',
       theme: initialThemeFromEcosystem(),
+      hubTab: 'academy',
+      skipGuideFor: {},
     },
     updatedAt: 0,
   };
@@ -103,14 +87,26 @@ function defaultProfile(): PlayerProfile {
 function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefined): PlayerProfile {
   const base = defaultProfile();
   if (!parsed || typeof parsed !== 'object') return base;
+  const parsedHistory = Array.isArray(parsed.history) ? parsed.history.slice(0, 30) : [];
+  const mergedSettings: UserSettings = {
+    ...base.settings,
+    ...(parsed.settings ?? {}),
+    skipGuideFor: {
+      ...(base.settings.skipGuideFor ?? {}),
+      ...(parsed.settings?.skipGuideFor ?? {}),
+    },
+  };
+  if (!parsed.settings?.hubTab) {
+    mergedSettings.hubTab = parsedHistory.length === 0 ? 'academy' : 'all';
+  }
   return {
     ...base,
     ...parsed,
     ratings: { ...base.ratings, ...(parsed.ratings ?? {}) },
     bestScores: { ...base.bestScores, ...(parsed.bestScores ?? {}) },
     playCounts: { ...base.playCounts, ...(parsed.playCounts ?? {}) },
-    settings: { ...base.settings, ...(parsed.settings ?? {}) },
-    history: Array.isArray(parsed.history) ? parsed.history.slice(0, 30) : [],
+    settings: mergedSettings,
+    history: parsedHistory,
     dailyCompletedIds: Array.isArray(parsed.dailyCompletedIds) ? parsed.dailyCompletedIds : [],
     updatedAt: Number(parsed.updatedAt) || 0,
   };
@@ -119,7 +115,7 @@ function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefined): Pl
 export function getDailyTriad(): StandaloneGameId[] {
   const d = new Date();
   const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  const pool = [...STANDALONE_IDS];
+  const pool = [...CIRCUIT_IDS];
   const picked: StandaloneGameId[] = [];
   let s = seed;
   for (let i = 0; i < 3; i++) {
@@ -160,7 +156,36 @@ export class ProfileStore {
 
   constructor() {
     this.profile = this.load();
+    const incomingTheme = consumeIncomingEcoTheme();
+    if (incomingTheme) {
+      this.profile.settings.theme = incomingTheme;
+      this.save(false);
+    } else {
+      const storedEco = readStoredEcoTheme();
+      if (storedEco && storedEco !== this.profile.settings.theme) {
+        this.profile.settings.theme = storedEco;
+        this.save(false);
+      } else {
+        writeStoredEcoTheme(this.profile.settings.theme);
+      }
+    }
     this.refreshDaily();
+    this.publishCatalogMetadata();
+  }
+
+  public publishCatalogMetadata(): void {
+    const dexterity2d = STANDALONE_IDS.filter(
+      (id) => GAME_CATALOG[id].category === 'dexterity2d'
+    ).length;
+    const action3d = STANDALONE_IDS.filter(
+      (id) => GAME_CATALOG[id].category === 'action3d'
+    ).length;
+    publishArenaCatalogMeta({
+      total: STANDALONE_IDS.length,
+      academies: ACADEMY_IDS.length,
+      dexterity2d,
+      action3d,
+    });
   }
 
   private load(): PlayerProfile {
@@ -177,7 +202,7 @@ export class ProfileStore {
     this.profile.updatedAt = Date.now();
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
-      localStorage.setItem('umbral-theme', this.profile.settings.theme === 'day' ? 'light' : 'dark');
+      writeStoredEcoTheme(this.profile.settings.theme);
     } catch {
       // Ignore storage quota errors
     }
@@ -210,10 +235,15 @@ export class ProfileStore {
     }
     const remoteTs = res.updatedAt || Number(res.profile.updatedAt) || 0;
     if (force || remoteTs > this.profile.updatedAt) {
+      const deviceTheme = readStoredEcoTheme();
       this.profile = normalizeProfile({ ...res.profile, updatedAt: remoteTs });
+      if (deviceTheme) {
+        this.profile.settings.theme = deviceTheme;
+      }
       this.refreshDaily(false);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+        writeStoredEcoTheme(this.profile.settings.theme);
       } catch {
         // Ignore
       }
@@ -221,6 +251,17 @@ export class ProfileStore {
       return { ok: true, message: res.message, updated: true };
     }
     return { ok: true, message: 'Progreso local al día con Supabase.', updated: false };
+  }
+
+  public applyExternalTheme(theme: ThemeMode): void {
+    if (this.profile.settings.theme === theme) return;
+    this.profile.settings.theme = theme;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+    } catch {
+      // Ignore
+    }
+    this.listeners.forEach((fn) => fn());
   }
 
   public replaceAll(raw: Partial<PlayerProfile>): void {
@@ -251,9 +292,36 @@ export class ProfileStore {
     this.save();
   }
 
+  public setSkipGuide(modeId: GameModeId, skip: boolean): void {
+    const nextMap = { ...(this.profile.settings.skipGuideFor ?? {}) };
+    if (skip) {
+      nextMap[modeId] = true;
+    } else {
+      delete nextMap[modeId];
+    }
+    this.updateSettings({ skipGuideFor: nextMap });
+  }
+
+  public resetAllGuides(): void {
+    this.updateSettings({ skipGuideFor: {} });
+  }
+
   public resetAll(): void {
     this.profile = defaultProfile();
     this.save();
+  }
+
+  public recordPracticeRun(durationSec: number): { xpEarned: number; leveledUp: boolean } {
+    const xpEarned = Math.min(60, Math.max(5, Math.round(durationSec * 0.8)));
+    this.profile.xp += xpEarned;
+    let leveledUp = false;
+    while (this.profile.xp >= xpForLevel(this.profile.level)) {
+      this.profile.xp -= xpForLevel(this.profile.level);
+      this.profile.level += 1;
+      leveledUp = true;
+    }
+    this.save();
+    return { xpEarned, leveledUp };
   }
 
   public recordRun(metrics: RunMetrics): {
@@ -368,7 +436,7 @@ export class ProfileStore {
       tips.push(`Buen control fino: lograste ${metrics.grazes} rozamientos sin daño.`);
     }
     if (!metrics.survived) {
-      tips.push('Te quedaste sin escudos antes del cierre: usa el modo lento o impulso en picos de peligro.');
+      tips.push('Te quedaste sin escudos antes del cierre: prueba Práctica Guiada para dominar el patrón.');
     }
     if (metrics.difficulty === 'adaptive' && metrics.peakIntensity >= 1.35) {
       tips.push(

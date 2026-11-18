@@ -4,6 +4,7 @@ import { createMiniGame, GauntletOrchestrator } from '../games/GauntletOrchestra
 import { Icons } from '../icons';
 import { computeOverallRating, profileStore } from '../state/ProfileStore';
 import {
+  ControlHint,
   DifficultyId,
   GameContext,
   GameModeId,
@@ -13,10 +14,16 @@ import {
   SkillAxis,
   StandaloneGameId,
 } from '../types';
+import { GuideOverlay, renderControlHintRow } from '../ui/GuideOverlay';
+import { detectTouchPrimary } from '../utils/input';
 
 export interface GameShellCallbacks {
   onExitToHub: () => void;
-  onReplay: (modeId: GameModeId) => void;
+  onReplay: (modeId: GameModeId, practiceMode?: boolean) => void;
+}
+
+export interface GameShellStartOptions {
+  practiceMode?: boolean;
 }
 
 export class GameShell {
@@ -26,6 +33,7 @@ export class GameShell {
 
   private shellEl!: HTMLDivElement;
   private stageHostEl!: HTMLDivElement;
+  private controlsBarEl!: HTMLElement;
   private hudEls!: {
     bar: HTMLDivElement;
     dim: HTMLSpanElement;
@@ -33,6 +41,7 @@ export class GameShell {
     sub: HTMLSpanElement;
     score: HTMLSpanElement;
     combo: HTMLSpanElement;
+    comboWrap: HTMLDivElement;
     timer: HTMLSpanElement;
     intensity: HTMLSpanElement;
     shields: HTMLDivElement;
@@ -43,6 +52,7 @@ export class GameShell {
   private debriefEl!: HTMLDivElement;
 
   private runner: MiniGame | GauntletOrchestrator | null = null;
+  private guideOverlay: GuideOverlay | null = null;
   private rafId = 0;
   private lastFrameMs = 0;
   private runStartedAt = 0;
@@ -51,6 +61,9 @@ export class GameShell {
   private difficulty: DifficultyId = 'adaptive';
   private liveIntensity = 1.0;
   private peakIntensity = 1.0;
+  private isTouch = false;
+  private practiceMode = false;
+  private isAcademy = false;
 
   private hudState: HudState = {
     score: 0,
@@ -89,17 +102,21 @@ export class GameShell {
     return Math.max(0.84, Math.min(1.36, Number(scaled.toFixed(2))));
   }
 
-  public start(): void {
+  public start(options?: GameShellStartOptions): void {
     const desc = GAME_CATALOG[this.modeId];
     const profile = profileStore.get();
+    this.isAcademy = desc.category === 'academy';
+    this.practiceMode = desc.category === 'circuit' ? false : Boolean(options?.practiceMode);
     this.difficulty = profile.settings.difficulty ?? 'adaptive';
     this.liveIntensity = this.computeStartIntensity(this.difficulty);
     this.peakIntensity = this.liveIntensity;
 
-    const isTouch =
-      profile.settings.touchControls === 'always' ||
-      (profile.settings.touchControls === 'auto' &&
-        ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+    document.documentElement.setAttribute(
+      'data-motion',
+      profile.settings.reduceMotion ? 'reduced' : 'normal'
+    );
+
+    this.isTouch = detectTouchPrimary(profile.settings.touchControls);
 
     const maxShields =
       this.difficulty === 'chill'
@@ -117,29 +134,32 @@ export class GameShell {
       phaseLabel: desc.title,
       dimension: desc.dimension === '3D' ? '3D' : '2D',
       accent: desc.accent,
-      subStat: isTouch ? desc.controlsTouch : desc.controlsPC,
+      subStat: this.isTouch ? desc.controlsTouch : desc.controlsPC,
       intensity: this.liveIntensity,
     };
+
+    const hideArcadeStats = this.isAcademy;
 
     this.shellEl = document.createElement('div');
     this.shellEl.className = 'oa-arena-shell';
     this.shellEl.innerHTML = `
       <header class="oa-hud">
         <div class="oa-hud-left">
-          <button type="button" class="oa-icon-btn" id="oa-btn-back" title="Volver al Hub">${Icons.arrowLeft(18)}</button>
+          <button type="button" class="oa-hud-btn" id="oa-btn-back" title="Salir o pausar">${Icons.arrowLeft(16)}<span>Salir</span></button>
           <span class="oa-dim-pill" id="oa-hud-dim">2D</span>
           <div class="oa-hud-titles">
             <span class="oa-hud-phase" id="oa-hud-phase">${desc.title}</span>
             <span class="oa-hud-sub" id="oa-hud-sub"></span>
           </div>
+          ${this.practiceMode ? '<span class="oa-practice-badge">PRÁCTICA</span>' : ''}
         </div>
         <div class="oa-hud-center">
-          <div class="oa-hud-shields" id="oa-hud-shields"></div>
+          <div class="oa-hud-shields ${hideArcadeStats ? 'is-hidden' : ''}" id="oa-hud-shields"></div>
           <span class="oa-hud-timer" id="oa-hud-timer">--:--</span>
-          <span class="oa-intensity-pill" id="oa-hud-intensity" title="Intensidad / Dificultad en vivo">1.00×</span>
+          <span class="oa-intensity-pill ${hideArcadeStats ? 'is-hidden' : ''}" id="oa-hud-intensity" title="Intensidad / Dificultad en vivo">1.00×</span>
         </div>
         <div class="oa-hud-right">
-          <div class="oa-hud-stat">
+          <div class="oa-hud-stat ${hideArcadeStats ? 'is-hidden' : ''}" id="oa-hud-combo-wrap">
             <span class="oa-stat-label">COMBO</span>
             <span class="oa-hud-combo" id="oa-hud-combo">x1</span>
           </div>
@@ -147,18 +167,30 @@ export class GameShell {
             <span class="oa-stat-label">PUNTOS</span>
             <span class="oa-hud-score" id="oa-hud-score">0</span>
           </div>
-          <button type="button" class="oa-icon-btn" id="oa-btn-mute" title="Audio">${profile.settings.muted ? Icons.volumeOff(18) : Icons.volumeOn(18)}</button>
-          <button type="button" class="oa-icon-btn" id="oa-btn-pause" title="Pausa (ESC)">${Icons.pause(18)}</button>
+          ${
+            this.practiceMode
+              ? `<button type="button" class="oa-hud-btn oa-hud-btn-accent" id="oa-btn-end-practice" title="Terminar práctica y ver resumen">${Icons.check(15)}<span>Terminar práctica</span></button>`
+              : ''
+          }
+          <button type="button" class="oa-hud-btn" id="oa-btn-guide" title="Abrir guía (?)">${Icons.help(16)}<span>Guía</span></button>
+          <button type="button" class="oa-hud-btn" id="oa-btn-mute" aria-pressed="${
+            profile.settings.muted ? 'true' : 'false'
+          }" title="Audio">${profile.settings.muted ? Icons.volumeOff(16) : Icons.volumeOn(16)}<span>${
+            profile.settings.muted ? 'Audio: No' : 'Audio: Sí'
+          }</span></button>
+          <button type="button" class="oa-hud-btn" id="oa-btn-pause" title="Pausa (ESC)">${Icons.pause(16)}<span>Pausa</span></button>
         </div>
       </header>
       <main class="oa-stage-host" id="oa-stage-host"></main>
+      <footer class="oa-controls-bar" id="oa-controls-bar" aria-label="Controles activos"></footer>
       <div class="oa-toast-host" id="oa-toast-host"></div>
       <div class="oa-overlay is-hidden" id="oa-pause-overlay">
-        <div class="oa-modal">
-          <h2>PARTIDA EN PAUSA</h2>
-          <p class="oa-modal-ctrl">${isTouch ? desc.controlsTouch : desc.controlsPC}</p>
+        <div class="oa-modal" role="dialog" aria-modal="true" aria-label="Partida en pausa">
+          <h2>${this.practiceMode ? 'PRÁCTICA EN PAUSA' : 'PARTIDA EN PAUSA'}</h2>
+          <p class="oa-modal-ctrl">${this.isTouch ? desc.controlsTouch : desc.controlsPC}</p>
           <div class="oa-modal-actions">
             <button type="button" class="oa-btn oa-btn-primary" id="oa-resume-btn">${Icons.play(16)}<span>CONTINUAR</span></button>
+            <button type="button" class="oa-btn" id="oa-pause-guide-btn">${Icons.help(16)}<span>VER GUÍA</span></button>
             <button type="button" class="oa-btn" id="oa-retry-btn">${Icons.refresh(16)}<span>REINICIAR</span></button>
             <button type="button" class="oa-btn oa-btn-ghost" id="oa-quit-btn">${Icons.arrowLeft(16)}<span>SALIR AL HUB</span></button>
           </div>
@@ -171,6 +203,7 @@ export class GameShell {
     this.root.appendChild(this.shellEl);
 
     this.stageHostEl = this.shellEl.querySelector('#oa-stage-host')!;
+    this.controlsBarEl = this.shellEl.querySelector('#oa-controls-bar')!;
     this.toastHostEl = this.shellEl.querySelector('#oa-toast-host')!;
     this.pauseOverlayEl = this.shellEl.querySelector('#oa-pause-overlay')!;
     this.debriefEl = this.shellEl.querySelector('#oa-debrief-overlay')!;
@@ -182,18 +215,21 @@ export class GameShell {
       sub: this.shellEl.querySelector('#oa-hud-sub')!,
       score: this.shellEl.querySelector('#oa-hud-score')!,
       combo: this.shellEl.querySelector('#oa-hud-combo')!,
+      comboWrap: this.shellEl.querySelector('#oa-hud-combo-wrap')!,
       timer: this.shellEl.querySelector('#oa-hud-timer')!,
       intensity: this.shellEl.querySelector('#oa-hud-intensity')!,
       shields: this.shellEl.querySelector('#oa-hud-shields')!,
       muteBtn: this.shellEl.querySelector('#oa-btn-mute')!,
     };
 
+    this.renderControlsBar(desc.guide.controls);
     this.bindShellEvents();
     this.renderHud();
 
     const ctx: GameContext = {
       container: this.stageHostEl,
-      isTouch,
+      isTouch: this.isTouch,
+      practiceMode: this.practiceMode,
       settings: profile.settings,
       difficulty: this.difficulty,
       getIntensity: () => this.liveIntensity,
@@ -201,14 +237,25 @@ export class GameShell {
         Object.assign(this.hudState, patch);
         this.renderHud();
       },
+      setControls: (controls) => {
+        this.renderControlsBar(controls);
+      },
+      onOpenGuide: () => {
+        this.openInGameGuide();
+      },
       damage: (amount = 1) => {
+        if (this.practiceMode) {
+          this.showToast('Error · en práctica no pierdes escudos', 'warn');
+          return this.hudState.shields;
+        }
         this.hudState.shields = Math.max(0, this.hudState.shields - amount);
         if (this.difficulty === 'adaptive') {
           this.liveIntensity = Math.max(0.72, Number((this.liveIntensity - 0.14).toFixed(2)));
           this.hudState.intensity = this.liveIntensity;
         }
         this.renderHud();
-        if (profileStore.get().settings.screenShake) {
+        const currSettings = profileStore.get().settings;
+        if (currSettings.screenShake && !currSettings.reduceMotion) {
           this.stageHostEl.classList.remove('is-shaking');
           void this.stageHostEl.offsetWidth;
           this.stageHostEl.classList.add('is-shaking');
@@ -263,6 +310,11 @@ export class GameShell {
     this.rafId = requestAnimationFrame(this.loop);
   }
 
+  private renderControlsBar(controls: ControlHint[]): void {
+    const items = controls.map((c) => renderControlHintRow(c, this.isTouch)).join('');
+    this.controlsBarEl.innerHTML = `<div class="oa-controls-track">${items}</div>`;
+  }
+
   private bindShellEvents(): void {
     this.shellEl.querySelector('#oa-btn-back')!.addEventListener('click', () => {
       synthAudio.uiClick();
@@ -272,12 +324,29 @@ export class GameShell {
       synthAudio.uiClick();
       this.togglePause();
     });
+    this.shellEl.querySelector('#oa-btn-guide')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.openInGameGuide();
+    });
+    this.shellEl.querySelector('#oa-pause-guide-btn')?.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.pauseOverlayEl.classList.add('is-hidden');
+      this.openInGameGuide();
+    });
+    this.shellEl.querySelector('#oa-btn-end-practice')?.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.showPracticeSummary();
+    });
+
     this.hudEls.muteBtn.addEventListener('click', () => {
       const s = profileStore.get().settings;
       const next = !s.muted;
       profileStore.updateSettings({ muted: next });
       synthAudio.setConfig(s.volume, next);
-      this.hudEls.muteBtn.innerHTML = next ? Icons.volumeOff(18) : Icons.volumeOn(18);
+      this.hudEls.muteBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      this.hudEls.muteBtn.innerHTML = `${next ? Icons.volumeOff(16) : Icons.volumeOn(16)}<span>${
+        next ? 'Audio: No' : 'Audio: Sí'
+      }</span>`;
     });
 
     this.shellEl.querySelector('#oa-resume-btn')!.addEventListener('click', () => {
@@ -287,8 +356,9 @@ export class GameShell {
     this.shellEl.querySelector('#oa-retry-btn')!.addEventListener('click', () => {
       synthAudio.uiClick();
       const m = this.modeId;
+      const p = this.practiceMode;
       this.destroy();
-      this.callbacks.onReplay(m);
+      this.callbacks.onReplay(m, p);
     });
     this.shellEl.querySelector('#oa-quit-btn')!.addEventListener('click', () => {
       synthAudio.uiClick();
@@ -300,10 +370,50 @@ export class GameShell {
     window.addEventListener('resize', this.onResize);
   }
 
+  private openInGameGuide(): void {
+    if (this.finished || this.destroyed) return;
+    if (!this.paused) {
+      this.paused = true;
+      this.runner?.setPaused(true);
+    }
+    synthAudio.stopAllNotes();
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+    this.pauseOverlayEl.classList.add('is-hidden');
+
+    this.guideOverlay?.close(true);
+    this.guideOverlay = new GuideOverlay(this.shellEl, this.modeId, {
+      context: 'ingame',
+      practiceMode: this.practiceMode,
+      onResume: () => {
+        this.guideOverlay = null;
+        this.paused = false;
+        this.runner?.setPaused(false);
+        this.lastFrameMs = performance.now();
+      },
+      onRestart: (nextPractice) => {
+        this.guideOverlay = null;
+        const m = this.modeId;
+        this.destroy();
+        this.callbacks.onReplay(m, nextPractice);
+      },
+    });
+    this.guideOverlay.open();
+  }
+
   private onGlobalKey = (e: KeyboardEvent): void => {
-    if (e.code === 'Escape' && !this.finished) {
+    if (this.guideOverlay || this.finished) return;
+    if (e.code === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
       this.togglePause();
+      return;
+    }
+    if (e.key === '?') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.openInGameGuide();
     }
   };
 
@@ -315,6 +425,9 @@ export class GameShell {
     if (this.finished) return;
     this.paused = force !== undefined ? force : !this.paused;
     this.runner?.setPaused(this.paused);
+    if (this.paused) {
+      synthAudio.stopAllNotes();
+    }
     this.pauseOverlayEl.classList.toggle('is-hidden', !this.paused);
     if (!this.paused) {
       this.lastFrameMs = performance.now();
@@ -346,7 +459,6 @@ export class GameShell {
     const mult = 1 + Math.min(2.5, Math.floor(h.combo / 5) * 0.25);
     this.hudEls.combo.textContent = `${h.combo} (x${mult.toFixed(2).replace(/\.00$/, '')})`;
 
-    // Intensity badge
     const intPrefix = this.difficulty === 'adaptive' ? 'IA ' : '';
     this.hudEls.intensity.textContent = `${intPrefix}${this.liveIntensity.toFixed(2)}×`;
     this.hudEls.intensity.classList.toggle('is-hot', this.liveIntensity >= 1.28);
@@ -381,12 +493,132 @@ export class GameShell {
     }, 1150);
   }
 
+  private showPracticeCompletedPrompt(): void {
+    this.paused = true;
+    this.runner?.setPaused(true);
+    synthAudio.stopAllNotes();
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+
+    const desc = GAME_CATALOG[this.modeId];
+    this.debriefEl.innerHTML = `
+      <div class="oa-modal oa-debrief-modal" role="dialog" aria-modal="true" aria-label="Práctica completada">
+        <div class="oa-debrief-head">
+          <div>
+            <h2 class="oa-debrief-title">PRÁCTICA COMPLETADA</h2>
+            <p class="oa-debrief-sub">${desc.title} · Puntuación de práctica: ${this.hudState.score.toLocaleString('es-ES')}</p>
+          </div>
+          <div class="oa-rank-stamp">PRÁCTICA</div>
+        </div>
+        <p class="oa-modal-ctrl">En Práctica Guiada puedes repetir sin riesgo o pasar al Modo Reto para puntuar en tu radar.</p>
+        <div class="oa-modal-actions">
+          <button type="button" class="oa-btn oa-btn-primary" id="oa-prac-continue">${Icons.refresh(16)}<span>Seguir practicando</span></button>
+          <button type="button" class="oa-btn" id="oa-prac-summary">${Icons.check(16)}<span>Terminar y ver resumen</span></button>
+        </div>
+      </div>
+    `;
+    this.debriefEl.classList.remove('is-hidden');
+
+    this.debriefEl.querySelector('#oa-prac-continue')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      const m = this.modeId;
+      this.destroy();
+      this.callbacks.onReplay(m, true);
+    });
+    this.debriefEl.querySelector('#oa-prac-summary')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.showPracticeSummary();
+    });
+  }
+
+  private showPracticeSummary(): void {
+    if (this.finished || this.destroyed) return;
+    this.finished = true;
+    this.paused = true;
+    this.runner?.setPaused(true);
+    synthAudio.stopAllNotes();
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+
+    const durationSec = Math.max(1, Math.round(this.totalActiveTime));
+    const { xpEarned, leveledUp } = profileStore.recordPracticeRun(durationSec);
+    const desc = GAME_CATALOG[this.modeId];
+
+    this.debriefEl.innerHTML = `
+      <div class="oa-modal oa-debrief-modal" role="dialog" aria-modal="true" aria-label="Resumen de práctica">
+        <div class="oa-debrief-head">
+          <div>
+            <h2 class="oa-debrief-title">${desc.title}</h2>
+            <p class="oa-debrief-sub">RESUMEN DE PRÁCTICA GUIADA · ${durationSec}s</p>
+          </div>
+          <div class="oa-rank-stamp">PRÁCTICA</div>
+        </div>
+
+        <div class="oa-debrief-stats">
+          <div class="oa-stat-box">
+            <span>PUNTOS (PRÁCTICA)</span>
+            <strong>${this.hudState.score.toLocaleString('es-ES')}</strong>
+          </div>
+          <div class="oa-stat-box">
+            <span>DURACIÓN</span>
+            <strong>${durationSec}s</strong>
+          </div>
+          <div class="oa-stat-box">
+            <span>XP DE PRÁCTICA</span>
+            <strong>+${xpEarned}${leveledUp ? ' · NIVEL SUBIDO' : ''}</strong>
+          </div>
+        </div>
+
+        <div class="oa-coaching-box">
+          <h3>SIGUIENTE PASO</h3>
+          <ul>
+            <li>La práctica no modifica tus récords, radar ni reto diario.</li>
+            <li>Cuando domines el patrón, prueba el Modo Reto Oficial.</li>
+          </ul>
+        </div>
+
+        <div class="oa-modal-actions">
+          <button type="button" class="oa-btn oa-btn-primary" id="oa-prac-challenge">${Icons.play(16)}<span>Probar MODO RETO</span></button>
+          <button type="button" class="oa-btn" id="oa-prac-again">${Icons.refresh(16)}<span>Seguir practicando</span></button>
+          <button type="button" class="oa-btn oa-btn-ghost" id="oa-prac-hub">${Icons.arrowLeft(16)}<span>VOLVER AL HUB</span></button>
+        </div>
+      </div>
+    `;
+    this.debriefEl.classList.remove('is-hidden');
+
+    this.debriefEl.querySelector('#oa-prac-challenge')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      const m = this.modeId;
+      this.destroy();
+      this.callbacks.onReplay(m, false);
+    });
+    this.debriefEl.querySelector('#oa-prac-again')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      const m = this.modeId;
+      this.destroy();
+      this.callbacks.onReplay(m, true);
+    });
+    this.debriefEl.querySelector('#oa-prac-hub')!.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.destroy();
+      this.callbacks.onExitToHub();
+    });
+  }
+
   private handleFinish(
     partial: Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'>
   ): void {
     if (this.finished || this.destroyed) return;
+    if (this.practiceMode) {
+      this.showPracticeCompletedPrompt();
+      return;
+    }
+
     this.finished = true;
     this.runner?.setPaused(true);
+    synthAudio.stopAllNotes();
     if (document.pointerLockElement) {
       document.exitPointerLock();
     }
@@ -422,7 +654,7 @@ export class GameShell {
     const tipsHtml = summary.coachingTips.map((t) => `<li>${t}</li>`).join('');
 
     this.debriefEl.innerHTML = `
-      <div class="oa-modal oa-debrief-modal">
+      <div class="oa-modal oa-debrief-modal" role="dialog" aria-modal="true" aria-label="Resumen de partida">
         <div class="oa-debrief-head">
           <div>
             <h2 class="oa-debrief-title">${desc.title}</h2>
@@ -471,7 +703,7 @@ export class GameShell {
       synthAudio.uiClick();
       const m = this.modeId;
       this.destroy();
-      this.callbacks.onReplay(m);
+      this.callbacks.onReplay(m, false);
     });
     this.debriefEl.querySelector('#oa-debrief-hub')!.addEventListener('click', () => {
       synthAudio.uiClick();
@@ -485,6 +717,9 @@ export class GameShell {
     cancelAnimationFrame(this.rafId);
     window.removeEventListener('keydown', this.onGlobalKey);
     window.removeEventListener('resize', this.onResize);
+    this.guideOverlay?.close(true);
+    this.guideOverlay = null;
+    synthAudio.stopAllNotes();
     this.runner?.destroy();
     this.runner = null;
     this.shellEl.remove();

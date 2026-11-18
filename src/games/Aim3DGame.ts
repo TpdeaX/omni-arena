@@ -49,6 +49,7 @@ export class Aim3DGame implements MiniGame {
   private yaw = 0;
   private pitch = 0;
   private pointerLocked = false;
+  private lockAcquiredAt = 0;
   private recoil = 0;
   private hitmarkerTimer = 0;
 
@@ -202,7 +203,7 @@ export class Aim3DGame implements MiniGame {
     this.lockPromptEl.className = 'oa-aim-hint';
     this.lockPromptEl.innerHTML = this.ctx.isTouch
       ? '<span>TOCA UN ORBE PARA DISPARAR · ARRASTRA PARA GIRAR</span>'
-      : '<span>CLIC EN ARENA PARA FIJAR MIRA FPS (O DISPARA DIRECTO)</span>';
+      : '<span>Haz clic para fijar la mira (este clic no dispara)</span>';
     this.wrapper.appendChild(this.lockPromptEl);
   }
 
@@ -219,7 +220,11 @@ export class Aim3DGame implements MiniGame {
   }
 
   private onPointerLockChange = (): void => {
+    const wasLocked = this.pointerLocked;
     this.pointerLocked = document.pointerLockElement === this.renderer.domElement;
+    if (this.pointerLocked && !wasLocked) {
+      this.lockAcquiredAt = performance.now();
+    }
     this.lockPromptEl.classList.toggle('is-hidden', this.pointerLocked);
     this.crosshairEl.classList.toggle('is-locked', this.pointerLocked);
   };
@@ -240,23 +245,26 @@ export class Aim3DGame implements MiniGame {
     synthAudio.ensure();
 
     if (this.pointerLocked) {
+      if (performance.now() - this.lockAcquiredAt < 150) {
+        return;
+      }
       this.fireAtNDC(0, 0);
       return;
     }
 
-    // Fire directly at clicked screen coordinates AND request pointer lock on desktop
+    if (!this.ctx.isTouch && this.renderer.domElement.requestPointerLock) {
+      try {
+        void this.renderer.domElement.requestPointerLock();
+        return;
+      } catch {
+        // Pointer lock may be blocked in sandboxed frames; fallback to direct click below
+      }
+    }
+
     const rect = this.renderer.domElement.getBoundingClientRect();
     const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     this.fireAtNDC(ndcX, ndcY);
-
-    if (!this.ctx.isTouch && this.renderer.domElement.requestPointerLock) {
-      try {
-        void this.renderer.domElement.requestPointerLock();
-      } catch {
-        // Pointer lock may be blocked in sandboxed frames; direct click works cleanly
-      }
-    }
   };
 
   private onTouchStart = (e: TouchEvent): void => {
@@ -481,7 +489,7 @@ export class Aim3DGame implements MiniGame {
     this.camera.rotation.y = this.yaw;
     this.camera.rotation.x = this.pitch;
 
-    this.recoil = Math.max(0, this.recoil - dt * 9);
+    this.recoil = this.ctx.settings.reduceMotion ? 0 : Math.max(0, this.recoil - dt * 9);
     this.gunGroup.position.z = -0.52 + this.recoil * 0.08;
     this.gunGroup.rotation.x = this.recoil * 0.14;
 

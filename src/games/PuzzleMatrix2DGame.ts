@@ -39,11 +39,19 @@ export class PuzzleMatrix2DGame implements MiniGame {
   private chimpMax = 4;
   private chimpHidden = false;
 
-  // Simon state
+  // Simon timeline state (pausable inside update)
   private simonSeq: number[] = [];
+  private simonCells: HTMLButtonElement[] = [];
+  private simonTitleEl: Element | null = null;
   private simonStep = 0;
   private simonPlaying = false;
-  private simonTimers: number[] = [];
+  private simonTimelineSec = 0;
+  private simonStepSec = 0.36;
+  private simonCueCursor = 0;
+  private simonLitCell: number | null = null;
+  private simonLitOffAt = 0;
+  private simonTapFlashTimer = 0;
+  private simonTapCell: HTMLButtonElement | null = null;
 
   // 4-option key handler
   private activeOptions: (() => void)[] = [];
@@ -94,15 +102,23 @@ export class PuzzleMatrix2DGame implements MiniGame {
     }
   };
 
-  private clearSimonTimers(): void {
-    for (const id of this.simonTimers) {
-      window.clearTimeout(id);
+  private resetSimonPlayback(): void {
+    this.simonPlaying = false;
+    this.simonTimelineSec = 0;
+    this.simonCueCursor = 0;
+    this.simonLitCell = null;
+    this.simonLitOffAt = 0;
+    this.simonTapFlashTimer = 0;
+    this.simonTapCell = null;
+    for (const c of this.simonCells) {
+      c.classList.remove('is-lit');
     }
-    this.simonTimers = [];
+    this.simonCells = [];
+    this.simonTitleEl = null;
   }
 
   private nextPuzzle(): void {
-    this.clearSimonTimers();
+    this.resetSimonPlayback();
     this.activeOptions = [];
     const order: PuzzleKind[] = ['stroop', 'math', 'chimp', 'simon'];
     this.currentKind = order[this.roundIndex % order.length];
@@ -243,9 +259,11 @@ export class PuzzleMatrix2DGame implements MiniGame {
 
     this.boardEl.innerHTML = `
       <div class="oa-pz-type">MEMORIA NUMÉRICA · PULSA 1 → ${this.chimpMax} EN ORDEN</div>
+      <div class="oa-mem-status" id="oa-pz-chimp-hint">Recuerda las posiciones: al pulsar el 1 se ocultan los demás</div>
       <div class="oa-pz-grid oa-pz-grid-4x3"></div>
     `;
     const grid = this.boardEl.querySelector('.oa-pz-grid')!;
+    const hintEl = this.boardEl.querySelector<HTMLElement>('#oa-pz-chimp-hint');
 
     for (let i = 0; i < 12; i++) {
       const num = chosen.get(i);
@@ -264,6 +282,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
             synthAudio.uiClick();
             if (this.chimpNext === 1 && !this.chimpHidden) {
               this.chimpHidden = true;
+              if (hintEl) hintEl.classList.add('is-hidden');
               grid.querySelectorAll<HTMLButtonElement>('.has-num:not(.is-cleared)').forEach((el) => {
                 el.classList.add('is-masked');
               });
@@ -286,17 +305,22 @@ export class PuzzleMatrix2DGame implements MiniGame {
   private renderSimon(): void {
     const intensity = this.ctx.getIntensity();
     const len = Math.min(7, 3 + Math.floor(this.solved / 5) + (intensity >= 1.3 ? 1 : 0));
-    const stepMs = Math.max(210, Math.round(360 / Math.sqrt(intensity)));
+    this.simonStepSec = Math.max(0.21, 0.36 / Math.sqrt(intensity));
     this.simonSeq = Array.from({ length: len }, () => Math.floor(Math.random() * 9));
     this.simonStep = 0;
     this.simonPlaying = true;
+    this.simonTimelineSec = 0;
+    this.simonCueCursor = 0;
+    this.simonLitCell = null;
+    this.simonLitOffAt = 0;
 
     this.boardEl.innerHTML = `
       <div class="oa-pz-type">SECUENCIA VISUAL · OBSERVA (${len} PASOS)</div>
       <div class="oa-pz-grid oa-pz-grid-3x3"></div>
     `;
     const grid = this.boardEl.querySelector('.oa-pz-grid')!;
-    const cells: HTMLButtonElement[] = [];
+    this.simonCells = [];
+    this.simonTitleEl = this.boardEl.querySelector('.oa-pz-type');
 
     for (let i = 0; i < 9; i++) {
       const c = document.createElement('button');
@@ -305,8 +329,13 @@ export class PuzzleMatrix2DGame implements MiniGame {
       c.addEventListener('click', () => {
         if (this.paused || this.simonPlaying) return;
         synthAudio.ensure();
+        if (this.simonTapCell && this.simonTapCell !== c) {
+          this.simonTapCell.classList.remove('is-lit');
+        }
         c.classList.add('is-lit');
-        window.setTimeout(() => c.classList.remove('is-lit'), 160);
+        this.simonTapCell = c;
+        this.simonTapFlashTimer = 0.16;
+
         if (i === this.simonSeq[this.simonStep]) {
           synthAudio.scheduleNoteCue(i % 4);
           this.simonStep += 1;
@@ -317,36 +346,66 @@ export class PuzzleMatrix2DGame implements MiniGame {
           this.handleFail('PATRÓN INCORRECTO');
         }
       });
-      cells.push(c);
+      this.simonCells.push(c);
       grid.appendChild(c);
     }
+  }
 
-    // Play sequence
-    const titleEl = this.boardEl.querySelector('.oa-pz-type')!;
-    this.simonSeq.forEach((cellIdx, step) => {
-      const tOn = window.setTimeout(() => {
-        if (this.destroyed) return;
-        cells[cellIdx]?.classList.add('is-lit');
+  private updateSimonTimeline(dt: number): void {
+    if (this.currentKind !== 'simon') return;
+
+    if (this.simonTapFlashTimer > 0) {
+      this.simonTapFlashTimer -= dt;
+      if (this.simonTapFlashTimer <= 0 && this.simonTapCell) {
+        this.simonTapCell.classList.remove('is-lit');
+        this.simonTapCell = null;
+      }
+    }
+
+    if (!this.simonPlaying) return;
+
+    this.simonTimelineSec += dt;
+    const startOffset = 0.24;
+
+    if (this.simonLitCell !== null && this.simonTimelineSec >= this.simonLitOffAt) {
+      this.simonCells[this.simonLitCell]?.classList.remove('is-lit');
+      this.simonLitCell = null;
+    }
+
+    if (this.simonCueCursor < this.simonSeq.length) {
+      const cueAt = startOffset + this.simonCueCursor * this.simonStepSec;
+      if (this.simonTimelineSec >= cueAt) {
+        if (this.simonLitCell !== null) {
+          this.simonCells[this.simonLitCell]?.classList.remove('is-lit');
+        }
+        const cellIdx = this.simonSeq[this.simonCueCursor];
+        this.simonCells[cellIdx]?.classList.add('is-lit');
         synthAudio.scheduleNoteCue(cellIdx % 4);
-      }, 240 + step * stepMs);
-      const tOff = window.setTimeout(() => {
-        cells[cellIdx]?.classList.remove('is-lit');
-      }, 240 + step * stepMs + Math.round(stepMs * 0.58));
-      this.simonTimers.push(tOn, tOff);
-    });
+        this.simonLitCell = cellIdx;
+        this.simonLitOffAt = cueAt + this.simonStepSec * 0.58;
+        this.simonCueCursor += 1;
+      }
+    }
 
-    const tReady = window.setTimeout(() => {
-      if (this.destroyed) return;
+    const readyAt = startOffset + this.simonSeq.length * this.simonStepSec + 0.07;
+    if (this.simonTimelineSec >= readyAt) {
+      if (this.simonLitCell !== null) {
+        this.simonCells[this.simonLitCell]?.classList.remove('is-lit');
+        this.simonLitCell = null;
+      }
       this.simonPlaying = false;
       this.roundStartMs = performance.now();
-      titleEl.textContent = `SECUENCIA VISUAL · TU TURNO (${len} PASOS)`;
-    }, 240 + this.simonSeq.length * stepMs + 70);
-    this.simonTimers.push(tReady);
+      if (this.simonTitleEl) {
+        this.simonTitleEl.textContent = `SECUENCIA VISUAL · TU TURNO (${this.simonSeq.length} PASOS)`;
+      }
+    }
   }
 
   public update(dt: number): void {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
+    this.updateSimonTimeline(dt);
+
     if (!this.isGauntletSlice) {
       const rem = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: rem });
@@ -390,7 +449,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
 
   public destroy(): void {
     this.destroyed = true;
-    this.clearSimonTimers();
+    this.resetSimonPlayback();
     window.removeEventListener('keydown', this.onKeyDown);
     this.wrapper.remove();
   }

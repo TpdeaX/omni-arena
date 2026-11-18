@@ -204,8 +204,13 @@ export class FlightPortals3DGame implements MiniGame {
 
     this.shipGroup.position.x = this.shipX;
     this.shipGroup.position.y = this.shipY;
-    this.shipGroup.rotation.z = -(this.shipX - prevX) * 2.2;
-    this.shipGroup.rotation.x = (this.targetY - this.shipY) * 0.25;
+    if (this.ctx.settings.reduceMotion) {
+      this.shipGroup.rotation.z = 0;
+      this.shipGroup.rotation.x = 0;
+    } else {
+      this.shipGroup.rotation.z = -(this.shipX - prevX) * 2.2;
+      this.shipGroup.rotation.x = (this.targetY - this.shipY) * 0.25;
+    }
 
     this.camera.position.x += (this.shipX * 0.45 - this.camera.position.x) * Math.min(1, dt * 5);
     this.camera.position.y += (this.shipY * 0.45 + 1.2 - this.camera.position.y) * Math.min(1, dt * 5);

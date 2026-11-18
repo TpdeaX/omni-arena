@@ -296,13 +296,16 @@ export class Runner3DGame implements MiniGame {
 
     // Move grid floor loop for speed illusion
     this.gridFloor.position.z = -40 + ((this.distance * 1) % 2.5);
-    this.camera.fov = 72 + (this.speed - 22) * 0.35;
-    this.camera.updateProjectionMatrix();
+    const targetFov = this.ctx.settings.reduceMotion ? 72 : 72 + (this.speed - 22) * 0.35;
+    if (this.camera.fov !== targetFov) {
+      this.camera.fov = targetFov;
+      this.camera.updateProjectionMatrix();
+    }
 
     // Player horizontal & vertical physics
     const dx = this.targetX - this.playerMesh.position.x;
     this.playerMesh.position.x += dx * Math.min(1, dt * 14);
-    this.playerMesh.rotation.z = -dx * 0.22;
+    this.playerMesh.rotation.z = this.ctx.settings.reduceMotion ? 0 : -dx * 0.22;
 
     if (!this.grounded) {
       this.velY -= 32 * dt;

@@ -59,7 +59,9 @@ export class SonicRing2DGame implements MiniGame {
       phaseLabel: 'ANILLO SÓNICO',
       accent: '#14B8A6',
       timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
-      subStat: 'GOLPEA EL ARCO · ESPACIO / CLIC',
+      subStat: this.ctx.isTouch
+        ? 'Toca la pantalla cuando la aguja cruce el arco'
+        : 'Espacio, clic, J o K cuando la aguja cruce el arco',
     });
   }
 

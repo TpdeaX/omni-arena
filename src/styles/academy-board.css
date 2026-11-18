@@ -1,0 +1,723 @@
+/* Estilos exclusivos para Academias de Tablero y Cartas (chess2d, checkers2d, poker2d) */
+
+.oa-board-stage-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.oa-board-prep {
+  width: 100%;
+  max-width: 540px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oa-board-prep-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-board-prep-desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+.oa-board-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oa-board-field-label {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
+.oa-board-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.oa-board-seg-btn {
+  flex: 1 1 110px;
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-secondary);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: border-color 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.oa-board-seg-btn:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+  color: var(--ink-primary);
+}
+
+.oa-board-seg-btn[aria-pressed='true'],
+.oa-board-seg-btn.is-selected {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.15);
+  color: var(--ink-primary);
+}
+
+.oa-board-seg-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.oa-board-primary-btn {
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--accent-cyan);
+  background: var(--accent-cyan);
+  color: var(--accent-cyan-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.96rem;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 0.14s ease, opacity 0.14s ease;
+}
+
+.oa-board-primary-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.oa-board-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ==================== TABLERO 8x8 (AJEDREZ / DAMAS) ==================== */
+
+.oa-grid8-frame {
+  position: relative;
+  width: min(100%, 490px);
+  aspect-ratio: 1 / 1;
+  padding: 20px 20px 22px 22px;
+  border-radius: 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+
+.oa-grid8 {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border: 2px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.oa-sq {
+  position: relative;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: filter 0.1s ease;
+}
+
+.oa-sq-light {
+  background-color: #e9dfd1;
+}
+
+.oa-sq-dark {
+  background-color: #8f6a4b;
+}
+
+:root[data-theme='day'] .oa-sq-light {
+  background-color: #f3eadc;
+}
+
+:root[data-theme='day'] .oa-sq-dark {
+  background-color: #9c7453;
+}
+
+.oa-sq.is-last-move {
+  box-shadow: inset 0 0 0 999px rgba(255, 184, 0, 0.22);
+}
+
+.oa-sq.is-selected {
+  box-shadow: inset 0 0 0 3px var(--accent-cyan), inset 0 0 0 999px rgba(0, 229, 255, 0.22);
+}
+
+.oa-sq.is-cursor {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: -3px;
+  z-index: 2;
+}
+
+.oa-sq.is-in-check {
+  background-image: radial-gradient(circle, rgba(220, 38, 38, 0.78) 0%, rgba(220, 38, 38, 0.12) 72%);
+}
+
+.oa-sq:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.oa-sq-coord-file,
+.oa-sq-coord-rank {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.oa-sq-coord-rank {
+  top: 2px;
+  left: 3px;
+}
+
+.oa-sq-coord-file {
+  bottom: 2px;
+  right: 3px;
+}
+
+.oa-sq-light .oa-sq-coord-file,
+.oa-sq-light .oa-sq-coord-rank {
+  color: #5b402b;
+}
+
+.oa-sq-dark .oa-sq-coord-file,
+.oa-sq-dark .oa-sq-coord-rank {
+  color: #f5ecdf;
+}
+
+.oa-piece-svg {
+  width: 82%;
+  height: 82%;
+  pointer-events: none;
+  display: block;
+}
+
+.oa-star-marker {
+  width: 54%;
+  height: 54%;
+  pointer-events: none;
+  color: #f59e0b;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* Ruta superpuesta para capturas en cadena (Damas) */
+.oa-checkers-route-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.oa-step-num-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--accent-cyan);
+  color: var(--accent-cyan-ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Selector de coronación en ajedrez */
+.oa-promo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 12px;
+}
+
+.oa-promo-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--accent-cyan);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  width: 100%;
+}
+
+.oa-promo-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  text-align: center;
+}
+
+.oa-promo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.oa-promo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.oa-promo-btn:hover {
+  border-color: var(--accent-cyan);
+}
+
+/* Historial de jugadas / status */
+.oa-moves-log {
+  max-height: 118px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+.oa-board-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+}
+
+.oa-turn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.oa-turn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+}
+
+.oa-turn-dot.is-white {
+  background: #f8fafc;
+}
+
+.oa-turn-dot.is-black {
+  background: #1e293b;
+}
+
+/* ==================== PÓKER TEXAS HOLD'EM ==================== */
+
+.oa-poker-notice {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+.oa-poker-table {
+  width: 100%;
+  max-width: 620px;
+  border-radius: 18px;
+  padding: 14px;
+  background: radial-gradient(ellipse at center, #14532d 0%, #0b331d 72%, #082315 100%);
+  border: 3px solid #2b4c3b;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #f8fafc;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.oa-poker-opponents {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.oa-poker-seat {
+  background: rgba(11, 14, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.oa-poker-seat.is-acting {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.32);
+}
+
+.oa-poker-seat.is-folded {
+  opacity: 0.55;
+}
+
+.oa-poker-seat.is-winner {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(255, 184, 0, 0.4);
+}
+
+.oa-poker-seat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.oa-poker-dealer-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fbbf24;
+  color: #111827;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.oa-poker-seat-chips {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: #fde68a;
+}
+
+.oa-poker-seat-act {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  min-height: 16px;
+}
+
+.oa-poker-cards-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.oa-poker-center {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.oa-poker-pot-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.oa-poker-pot-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid #fbbf24;
+  color: #fef3c7;
+}
+
+.oa-poker-hero-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(11, 14, 20, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.oa-poker-hero-box.is-acting {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.3);
+}
+
+.oa-card-svg {
+  width: 50px;
+  height: 70px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.oa-card-svg.is-sm {
+  width: 34px;
+  height: 48px;
+}
+
+.oa-card-svg.is-mini {
+  width: 26px;
+  height: 36px;
+}
+
+.oa-poker-actions-grid {
+  width: 100%;
+  max-width: 620px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.oa-poker-act-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 9px 12px;
+  min-height: 54px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  text-align: left;
+  transition: border-color 0.14s ease, background-color 0.14s ease, opacity 0.14s ease;
+}
+
+.oa-poker-act-btn:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+  background: var(--bg-elevated);
+}
+
+.oa-poker-act-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.oa-poker-act-btn.is-primary {
+  border-color: var(--accent-cyan);
+}
+
+.oa-poker-act-btn.is-danger {
+  border-color: rgba(220, 38, 38, 0.65);
+}
+
+.oa-poker-act-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.oa-poker-act-sub {
+  font-size: 0.74rem;
+  color: var(--ink-secondary);
+  line-height: 1.25;
+}
+
+.oa-poker-raise-presets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+}
+
+.oa-poker-preset-btn {
+  flex: 1 1 82px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.oa-poker-preset-btn:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+}
+
+.oa-poker-preset-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* Guía visual de las 10 manos */
+.oa-poker-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.oa-poker-guide-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.oa-poker-guide-item.is-current-hand {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.14);
+  box-shadow: inset 0 0 0 1px var(--accent-cyan);
+}
+
+.oa-poker-guide-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.oa-poker-guide-name {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-poker-guide-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent-cyan);
+  color: var(--accent-cyan-ink);
+  font-weight: 700;
+}
+
+.oa-poker-guide-desc {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--ink-secondary);
+}
+
+.oa-poker-guide-cards {
+  display: flex;
+  gap: 3px;
+}
+
+.oa-equity-meter {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.oa-equity-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-cyan));
+  transition: width 0.25s ease;
+}
+
+@media (max-width: 600px) {
+  .oa-grid8-frame {
+    padding: 10px;
+  }
+  .oa-poker-opponents {
+    grid-template-columns: 1fr;
+  }
+  .oa-poker-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .oa-card-svg {
+    width: 42px;
+    height: 60px;
+  }
+}

@@ -1,27 +1,36 @@
-import { GAME_CATALOG } from '../catalog';
+import { CIRCUIT_IDS, GAME_CATALOG } from '../catalog';
 import { synthAudio } from '../audio/SynthAudio';
 import { GameContext, MiniGame, RunMetrics, SkillAxis, StandaloneGameId } from '../types';
+import { renderControlHintRow } from '../ui/GuideOverlay';
 import { Aim3DGame } from './Aim3DGame';
 import { BlitzStacker2DGame } from './BlitzStacker2DGame';
 import { BulletHell2DGame } from './BulletHell2DGame';
+import { CheckersAcademyGame } from './CheckersAcademyGame';
+import { ChessAcademyGame } from './ChessAcademyGame';
 import { DualNBack2DGame } from './DualNBack2DGame';
 import { FlashParry2DGame } from './FlashParry2DGame';
 import { FlightPortals3DGame } from './FlightPortals3DGame';
+import { HanoiLogic2DGame } from './HanoiLogic2DGame';
 import { LaserTrack2DGame } from './LaserTrack2DGame';
 import { MemoryGrid2DGame } from './MemoryGrid2DGame';
 import { NeonSnake2DGame } from './NeonSnake2DGame';
 import { OrbitBreaker3DGame } from './OrbitBreaker3DGame';
+import { PianoEar2DGame } from './PianoEar2DGame';
+import { PokerAcademyGame } from './PokerAcademyGame';
 import { PrecisionTarget2DGame } from './PrecisionTarget2DGame';
 import { PuzzleMatrix2DGame } from './PuzzleMatrix2DGame';
+import { RavenMatrix2DGame } from './RavenMatrix2DGame';
 import { Rhythm2DGame } from './Rhythm2DGame';
+import { RubikCube3DGame } from './RubikCube3DGame';
 import { Runner3DGame } from './Runner3DGame';
 import { SchulteGrid2DGame } from './SchulteGrid2DGame';
 import { SkyVault3DGame } from './SkyVault3DGame';
 import { SonicRing2DGame } from './SonicRing2DGame';
+import { SudokuGuide2DGame } from './SudokuGuide2DGame';
 import { TwinStick2DGame } from './TwinStick2DGame';
 
-// Alternating 3D <-> 2D sequence across all 18 disciplines
-const SEQUENCE: StandaloneGameId[] = [
+// Alternating 3D / 2D sequence across the 18 fast circuit disciplines
+const ALTERNATING_CIRCUIT: StandaloneGameId[] = [
   'aim3d',
   'schulte2d',
   'flight3d',
@@ -41,6 +50,9 @@ const SEQUENCE: StandaloneGameId[] = [
   'twinstick2d',
   'puzzle2d',
 ];
+
+const SEQUENCE: StandaloneGameId[] =
+  ALTERNATING_CIRCUIT.length === CIRCUIT_IDS.length ? ALTERNATING_CIRCUIT : [...CIRCUIT_IDS];
 
 export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame {
   switch (id) {
@@ -80,8 +92,27 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new NeonSnake2DGame(isSlice);
     case 'sniper2d':
       return new PrecisionTarget2DGame(isSlice);
+    // 8 Nuevas Academias
+    case 'chess2d':
+      return new ChessAcademyGame(isSlice);
+    case 'checkers2d':
+      return new CheckersAcademyGame(isSlice);
+    case 'poker2d':
+      return new PokerAcademyGame(isSlice);
+    case 'rubik3d':
+      return new RubikCube3DGame(isSlice);
+    case 'piano2d':
+      return new PianoEar2DGame(isSlice);
+    case 'raven2d':
+      return new RavenMatrix2DGame(isSlice);
+    case 'sudoku2d':
+      return new SudokuGuide2DGame(isSlice);
+    case 'hanoi2d':
+      return new HanoiLogic2DGame(isSlice);
   }
 }
+
+const TRANSITION_WAIT_SEC = 8;
 
 export class GauntletOrchestrator {
   private ctx!: GameContext;
@@ -90,6 +121,8 @@ export class GauntletOrchestrator {
 
   private activeGame: MiniGame | null = null;
   private shiftBannerEl: HTMLDivElement | null = null;
+  private countdownTextEl: HTMLSpanElement | null = null;
+  private countdownRingEl: SVGCircleElement | null = null;
 
   private phaseIndex = 0;
   private phaseElapsed = 0;
@@ -115,9 +148,32 @@ export class GauntletOrchestrator {
 
     this.shiftBannerEl = document.createElement('div');
     this.shiftBannerEl.className = 'oa-shift-banner is-hidden';
+    this.shiftBannerEl.addEventListener('click', () => {
+      if (this.shiftCooldown > 0 && !this.paused && !this.destroyed) {
+        this.dismissShiftBanner();
+      }
+    });
     this.ctx.container.appendChild(this.shiftBannerEl);
 
+    window.addEventListener('keydown', this.onKeyDown);
     this.launchPhase(0);
+  }
+
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (this.paused || this.destroyed || this.shiftCooldown <= 0) return;
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.dismissShiftBanner();
+    }
+  };
+
+  private dismissShiftBanner(): void {
+    this.shiftCooldown = 0;
+    this.shiftBannerEl?.classList.add('is-hidden');
+    if (!this.paused) {
+      this.activeGame?.setPaused(false);
+    }
   }
 
   private launchPhase(idx: number): void {
@@ -130,21 +186,49 @@ export class GauntletOrchestrator {
     const modeId = SEQUENCE[idx % SEQUENCE.length];
     const desc = GAME_CATALOG[modeId];
 
-    // Show brief transition banner between phases
-    this.shiftCooldown = idx === 0 ? 0.85 : 1.15;
+    this.shiftCooldown = TRANSITION_WAIT_SEC;
     synthAudio.shiftTransition();
+    this.ctx.setControls?.(desc.guide.controls);
 
     if (this.shiftBannerEl) {
       this.shiftBannerEl.style.setProperty('--shift-accent', desc.accent);
+      const topControls = desc.guide.controls
+        .slice(0, 3)
+        .map((c) => renderControlHintRow(c, this.ctx.isTouch))
+        .join('');
+      const reduceMotion = Boolean(this.ctx.settings.reduceMotion);
+      const ringSvg = reduceMotion
+        ? ''
+        : `<svg width="34" height="34" viewBox="0 0 36 36" aria-hidden="true">
+            <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border-strong)" stroke-width="3"/>
+            <circle id="oa-shift-ring" cx="18" cy="18" r="15" fill="none" stroke="${desc.accent}" stroke-width="3" stroke-dasharray="94.2" stroke-dashoffset="0" transform="rotate(-90 18 18)"/>
+          </svg>`;
+
       this.shiftBannerEl.innerHTML = `
         <div class="oa-shift-dim">${desc.dimension}</div>
         <div class="oa-shift-title">${desc.title}</div>
-        <div class="oa-shift-ctrl">${this.ctx.isTouch ? desc.controlsTouch : desc.controlsPC}</div>
+        <p class="oa-shift-goal">${desc.guide.objective}</p>
+        <div class="oa-guide-hints">${topControls}</div>
+        <div class="oa-shift-actions">
+          <button type="button" class="oa-btn oa-btn-primary oa-shift-ready-btn" id="oa-shift-ready">
+            ${this.ctx.isTouch ? 'Listo (Tocar)' : 'Listo (Espacio)'}
+          </button>
+          ${ringSvg}
+          <span class="oa-shift-countdown" id="oa-shift-cd">${TRANSITION_WAIT_SEC}s</span>
+        </div>
       `;
       this.shiftBannerEl.classList.remove('is-hidden');
+      this.countdownTextEl = this.shiftBannerEl.querySelector('#oa-shift-cd');
+      this.countdownRingEl = this.shiftBannerEl.querySelector('#oa-shift-ring');
+      this.shiftBannerEl.querySelector('#oa-shift-ready')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!this.paused && !this.destroyed) {
+          synthAudio.uiClick();
+          this.dismissShiftBanner();
+        }
+      });
     }
 
-    // Wrap GameContext so individual slices can't terminate the whole Gauntlet unless shields hit 0
     const sliceCtx: GameContext = {
       ...this.ctx,
       addScore: (pts, comboInc) => {
@@ -164,7 +248,6 @@ export class GauntletOrchestrator {
     game.mount(sliceCtx);
     game.setPaused(true);
 
-    // Ensure shift banner stays on top of freshly appended stage
     if (this.shiftBannerEl) {
       this.ctx.container.appendChild(this.shiftBannerEl);
     }
@@ -181,7 +264,9 @@ export class GauntletOrchestrator {
     });
   }
 
-  private collectMetrics(m: Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'>): void {
+  private collectMetrics(
+    m: Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'>
+  ): void {
     this.bestCombo = Math.max(this.bestCombo, m.maxCombo);
     this.totalHits += m.hits ?? 0;
     this.totalMisses += m.misses ?? 0;
@@ -230,10 +315,16 @@ export class GauntletOrchestrator {
     if (this.paused || this.destroyed) return;
 
     if (this.shiftCooldown > 0) {
-      this.shiftCooldown -= dt;
+      this.shiftCooldown = Math.max(0, this.shiftCooldown - dt);
+      if (this.countdownTextEl) {
+        this.countdownTextEl.textContent = `${Math.ceil(this.shiftCooldown)}s`;
+      }
+      if (this.countdownRingEl) {
+        const ratio = 1 - this.shiftCooldown / TRANSITION_WAIT_SEC;
+        this.countdownRingEl.setAttribute('stroke-dashoffset', (94.2 * ratio).toFixed(1));
+      }
       if (this.shiftCooldown <= 0) {
-        this.shiftBannerEl?.classList.add('is-hidden');
-        this.activeGame?.setPaused(false);
+        this.dismissShiftBanner();
       }
       return;
     }
@@ -257,7 +348,6 @@ export class GauntletOrchestrator {
     if (this.phaseElapsed >= this.sliceDuration) {
       this.phaseElapsed = 0;
       this.phaseIndex += 1;
-      // Bonus shield every 5 phases in endless Gauntlet
       if (!this.isRanked && this.phaseIndex % 5 === 0) {
         this.ctx.heal(1);
         this.ctx.toast('RACHA DE FASES +1 ESCUDO', 'good');
@@ -283,6 +373,7 @@ export class GauntletOrchestrator {
 
   public destroy(): void {
     this.destroyed = true;
+    window.removeEventListener('keydown', this.onKeyDown);
     this.activeGame?.destroy();
     this.activeGame = null;
     this.shiftBannerEl?.remove();

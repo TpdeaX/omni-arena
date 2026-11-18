@@ -6,7 +6,7 @@ interface NBackStep {
   tone: number; // 0..3
 }
 
-const TONE_LABELS = ['DO ◆', 'MI ▲', 'SOL ●', 'SI ■'];
+const TONE_LABELS = ['DO', 'MI', 'SOL', 'SI'];
 const TONE_COLORS = ['#38BDF8', '#A855F7', '#10B981', '#F59E0B'];
 
 export class DualNBack2DGame implements MiniGame {
@@ -74,6 +74,9 @@ export class DualNBack2DGame implements MiniGame {
     } else if (e.key === 'l' || e.key === 'L' || e.key === 'ArrowRight') {
       e.preventDefault();
       this.toggleChoice('sound');
+    } else if (e.code === 'Space') {
+      e.preventDefault();
+      this.confirmNoMatch();
     }
   };
 
@@ -86,6 +89,14 @@ export class DualNBack2DGame implements MiniGame {
     }
     synthAudio.uiClick();
     this.renderBoard();
+  }
+
+  private confirmNoMatch(): void {
+    if (this.history.length <= this.nLevel || this.stepEvaluated) return;
+    this.pressedPos = false;
+    this.pressedSound = false;
+    synthAudio.uiClick();
+    this.advanceStep();
   }
 
   private evaluateCurrentStep(): void {
@@ -127,7 +138,8 @@ export class DualNBack2DGame implements MiniGame {
       this.ctx.addScore(pts, 1);
       if (stepHits > 0) synthAudio.puzzleSuccess(this.combo);
 
-      this.feedbackText = stepHits > 0 ? `COINCIDENCIA EXACTA +${pts}` : `DESCARTE CORRECTO +${pts}`;
+      this.feedbackText =
+        stepHits > 0 ? `COINCIDENCIA EXACTA +${pts}` : `RECHAZO CORRECTO +${pts}`;
 
       const maxN = this.isGauntletSlice ? 2 : 3;
       if (this.combo > 0 && this.combo % 5 === 0 && this.nLevel < maxN) {
@@ -139,7 +151,7 @@ export class DualNBack2DGame implements MiniGame {
       this.combo = 0;
       this.ctx.breakCombo();
       synthAudio.damage();
-      this.feedbackText = matchPos || matchSound ? 'FALTO MARCAR COINCIDENCIA' : 'FALSA ALARMA';
+      this.feedbackText = matchPos || matchSound ? 'FALTÓ MARCAR COINCIDENCIA' : 'FALSA ALARMA';
       if (this.misses % 3 === 0) {
         const left = this.ctx.damage(1);
         if (left <= 0) {
@@ -162,7 +174,8 @@ export class DualNBack2DGame implements MiniGame {
     this.pressedSound = false;
     this.stepEvaluated = false;
 
-    const ref = this.history.length >= this.nLevel ? this.history[this.history.length - this.nLevel] : null;
+    const ref =
+      this.history.length >= this.nLevel ? this.history[this.history.length - this.nLevel] : null;
     const pos = ref && Math.random() < 0.38 ? ref.pos : Math.floor(Math.random() * 9);
     const tone = ref && Math.random() < 0.38 ? ref.tone : Math.floor(Math.random() * 4);
     this.history.push({ pos, tone });
@@ -190,35 +203,58 @@ export class DualNBack2DGame implements MiniGame {
     const curr = this.history[this.history.length - 1];
     const showStimulus = this.flashElapsed < this.stepDuration * 0.65;
     const canAnswer = this.history.length > this.nLevel;
+    const timerPct = Math.max(0, Math.min(100, (this.stepTimer / this.stepDuration) * 100));
 
     this.boardEl.innerHTML = `
       <div class="oa-mem-head">
         <span class="oa-mem-pill">${this.nLevel}-BACK CUÁNTICO · PASO ${this.history.length}</span>
         <span class="oa-mem-status">${this.feedbackText}</span>
       </div>
+      <div class="oa-nback-timer-wrap" aria-label="Tiempo del paso actual">
+        <div class="oa-nback-timer-fill" id="oa-nb-timer-fill" style="width:${timerPct.toFixed(1)}%"></div>
+      </div>
       <div class="oa-nback-tone" style="border-color:${showStimulus ? TONE_COLORS[curr.tone] : 'var(--border-strong)'}">
-        ${showStimulus ? `SEÑAL SONORA: <strong style="color:${TONE_COLORS[curr.tone]}">${TONE_LABELS[curr.tone]}</strong>` : 'DECIDE ANTES DEL SIGUIENTE PULSO...'}
+        ${
+          showStimulus
+            ? `SEÑAL SONORA: <strong style="color:${TONE_COLORS[curr.tone]}">${TONE_LABELS[curr.tone]}</strong>`
+            : 'DECIDE ANTES DEL SIGUIENTE PULSO...'
+        }
       </div>
       <div class="oa-nback-grid">
         ${Array.from({ length: 9 }, (_, i) => {
           const active = showStimulus && curr.pos === i;
-          return `<div class="oa-nback-cell ${active ? 'is-active' : ''}" style="${active ? `background:${TONE_COLORS[curr.tone]};border-color:#fff;` : ''}">${active ? '◆' : ''}</div>`;
+          return `<div class="oa-nback-cell ${active ? 'is-active' : ''}" style="${
+            active ? `background:${TONE_COLORS[curr.tone]};border-color:#fff;` : ''
+          }">${active ? '<span class="oa-nback-dot"></span>' : ''}</div>`;
         }).join('')}
       </div>
       <div class="oa-nback-actions">
-        <button type="button" class="oa-nback-btn ${this.pressedPos ? 'is-selected' : ''}" id="oa-nb-pos" ${!canAnswer ? 'disabled' : ''}>
+        <button type="button" class="oa-nback-btn ${this.pressedPos ? 'is-selected' : ''}" id="oa-nb-pos" ${
+          !canAnswer ? 'disabled' : ''
+        }>
           <strong>POSICIÓN</strong>
-          <span>Tecla A / ◀</span>
+          <span>Tecla A / Izq</span>
         </button>
-        <button type="button" class="oa-nback-btn ${this.pressedSound ? 'is-selected' : ''}" id="oa-nb-sound" ${!canAnswer ? 'disabled' : ''}>
+        <button type="button" class="oa-nback-btn" id="oa-nb-none" ${!canAnswer ? 'disabled' : ''}>
+          <strong>No coincide</strong>
+          <span>Espacio</span>
+        </button>
+        <button type="button" class="oa-nback-btn ${this.pressedSound ? 'is-selected' : ''}" id="oa-nb-sound" ${
+          !canAnswer ? 'disabled' : ''
+        }>
           <strong>SONIDO</strong>
-          <span>Tecla L / ▶</span>
+          <span>Tecla L / Der</span>
         </button>
       </div>
     `;
 
     this.boardEl.querySelector('#oa-nb-pos')?.addEventListener('click', () => this.toggleChoice('pos'));
-    this.boardEl.querySelector('#oa-nb-sound')?.addEventListener('click', () => this.toggleChoice('sound'));
+    this.boardEl
+      .querySelector('#oa-nb-sound')
+      ?.addEventListener('click', () => this.toggleChoice('sound'));
+    this.boardEl
+      .querySelector('#oa-nb-none')
+      ?.addEventListener('click', () => this.confirmNoMatch());
   }
 
   public update(dt: number): void {
@@ -243,6 +279,12 @@ export class DualNBack2DGame implements MiniGame {
     }
 
     this.stepTimer -= dt;
+    const fillEl = this.boardEl.querySelector<HTMLDivElement>('#oa-nb-timer-fill');
+    if (fillEl) {
+      const pct = Math.max(0, Math.min(100, (this.stepTimer / this.stepDuration) * 100));
+      fillEl.style.width = `${pct.toFixed(1)}%`;
+    }
+
     if (this.stepTimer <= 0) {
       this.advanceStep();
     }
@@ -256,10 +298,15 @@ export class DualNBack2DGame implements MiniGame {
     this.paused = paused;
   }
 
-  public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
+  public getMetrics(
+    survived = true
+  ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
     const acc = total > 0 ? (this.hits / total) * 100 : 85;
-    const logicScore = Math.min(990, 260 + this.nLevel * 95 + this.hits * 22 + this.maxCombo * 12 - this.misses * 22);
+    const logicScore = Math.min(
+      990,
+      260 + this.nLevel * 95 + this.hits * 22 + this.maxCombo * 12 - this.misses * 22
+    );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

@@ -26,7 +26,7 @@ function showHub(): void {
   currentHub.render();
 }
 
-function launchMode(modeId: GameModeId, practiceMode = false): void {
+function launchMode(modeId: GameModeId, practiceMode = false, infiniteMode = false): void {
   activeShell?.destroy();
   currentHub?.destroy();
   currentHub = null;
@@ -34,7 +34,7 @@ function launchMode(modeId: GameModeId, practiceMode = false): void {
     onExitToHub: showHub,
     onReplay: launchMode,
   });
-  activeShell.start({ practiceMode });
+  activeShell.start({ practiceMode, infiniteMode });
 }
 
 bindEcoThemeSync((theme) => {

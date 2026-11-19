@@ -59,7 +59,7 @@ export class DualNBack2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'N-BACK CUÁNTICO',
       accent: '#7C3AED',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: '1-BACK · MEMORIA DE TRABAJO',
     });
 
@@ -141,18 +141,24 @@ export class DualNBack2DGame implements MiniGame {
       this.feedbackText =
         stepHits > 0 ? `COINCIDENCIA EXACTA +${pts}` : `RECHAZO CORRECTO +${pts}`;
 
-      const maxN = this.isGauntletSlice ? 2 : 3;
+      const maxN = this.isGauntletSlice
+        ? 2
+        : this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? 4
+        : 3;
       if (this.combo > 0 && this.combo % 5 === 0 && this.nLevel < maxN) {
         this.nLevel += 1;
         this.ctx.toast(`NIVEL COGNITIVO ${this.nLevel}-BACK`, 'accent');
       }
     } else {
+      const prevMisses = this.misses;
       this.misses += stepErrors;
       this.combo = 0;
       this.ctx.breakCombo();
       synthAudio.damage();
       this.feedbackText = matchPos || matchSound ? 'FALTÓ MARCAR COINCIDENCIA' : 'FALSA ALARMA';
-      if (this.misses % 3 === 0) {
+      const errBudget = this.ctx.infiniteMode && !this.isGauntletSlice ? 2 : 3;
+      if (Math.floor(this.misses / errBudget) > Math.floor(prevMisses / errBudget)) {
         const left = this.ctx.damage(1);
         if (left <= 0) {
           this.ctx.finish(this.getMetrics(false));
@@ -167,7 +173,8 @@ export class DualNBack2DGame implements MiniGame {
     if (this.destroyed) return;
 
     const intensity = this.ctx.getIntensity();
-    this.stepDuration = Math.max(1.55, 2.28 / Math.max(0.8, intensity * 0.92));
+    const minStep = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 1.35 : 1.55;
+    this.stepDuration = Math.max(minStep, 2.28 / Math.max(0.8, intensity * 0.92));
     this.stepTimer = this.stepDuration;
     this.flashElapsed = 0;
     this.pressedPos = false;
@@ -261,7 +268,7 @@ export class DualNBack2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -302,11 +309,14 @@ export class DualNBack2DGame implements MiniGame {
     survived = true
   ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const acc = total > 0 ? (this.hits / total) * 100 : 85;
-    const logicScore = Math.min(
-      990,
-      260 + this.nLevel * 95 + this.hits * 22 + this.maxCombo * 12 - this.misses * 22
-    );
+    const acc = total > 0 ? (this.hits / total) * 100 : 0;
+    const logicScore =
+      total === 0
+        ? 140
+        : Math.min(
+            990,
+            260 + this.nLevel * 95 + this.hits * 22 + this.maxCombo * 12 - this.misses * 22
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

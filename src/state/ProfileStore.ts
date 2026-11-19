@@ -1,6 +1,13 @@
-import { ACADEMY_IDS, AXIS_META, CIRCUIT_IDS, GAME_CATALOG, STANDALONE_IDS } from '../catalog';
-import { arenaCloudSync } from '../services/CloudSync';
 import {
+  ACADEMY_IDS,
+  AXIS_META,
+  CIRCUIT_IDS,
+  DIFFICULTY_META,
+  GAME_CATALOG,
+  STANDALONE_IDS,
+} from '../catalog.ts';
+import type {
+  DifficultyId,
   GameModeId,
   PlayerProfile,
   RunMetrics,
@@ -8,15 +15,90 @@ import {
   StandaloneGameId,
   ThemeMode,
   UserSettings,
-} from '../types';
-import {
-  consumeIncomingEcoTheme,
-  publishArenaCatalogMeta,
-  readStoredEcoTheme,
-  writeStoredEcoTheme,
-} from '../utils/ecosystem';
+} from '../types.ts';
 
 const STORAGE_KEY = 'omni_arena_profile_v1';
+const ECO_THEME_KEY = 'umbral-theme';
+const CATALOG_META_KEY = 'omni_arena_catalog_meta_v1';
+
+const VALID_DIFFICULTIES = new Set<DifficultyId>([
+  'chill',
+  'standard',
+  'hyper',
+  'adaptive',
+  'progressive',
+]);
+
+function normalizeEcoTheme(raw: string | null | undefined): 'light' | 'dark' | null {
+  if (!raw) return null;
+  const clean = raw.trim().toLowerCase();
+  if (clean === 'light' || clean === 'day') return 'light';
+  if (clean === 'dark' || clean === 'night') return 'dark';
+  return null;
+}
+
+function consumeIncomingEcoTheme(): ThemeMode | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const url = new URL(window.location.href);
+    const param = normalizeEcoTheme(url.searchParams.get('eco_theme'));
+    if (param) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(ECO_THEME_KEY, param);
+      }
+      url.searchParams.delete('eco_theme');
+      const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(null, '', nextUrl);
+      return param === 'light' ? 'day' : 'night';
+    }
+  } catch {
+    // Ignore URL errors
+  }
+  return null;
+}
+
+function readStoredEcoTheme(): ThemeMode | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(ECO_THEME_KEY);
+    const norm = normalizeEcoTheme(raw);
+    return norm ? (norm === 'light' ? 'day' : 'night') : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredEcoTheme(theme: ThemeMode): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(ECO_THEME_KEY, theme === 'day' ? 'light' : 'dark');
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function publishArenaCatalogMeta(meta: {
+  total: number;
+  academies: number;
+  dexterity2d: number;
+  action3d: number;
+}): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const payload = {
+      version: 1,
+      total: meta.total,
+      academies: meta.academies,
+      dexterity2d: meta.dexterity2d,
+      action3d: meta.action3d,
+      updatedAt: Date.now(),
+    };
+    localStorage.setItem(CATALOG_META_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 function todayStamp(): string {
   const d = new Date();
@@ -43,7 +125,7 @@ function initialReduceMotion(): boolean {
   return false;
 }
 
-function createZeroModeMap(): Record<GameModeId, number> {
+export function createZeroModeMap(): Record<GameModeId, number> {
   const out = {} as Record<GameModeId, number>;
   (Object.keys(GAME_CATALOG) as GameModeId[]).forEach((id) => {
     out[id] = 0;
@@ -51,7 +133,18 @@ function createZeroModeMap(): Record<GameModeId, number> {
   return out;
 }
 
-function defaultProfile(): PlayerProfile {
+export function meetsInfiniteMinimum(
+  durationSec: number,
+  hits = 0,
+  puzzlesSolved = 0
+): boolean {
+  const safeDur = Number.isFinite(durationSec) ? durationSec : 0;
+  const safeEvents =
+    (Number.isFinite(hits) ? hits : 0) + (Number.isFinite(puzzlesSolved) ? puzzlesSolved : 0);
+  return safeDur >= 20 || safeEvents >= 3;
+}
+
+export function defaultProfile(): PlayerProfile {
   return {
     xp: 0,
     level: 1,
@@ -63,6 +156,7 @@ function defaultProfile(): PlayerProfile {
       agility: 300,
     },
     bestScores: createZeroModeMap(),
+    bestInfiniteScores: createZeroModeMap(),
     playCounts: createZeroModeMap(),
     history: [],
     dailyStreak: 0,
@@ -76,21 +170,29 @@ function defaultProfile(): PlayerProfile {
       screenShake: true,
       reduceMotion: initialReduceMotion(),
       difficulty: 'adaptive',
+      infiniteModeDefault: false,
       theme: initialThemeFromEcosystem(),
       hubTab: 'academy',
+      academySubFilter: 'all',
       skipGuideFor: {},
     },
     updatedAt: 0,
   };
 }
 
-function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefined): PlayerProfile {
+export function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefined): PlayerProfile {
   const base = defaultProfile();
   if (!parsed || typeof parsed !== 'object') return base;
   const parsedHistory = Array.isArray(parsed.history) ? parsed.history.slice(0, 30) : [];
+  const rawDiff = parsed.settings?.difficulty;
+  const safeDifficulty: DifficultyId =
+    rawDiff && VALID_DIFFICULTIES.has(rawDiff) ? rawDiff : base.settings.difficulty;
+
   const mergedSettings: UserSettings = {
     ...base.settings,
     ...(parsed.settings ?? {}),
+    difficulty: safeDifficulty,
+    infiniteModeDefault: Boolean(parsed.settings?.infiniteModeDefault),
     skipGuideFor: {
       ...(base.settings.skipGuideFor ?? {}),
       ...(parsed.settings?.skipGuideFor ?? {}),
@@ -99,11 +201,18 @@ function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefined): Pl
   if (!parsed.settings?.hubTab) {
     mergedSettings.hubTab = parsedHistory.length === 0 ? 'academy' : 'all';
   }
+  if (!parsed.settings?.academySubFilter) {
+    mergedSettings.academySubFilter = 'all';
+  }
   return {
     ...base,
     ...parsed,
     ratings: { ...base.ratings, ...(parsed.ratings ?? {}) },
     bestScores: { ...base.bestScores, ...(parsed.bestScores ?? {}) },
+    bestInfiniteScores: {
+      ...base.bestInfiniteScores,
+      ...(parsed.bestInfiniteScores ?? {}),
+    },
     playCounts: { ...base.playCounts, ...(parsed.playCounts ?? {}) },
     settings: mergedSettings,
     history: parsedHistory,
@@ -190,6 +299,7 @@ export class ProfileStore {
 
   private load(): PlayerProfile {
     try {
+      if (typeof localStorage === 'undefined') return defaultProfile();
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultProfile();
       return normalizeProfile(JSON.parse(raw) as Partial<PlayerProfile>);
@@ -201,20 +311,26 @@ export class ProfileStore {
   private save(syncCloud = true): void {
     this.profile.updatedAt = Date.now();
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+      }
       writeStoredEcoTheme(this.profile.settings.theme);
     } catch {
       // Ignore storage quota errors
     }
     this.listeners.forEach((fn) => fn());
-    if (syncCloud) {
-      const cfg = arenaCloudSync.reloadConfig();
-      if (arenaCloudSync.isConfigured() && cfg.autoSync) {
-        window.clearTimeout(this.pushTimer);
-        this.pushTimer = window.setTimeout(() => {
-          void arenaCloudSync.pushProfile(this.profile);
-        }, 600);
-      }
+    if (syncCloud && typeof window !== 'undefined') {
+      void import('../services/CloudSync')
+        .then(({ arenaCloudSync }) => {
+          const cfg = arenaCloudSync.reloadConfig();
+          if (arenaCloudSync.isConfigured() && cfg.autoSync) {
+            window.clearTimeout(this.pushTimer);
+            this.pushTimer = window.setTimeout(() => {
+              void arenaCloudSync.pushProfile(this.profile);
+            }, 600);
+          }
+        })
+        .catch(() => {});
     }
   }
 
@@ -224,10 +340,12 @@ export class ProfileStore {
   }
 
   public async pushNow(): Promise<{ ok: boolean; message: string }> {
+    const { arenaCloudSync } = await import('../services/CloudSync');
     return arenaCloudSync.pushProfile(this.profile);
   }
 
   public async syncFromCloud(force = false): Promise<{ ok: boolean; message: string; updated: boolean }> {
+    const { arenaCloudSync } = await import('../services/CloudSync');
     const res = await arenaCloudSync.pullProfile();
     if (!res.ok) return { ok: false, message: res.message, updated: false };
     if (!res.profile) {
@@ -242,7 +360,9 @@ export class ProfileStore {
       }
       this.refreshDaily(false);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+        }
         writeStoredEcoTheme(this.profile.settings.theme);
       } catch {
         // Ignore
@@ -257,7 +377,9 @@ export class ProfileStore {
     if (this.profile.settings.theme === theme) return;
     this.profile.settings.theme = theme;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.profile));
+      }
     } catch {
       // Ignore
     }
@@ -288,7 +410,15 @@ export class ProfileStore {
   }
 
   public updateSettings(patch: Partial<UserSettings>): void {
-    this.profile.settings = { ...this.profile.settings, ...patch };
+    const nextDiff =
+      patch.difficulty && VALID_DIFFICULTIES.has(patch.difficulty)
+        ? patch.difficulty
+        : this.profile.settings.difficulty;
+    this.profile.settings = {
+      ...this.profile.settings,
+      ...patch,
+      difficulty: nextDiff,
+    };
     this.save();
   }
 
@@ -330,10 +460,40 @@ export class ProfileStore {
     leveledUp: boolean;
     isNewBest: boolean;
     runRank: string;
+    qualifiedForRank: boolean;
     coachingTips: string[];
   } {
     const today = todayStamp();
     const ratingDeltas: Partial<Record<SkillAxis, number>> = {};
+    const isInf = Boolean(metrics.infiniteMode);
+    const qualifiedForRank =
+      !isInf ||
+      meetsInfiniteMinimum(metrics.durationSec, metrics.hits ?? 0, metrics.puzzlesSolved ?? 0);
+
+    this.profile.playCounts[metrics.modeId] = (this.profile.playCounts[metrics.modeId] ?? 0) + 1;
+
+    if (!qualifiedForRank) {
+      const xpEarned = Math.max(5, Math.min(20, Math.round(metrics.durationSec * 0.5)));
+      this.profile.xp += xpEarned;
+      let leveledUp = false;
+      while (this.profile.xp >= xpForLevel(this.profile.level)) {
+        this.profile.xp -= xpForLevel(this.profile.level);
+        this.profile.level += 1;
+        leveledUp = true;
+      }
+      this.save();
+      return {
+        ratingDeltas: {},
+        xpEarned,
+        leveledUp,
+        isNewBest: false,
+        runRank: 'C',
+        qualifiedForRank: false,
+        coachingTips: [
+          'Sesión infinita finalizada antes del umbral mínimo (20s activos o 3 aciertos/rondas): no altera tu radar ni racha diaria.',
+        ],
+      };
+    }
 
     const intensityBonus = Math.max(0, Math.round((metrics.peakIntensity - 1) * 90));
     for (const [axisKey, perfRaw] of Object.entries(metrics.axisPerformances)) {
@@ -346,12 +506,20 @@ export class ProfileStore {
       this.profile.ratings[axis] = next;
     }
 
-    const prevBest = this.profile.bestScores[metrics.modeId] ?? 0;
-    const isNewBest = metrics.score > prevBest;
-    if (isNewBest) {
-      this.profile.bestScores[metrics.modeId] = metrics.score;
+    let isNewBest = false;
+    if (isInf) {
+      const prevInf = this.profile.bestInfiniteScores[metrics.modeId] ?? 0;
+      isNewBest = metrics.score > prevInf;
+      if (isNewBest) {
+        this.profile.bestInfiniteScores[metrics.modeId] = metrics.score;
+      }
+    } else {
+      const prevBest = this.profile.bestScores[metrics.modeId] ?? 0;
+      isNewBest = metrics.score > prevBest;
+      if (isNewBest) {
+        this.profile.bestScores[metrics.modeId] = metrics.score;
+      }
     }
-    this.profile.playCounts[metrics.modeId] = (this.profile.playCounts[metrics.modeId] ?? 0) + 1;
 
     const triad = getDailyTriad();
     if (
@@ -391,6 +559,7 @@ export class ProfileStore {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       modeId: metrics.modeId,
       difficulty: metrics.difficulty,
+      infiniteMode: isInf,
       score: metrics.score,
       rank: runRank,
       timestamp: Date.now(),
@@ -406,6 +575,7 @@ export class ProfileStore {
       leveledUp,
       isNewBest,
       runRank,
+      qualifiedForRank: true,
       coachingTips: this.buildCoachingTips(metrics),
     };
   }
@@ -438,9 +608,12 @@ export class ProfileStore {
     if (!metrics.survived) {
       tips.push('Te quedaste sin escudos antes del cierre: prueba Práctica Guiada para dominar el patrón.');
     }
-    if (metrics.difficulty === 'adaptive' && metrics.peakIntensity >= 1.35) {
+    if (
+      (metrics.difficulty === 'adaptive' || metrics.difficulty === 'progressive') &&
+      metrics.peakIntensity >= 1.35
+    ) {
       tips.push(
-        `Alcanzaste intensidad dinámica ${metrics.peakIntensity.toFixed(2)}×: el sistema escaló la velocidad para exigirte más.`
+        `Alcanzaste intensidad ${metrics.peakIntensity.toFixed(2)}× (${DIFFICULTY_META[metrics.difficulty].label}): el sistema escaló la exigencia.`
       );
     }
 

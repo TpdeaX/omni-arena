@@ -138,12 +138,12 @@ test('Piano: 25 teclas consecutivas MIDI 48 (Do3) a MIDI 72 (Do5) con códigos �
   }
 });
 
-test('Piano: acordes, 6 melodías dentro de Do3-Do5, 12 intervalos y pentagrama Sol/Fa', () => {
+test('Piano: acordes, 18 melodías dentro de Do3-Do5, 12 intervalos y pentagrama Sol/Fa', () => {
   const cMaj = describeChordEs(60, 'major');
   assert.deepEqual(cMaj.midis, [60, 64, 67]);
   assert.deepEqual(cMaj.noteNames, ['Do', 'Mi', 'Sol']);
 
-  assert.equal(GUIDED_MELODIES.length, 6);
+  assert.equal(GUIDED_MELODIES.length, 18);
   for (const mel of GUIDED_MELODIES) {
     assert.ok(mel.notes.length >= 10);
     for (const n of mel.notes) {

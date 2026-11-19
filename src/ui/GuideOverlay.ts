@@ -1,9 +1,17 @@
 import { synthAudio } from '../audio/SynthAudio';
-import { GAME_CATALOG } from '../catalog';
+import { DIFFICULTY_META, GAME_CATALOG } from '../catalog';
 import { Icons } from '../icons';
 import { profileStore } from '../state/ProfileStore';
-import { ControlHint, GameModeId } from '../types';
+import { ControlHint, DifficultyId, GameModeId } from '../types';
 import { detectTouchPrimary } from '../utils/input';
+
+const GUIDE_DIFFICULTIES: DifficultyId[] = [
+  'chill',
+  'standard',
+  'hyper',
+  'adaptive',
+  'progressive',
+];
 
 export function getModeIconSvg(id: GameModeId, size = 22): string {
   switch (id) {
@@ -53,12 +61,26 @@ export function getModeIconSvg(id: GameModeId, size = 22): string {
       return Icons.rubik(size);
     case 'piano2d':
       return Icons.piano(size);
+    case 'drums2d':
+      return Icons.drums(size);
+    case 'strings2d':
+      return Icons.guitar(size);
+    case 'band2d':
+      return Icons.band(size);
     case 'raven2d':
       return Icons.matrix(size);
     case 'sudoku2d':
       return Icons.sudoku(size);
     case 'hanoi2d':
       return Icons.hanoi(size);
+    case 'spatial3d':
+      return Icons.spatial3d(size);
+    case 'nonogram2d':
+      return Icons.nonogram(size);
+    case 'logicseq2d':
+      return Icons.logicseq(size);
+    case 'memorypath2d':
+      return Icons.memorypath(size);
     default:
       return Icons.omni(size);
   }
@@ -81,15 +103,16 @@ export function renderControlHintRow(hint: ControlHint, isTouch: boolean): strin
 
 export interface GuideOverlayLaunchCallbacks {
   context: 'hub';
-  onStart: (modeId: GameModeId, practiceMode: boolean) => void;
+  onStart: (modeId: GameModeId, practiceMode: boolean, infiniteMode?: boolean) => void;
   onClose?: () => void;
 }
 
 export interface GuideOverlayInGameCallbacks {
   context: 'ingame';
   practiceMode: boolean;
+  infiniteMode?: boolean;
   onResume: () => void;
-  onRestart: (practiceMode: boolean) => void;
+  onRestart: (practiceMode: boolean, infiniteMode?: boolean) => void;
 }
 
 export type GuideOverlayOptions = GuideOverlayLaunchCallbacks | GuideOverlayInGameCallbacks;
@@ -103,6 +126,7 @@ export class GuideOverlay {
   private autoTimer = 0;
   private userInteracted = false;
   private prevFocus: HTMLElement | null = null;
+  private selectedInfinite = false;
 
   constructor(host: HTMLElement, modeId: GameModeId, options: GuideOverlayOptions) {
     this.host = host;
@@ -119,8 +143,26 @@ export class GuideOverlay {
     const isTouch = detectTouchPrimary(profile.settings.touchControls);
     const reduceMotion = Boolean(profile.settings.reduceMotion);
     const isCircuit = desc.category === 'circuit';
+    const supportsInfinite = Boolean(desc.supportsInfinite) && !isCircuit;
     const frames = desc.guide.example.frames;
     const skipChecked = Boolean(profile.settings.skipGuideFor?.[this.modeId]);
+    const currentDiff = profile.settings.difficulty ?? 'adaptive';
+    const diffMeta = DIFFICULTY_META[currentDiff];
+
+    if (this.options.context === 'ingame') {
+      this.selectedInfinite = Boolean(this.options.infiniteMode && supportsInfinite);
+    } else {
+      this.selectedInfinite = Boolean(profile.settings.infiniteModeDefault && supportsInfinite);
+    }
+
+    const diffButtonsHtml = GUIDE_DIFFICULTIES.map((dId) => {
+      const m = DIFFICULTY_META[dId];
+      const active = dId === currentDiff;
+      return `<button type="button" class="oa-guide-diff-btn ${active ? 'is-active' : ''}" data-guide-diff="${dId}" style="--diff-accent:${m.accent}">
+        <span>${m.label}</span>
+        <em>${m.short}</em>
+      </button>`;
+    }).join('');
 
     const el = document.createElement('div');
     el.className = 'oa-overlay oa-guide-overlay';
@@ -180,6 +222,33 @@ export class GuideOverlay {
         </section>
 
         ${
+          !isCircuit
+            ? `<section class="oa-guide-config" aria-label="Dificultad y modo de sesión">
+                <div class="oa-guide-diff-row">
+                  <div class="oa-guide-diff-head">
+                    <span class="oa-guide-config-title">${Icons.sliders(15)}<span>Cambiar dificultad</span></span>
+                    <span class="oa-guide-diff-desc" id="oa-guide-diff-desc">${diffMeta.desc}</span>
+                  </div>
+                  <div class="oa-guide-diff-pills" id="oa-guide-diff-pills">
+                    ${diffButtonsHtml}
+                  </div>
+                </div>
+                ${
+                  supportsInfinite
+                    ? `<label class="oa-guide-infinite-toggle" id="oa-guide-inf-wrap">
+                        <div class="oa-guide-inf-left">
+                          <input type="checkbox" id="oa-guide-infinite-check" ${this.selectedInfinite ? 'checked' : ''} />
+                          <span class="oa-guide-inf-title">${Icons.infinity(16)}<span>Modo Infinito (sin límite de tiempo)</span></span>
+                        </div>
+                        <span class="oa-guide-inf-desc">Juega rondas continuas cada vez más exigentes hasta agotar escudos o pulsar Finalizar y puntuar.</span>
+                      </label>`
+                    : ''
+                }
+              </section>`
+            : ''
+        }
+
+        ${
           this.options.context === 'hub'
             ? `<div class="oa-guide-actions">
                 ${
@@ -188,10 +257,12 @@ export class GuideOverlay {
                         ${Icons.play(16)}<span>${this.modeId === 'ranked' ? 'EMPEZAR CLASIFICATORIA' : 'EMPEZAR CIRCUITO'}</span>
                       </button>`
                     : `<button type="button" class="oa-btn oa-guide-cta oa-guide-practice-btn" id="oa-guide-practice">
-                        ${Icons.bookOpen(16)}<span>PRÁCTICA GUIADA (sin perder vidas)</span>
+                        ${Icons.bookOpen(16)}<span>Empezar práctica (sin perder vidas)</span>
                       </button>
                       <button type="button" class="oa-btn oa-btn-primary oa-guide-cta" id="oa-guide-challenge">
-                        ${Icons.play(16)}<span>MODO RETO (Oficial)</span>
+                        ${Icons.play(16)}<span id="oa-guide-challenge-label">${
+                          this.selectedInfinite ? 'Empezar reto infinito' : 'Empezar reto (Oficial)'
+                        }</span>
                       </button>`
                 }
               </div>
@@ -211,13 +282,15 @@ export class GuideOverlay {
                 ${
                   isCircuit
                     ? `<button type="button" class="oa-btn oa-guide-cta" id="oa-guide-restart-challenge">
-                        ${Icons.refresh(16)}<span>Reiniciar</span>
+                        ${Icons.refresh(16)}<span>Reiniciar circuito</span>
                       </button>`
                     : `<button type="button" class="oa-btn oa-guide-cta" id="oa-guide-restart-practice">
                         ${Icons.bookOpen(16)}<span>Reiniciar en Práctica</span>
                       </button>
                       <button type="button" class="oa-btn oa-guide-cta" id="oa-guide-restart-challenge">
-                        ${Icons.refresh(16)}<span>Reiniciar en Reto</span>
+                        ${Icons.refresh(16)}<span id="oa-guide-restart-label">${
+                          this.selectedInfinite ? 'Reiniciar en Reto Infinito' : 'Reiniciar en Reto'
+                        }</span>
                       </button>`
                 }
               </div>`
@@ -304,6 +377,40 @@ export class GuideOverlay {
       this.renderFrame();
     });
 
+    el.querySelectorAll<HTMLButtonElement>('[data-guide-diff]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        synthAudio.uiClick();
+        const nextDiff = btn.dataset.guideDiff as DifficultyId;
+        profileStore.updateSettings({ difficulty: nextDiff });
+        el.querySelectorAll<HTMLButtonElement>('[data-guide-diff]').forEach((b) => {
+          b.classList.toggle('is-active', b.dataset.guideDiff === nextDiff);
+        });
+        const descEl = el.querySelector('#oa-guide-diff-desc');
+        if (descEl) {
+          descEl.textContent = DIFFICULTY_META[nextDiff].desc;
+        }
+      });
+    });
+
+    const infCheck = el.querySelector<HTMLInputElement>('#oa-guide-infinite-check');
+    infCheck?.addEventListener('change', () => {
+      synthAudio.uiClick();
+      this.selectedInfinite = infCheck.checked;
+      profileStore.updateSettings({ infiniteModeDefault: this.selectedInfinite });
+      const challengeLbl = el.querySelector('#oa-guide-challenge-label');
+      if (challengeLbl) {
+        challengeLbl.textContent = this.selectedInfinite
+          ? 'Empezar reto infinito'
+          : 'Empezar reto (Oficial)';
+      }
+      const restartLbl = el.querySelector('#oa-guide-restart-label');
+      if (restartLbl) {
+        restartLbl.textContent = this.selectedInfinite
+          ? 'Reiniciar en Reto Infinito'
+          : 'Reiniciar en Reto';
+      }
+    });
+
     if (this.options.context === 'hub') {
       const opts = this.options;
       el.querySelector('#oa-guide-practice')?.addEventListener('click', () => {
@@ -311,14 +418,15 @@ export class GuideOverlay {
         synthAudio.uiClick();
         this.saveSkipPreference();
         this.close(true);
-        opts.onStart(this.modeId, true);
+        opts.onStart(this.modeId, true, false);
       });
       el.querySelector('#oa-guide-challenge')?.addEventListener('click', () => {
         synthAudio.ensure();
         synthAudio.uiClick();
         this.saveSkipPreference();
+        const inf = this.selectedInfinite;
         this.close(true);
-        opts.onStart(this.modeId, false);
+        opts.onStart(this.modeId, false, inf);
       });
     } else {
       const opts = this.options;
@@ -330,12 +438,13 @@ export class GuideOverlay {
       el.querySelector('#oa-guide-restart-practice')?.addEventListener('click', () => {
         synthAudio.uiClick();
         this.close(true);
-        opts.onRestart(true);
+        opts.onRestart(true, false);
       });
       el.querySelector('#oa-guide-restart-challenge')?.addEventListener('click', () => {
         synthAudio.uiClick();
+        const inf = this.selectedInfinite;
         this.close(true);
-        opts.onRestart(false);
+        opts.onRestart(false, inf);
       });
     }
 
@@ -380,15 +489,19 @@ export class GuideOverlay {
     }
     if (e.code === 'Enter' && this.options.context === 'hub') {
       const active = document.activeElement;
-      const insideButtons = active && this.overlayEl.contains(active) && active.tagName === 'BUTTON';
+      const insideButtons =
+        active &&
+        this.overlayEl.contains(active) &&
+        (active.tagName === 'BUTTON' || active.tagName === 'INPUT');
       if (!insideButtons) {
         e.preventDefault();
         e.stopPropagation();
         const isCircuit = GAME_CATALOG[this.modeId].category === 'circuit';
         this.saveSkipPreference();
         const opts = this.options;
+        const inf = this.selectedInfinite;
         this.close(true);
-        opts.onStart(this.modeId, !isCircuit);
+        opts.onStart(this.modeId, !isCircuit, isCircuit ? false : inf);
       }
     }
   };

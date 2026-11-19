@@ -20,9 +20,11 @@ export class RavenMatrix2DGame implements MiniGame {
   private ctx!: GameContext;
   private isGauntletSlice = false;
   private practiceMode = false;
+  private infiniteMode = false;
   private paused = false;
   private destroyed = false;
   private finished = false;
+  private outOfShields = false;
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
@@ -41,6 +43,7 @@ export class RavenMatrix2DGame implements MiniGame {
 
   private matrixTimeLimit = 45;
   private matrixTimeLeft = 45;
+  private roundElapsedSec = 0;
   private totalElapsed = 0;
 
   private score = 0;
@@ -57,17 +60,23 @@ export class RavenMatrix2DGame implements MiniGame {
   public mount(ctx: GameContext): void {
     this.ctx = ctx;
     this.practiceMode = Boolean(ctx.practiceMode);
+    this.infiniteMode = Boolean(ctx.infiniteMode && !this.isGauntletSlice && !this.practiceMode);
     this.matrixTimeLimit = ctx.difficulty === 'chill' ? 60 : 45;
 
-    if (ctx.difficulty === 'chill') this.selectedMode = 1;
-    else if (ctx.difficulty === 'hyper') this.selectedMode = 3;
-    else if (ctx.difficulty === 'adaptive') this.selectedMode = 'progressive';
-    else this.selectedMode = 2;
+    if (this.infiniteMode || ctx.difficulty === 'adaptive' || ctx.difficulty === 'progressive') {
+      this.selectedMode = 'progressive';
+    } else if (ctx.difficulty === 'chill') {
+      this.selectedMode = 1;
+    } else if (ctx.difficulty === 'hyper') {
+      this.selectedMode = 3;
+    } else {
+      this.selectedMode = 2;
+    }
 
     const layout = createAcademyLayout(
       ctx.container,
       'MATRICES LÓGICAS',
-      this.practiceMode ? 'PRÁCTICA' : 'RETO 12'
+      this.practiceMode ? 'PRÁCTICA' : this.infiniteMode ? 'INFINITO' : 'RETO 12'
     );
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
@@ -130,6 +139,8 @@ export class RavenMatrix2DGame implements MiniGame {
     p.className = 'oa-intel-prep-sub';
     p.textContent = this.practiceMode
       ? 'En Práctica Guiada tienes pistas razonadas ilimitadas, explicaciones detalladas y cambio libre de nivel.'
+      : this.infiniteMode
+      ? 'Modo Infinito: sin límite de matrices ni reloj por matriz. Escala niveles 1→4 de forma continua y cada fallo resta 1 escudo hasta quedar en 0 o pulsar Finalizar y puntuar.'
       : `Modo Reto: ${CHALLENGE_TOTAL} matrices con ${this.matrixTimeLimit} s por matriz. Solo una opción cumple todas las reglas.`;
 
     const group = document.createElement('div');
@@ -189,10 +200,19 @@ export class RavenMatrix2DGame implements MiniGame {
   }
 
   private levelForRound(roundIdx: number): RavenLevel {
-    if (this.selectedMode !== 'progressive') return this.selectedMode;
+    if (this.selectedMode !== 'progressive') {
+      if (this.infiniteMode || this.ctx.difficulty === 'progressive') {
+        const escalated = Math.min(4, this.selectedMode + Math.floor(roundIdx / 3));
+        return escalated as RavenLevel;
+      }
+      return this.selectedMode;
+    }
     if (roundIdx < 3) return 1;
     if (roundIdx < 6) return 2;
     if (roundIdx < 9) return 3;
+    if (this.infiniteMode) {
+      return (roundIdx - 9) % 4 === 3 ? 3 : 4;
+    }
     return 4;
   }
 
@@ -206,6 +226,7 @@ export class RavenMatrix2DGame implements MiniGame {
     this.maxCombo = 0;
     this.reactionTimesMs = [];
     this.finished = false;
+    this.outOfShields = false;
     this.loadNextPuzzle();
   }
 
@@ -217,6 +238,7 @@ export class RavenMatrix2DGame implements MiniGame {
     this.chosenIndex = null;
     this.hintShown = false;
     this.matrixTimeLeft = this.matrixTimeLimit;
+    this.roundElapsedSec = 0;
 
     this.updateControlsHint();
     this.renderBoard();
@@ -226,9 +248,14 @@ export class RavenMatrix2DGame implements MiniGame {
   private updateHud(): void {
     const progressLabel = this.practiceMode
       ? `PRÁCTICA · MATRIZ ${this.roundIdx + 1}`
+      : this.infiniteMode
+      ? `INFINITO · MATRIZ ${this.roundIdx + 1}`
       : `MATRIZ ${this.roundIdx + 1}/${CHALLENGE_TOTAL}`;
     this.ctx.setHud({
-      timeLeftSec: this.practiceMode || this.phase !== 'playing' ? null : Math.ceil(this.matrixTimeLeft),
+      timeLeftSec:
+        this.practiceMode || this.infiniteMode || this.phase !== 'playing'
+          ? null
+          : Math.ceil(this.matrixTimeLeft),
       subStat: `${progressLabel} · ACIERTOS ${this.hits}`,
     });
   }
@@ -253,9 +280,10 @@ export class RavenMatrix2DGame implements MiniGame {
 
     const chipProg = document.createElement('span');
     chipProg.className = 'oa-intel-stat-chip';
-    chipProg.textContent = this.practiceMode
-      ? `Matriz ${this.roundIdx + 1} · Aciertos ${this.hits}`
-      : `Matriz ${this.roundIdx + 1} / ${CHALLENGE_TOTAL} · Aciertos ${this.hits}`;
+    chipProg.textContent =
+      this.practiceMode || this.infiniteMode
+        ? `Matriz ${this.roundIdx + 1} · Aciertos ${this.hits}`
+        : `Matriz ${this.roundIdx + 1} / ${CHALLENGE_TOTAL} · Aciertos ${this.hits}`;
 
     meta.append(chipLevel, chipProg);
 
@@ -362,7 +390,8 @@ export class RavenMatrix2DGame implements MiniGame {
       const nextBtn = document.createElement('button');
       nextBtn.type = 'button';
       nextBtn.className = 'oa-intel-primary-btn';
-      const isLastChallenge = !this.practiceMode && this.roundIdx + 1 >= CHALLENGE_TOTAL;
+      const isLastChallenge =
+        !this.practiceMode && !this.infiniteMode && this.roundIdx + 1 >= CHALLENGE_TOTAL;
       nextBtn.innerHTML = `<span>${isLastChallenge ? 'Ver resultado final' : 'Siguiente matriz'}</span>${Icons.arrowRight(16)}`;
       nextBtn.addEventListener('click', () => this.advanceRound());
       actions.appendChild(nextBtn);
@@ -411,7 +440,10 @@ export class RavenMatrix2DGame implements MiniGame {
     this.answered = true;
     this.chosenIndex = idx;
 
-    const usedMs = Math.max(200, Math.round((this.matrixTimeLimit - this.matrixTimeLeft) * 1000));
+    const usedMs =
+      this.practiceMode || this.infiniteMode
+        ? Math.max(200, Math.round(this.roundElapsedSec * 1000))
+        : Math.max(200, Math.round((this.matrixTimeLimit - this.matrixTimeLeft) * 1000));
     this.reactionTimesMs.push(usedMs);
 
     const correct = idx === this.puzzle.correctIndex;
@@ -419,7 +451,11 @@ export class RavenMatrix2DGame implements MiniGame {
       this.hits++;
       this.combo++;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
-      const timeBonus = this.practiceMode ? 0 : Math.round(this.matrixTimeLeft * 4);
+      const timeBonus = this.practiceMode
+        ? 0
+        : this.infiniteMode
+        ? Math.max(0, Math.round((30 - this.roundElapsedSec) * 4))
+        : Math.round(this.matrixTimeLeft * 4);
       const levelBonus = this.puzzle.level * 50;
       const pts = 150 + levelBonus + timeBonus;
       this.score += pts;
@@ -442,6 +478,17 @@ export class RavenMatrix2DGame implements MiniGame {
         this.puzzle.explanation,
         'bad'
       );
+      if (!this.practiceMode) {
+        const left = this.ctx.damage(1);
+        if (left <= 0) {
+          this.outOfShields = true;
+          this.updateControlsHint();
+          this.renderBoard();
+          this.updateHud();
+          this.finishRun(false);
+          return;
+        }
+      }
     }
 
     this.updateControlsHint();
@@ -450,7 +497,7 @@ export class RavenMatrix2DGame implements MiniGame {
   }
 
   private handleTimeout(): void {
-    if (this.answered || this.phase !== 'playing' || this.practiceMode) return;
+    if (this.answered || this.phase !== 'playing' || this.practiceMode || this.infiniteMode) return;
     this.answered = true;
     this.chosenIndex = null;
     this.misses++;
@@ -465,15 +512,20 @@ export class RavenMatrix2DGame implements MiniGame {
       this.puzzle.explanation,
       'warn'
     );
+    const left = this.ctx.damage(1);
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
+    if (left <= 0) {
+      this.outOfShields = true;
+      this.finishRun(false);
+    }
   }
 
   private advanceRound(): void {
     if (this.phase !== 'playing') return;
     synthAudio.uiClick();
-    if (!this.practiceMode && this.roundIdx + 1 >= CHALLENGE_TOTAL) {
+    if (!this.practiceMode && !this.infiniteMode && this.roundIdx + 1 >= CHALLENGE_TOTAL) {
       this.finishRun();
       return;
     }
@@ -481,11 +533,11 @@ export class RavenMatrix2DGame implements MiniGame {
     this.loadNextPuzzle();
   }
 
-  private finishRun(): void {
+  private finishRun(survivedOverride?: boolean): void {
     if (this.finished) return;
     this.finished = true;
     this.phase = 'done';
-    this.ctx.finish(this.getMetrics());
+    this.ctx.finish(this.getMetrics(survivedOverride));
   }
 
   private onKeyDown = (e: KeyboardEvent): void => {
@@ -528,8 +580,11 @@ export class RavenMatrix2DGame implements MiniGame {
   public update(dt: number, _elapsed: number): void {
     if (this.paused || this.destroyed || this.phase !== 'playing') return;
     this.totalElapsed += dt;
+    if (!this.answered) {
+      this.roundElapsedSec += dt;
+    }
 
-    if (!this.practiceMode && !this.answered) {
+    if (!this.practiceMode && !this.infiniteMode && !this.answered) {
       const prevSec = Math.ceil(this.matrixTimeLeft);
       this.matrixTimeLeft = Math.max(0, this.matrixTimeLeft - dt);
       const nextSec = Math.ceil(this.matrixTimeLeft);
@@ -554,14 +609,30 @@ export class RavenMatrix2DGame implements MiniGame {
     this.paused = paused;
   }
 
-  public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const total = Math.max(1, this.hits + this.misses);
-    const accuracy = Math.round((this.hits / total) * 100);
+  public getMetrics(
+    survivedOverride?: boolean
+  ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
+    const answeredCount = this.hits + this.misses;
+    const accuracy = answeredCount > 0 ? Math.round((this.hits / answeredCount) * 100) : 0;
     const avgReactionMs =
       this.reactionTimesMs.length > 0
         ? Math.round(this.reactionTimesMs.reduce((a, b) => a + b, 0) / this.reactionTimesMs.length)
         : undefined;
-    const logicScore = Math.min(1000, Math.round(250 + (this.hits / CHALLENGE_TOTAL) * 700));
+    const logicScore =
+      answeredCount === 0
+        ? 140
+        : this.infiniteMode
+        ? Math.max(
+            140,
+            Math.min(1000, Math.round(180 + this.hits * 48 + accuracy * 2.2 - this.misses * 25))
+          )
+        : Math.min(1000, Math.round(250 + (this.hits / CHALLENGE_TOTAL) * 700));
+    const survived =
+      survivedOverride !== undefined
+        ? survivedOverride
+        : this.infiniteMode
+        ? !this.outOfShields
+        : !this.outOfShields && (this.hits >= Math.ceil(CHALLENGE_TOTAL / 2) || this.practiceMode);
     return {
       score: this.score,
       maxCombo: this.maxCombo,
@@ -570,7 +641,7 @@ export class RavenMatrix2DGame implements MiniGame {
       hits: this.hits,
       misses: this.misses,
       puzzlesSolved: this.hits,
-      survived: this.hits >= Math.ceil(CHALLENGE_TOTAL / 2) || this.practiceMode,
+      survived,
       axisPerformances: {
         logic: logicScore,
       },

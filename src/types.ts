@@ -1,12 +1,35 @@
 export type SkillAxis = 'aim' | 'rhythm' | 'logic' | 'reflex' | 'agility';
 
-export type DifficultyId = 'chill' | 'standard' | 'hyper' | 'adaptive';
+export type DifficultyId = 'chill' | 'standard' | 'hyper' | 'adaptive' | 'progressive';
 
 export type ThemeMode = 'day' | 'night';
 
 export type GameCategory = 'academy' | 'dexterity2d' | 'action3d' | 'circuit';
 
 export type HubTabId = 'academy' | 'dexterity2d' | 'action3d' | 'all';
+
+export type AcademySubFilter = 'all' | 'music' | 'iq' | 'strategy';
+
+export type InstrumentTimbre =
+  | 'piano'
+  | 'organ'
+  | 'soft'
+  | 'bell'
+  | 'guitar'
+  | 'bass'
+  | 'ukulele'
+  | 'marimba'
+  | 'flute';
+
+export type DrumPieceId =
+  | 'kick'
+  | 'snare'
+  | 'hihat_closed'
+  | 'hihat_open'
+  | 'tom_high'
+  | 'tom_low'
+  | 'crash'
+  | 'ride';
 
 export type GameModeId =
   | 'aim3d'
@@ -27,15 +50,22 @@ export type GameModeId =
   | 'schulte2d'
   | 'nback2d'
   | 'pulse2d'
-  // Nuevas Academias (8)
+  // Academias Guiadas (15)
   | 'chess2d'
   | 'checkers2d'
   | 'poker2d'
   | 'rubik3d'
   | 'piano2d'
+  | 'drums2d'
+  | 'strings2d'
+  | 'band2d'
   | 'raven2d'
   | 'sudoku2d'
   | 'hanoi2d'
+  | 'spatial3d'
+  | 'nonogram2d'
+  | 'logicseq2d'
+  | 'memorypath2d'
   // Circuitos
   | 'gauntlet'
   | 'ranked';
@@ -80,6 +110,8 @@ export interface GameDescriptor {
   controlsTouch: string;
   description: string;
   keywords?: string[];
+  supportsInfinite?: boolean;
+  academyGroup?: Exclude<AcademySubFilter, 'all'>;
   guide: GameGuideSpec;
 }
 
@@ -87,6 +119,7 @@ export interface RunMetrics {
   modeId: GameModeId;
   difficulty: DifficultyId;
   peakIntensity: number;
+  infiniteMode?: boolean;
   score: number;
   maxCombo: number;
   accuracy?: number; // 0..100
@@ -105,6 +138,7 @@ export interface RunRecord {
   id: string;
   modeId: GameModeId;
   difficulty: DifficultyId;
+  infiniteMode?: boolean;
   score: number;
   rank: string;
   timestamp: number;
@@ -119,8 +153,10 @@ export interface UserSettings {
   screenShake: boolean;
   reduceMotion?: boolean;
   difficulty: DifficultyId;
+  infiniteModeDefault?: boolean;
   theme: ThemeMode;
   hubTab?: HubTabId;
+  academySubFilter?: AcademySubFilter;
   skipGuideFor?: Partial<Record<GameModeId, boolean>>;
 }
 
@@ -129,6 +165,7 @@ export interface PlayerProfile {
   level: number;
   ratings: Record<SkillAxis, number>; // 0..1000
   bestScores: Record<GameModeId, number>;
+  bestInfiniteScores: Record<GameModeId, number>;
   playCounts: Record<GameModeId, number>;
   history: RunRecord[];
   dailyStreak: number;
@@ -142,6 +179,7 @@ export interface GameContext {
   container: HTMLElement;
   isTouch: boolean;
   practiceMode?: boolean;
+  infiniteMode?: boolean;
   settings: UserSettings;
   difficulty: DifficultyId;
   getIntensity: () => number;

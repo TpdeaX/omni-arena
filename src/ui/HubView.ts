@@ -17,6 +17,7 @@ import {
   xpForLevel,
 } from '../state/ProfileStore';
 import {
+  AcademySubFilter,
   DifficultyId,
   GameModeId,
   HubTabId,
@@ -34,7 +35,13 @@ import {
 import { getModeIconSvg, GuideOverlay } from './GuideOverlay';
 import { renderRadarSvg } from './RadarChart';
 
-const DIFFICULTY_ORDER: DifficultyId[] = ['chill', 'standard', 'hyper', 'adaptive'];
+const DIFFICULTY_ORDER: DifficultyId[] = [
+  'chill',
+  'standard',
+  'hyper',
+  'adaptive',
+  'progressive',
+];
 
 const TAB_ORDER: { id: HubTabId; label: string }[] = [
   { id: 'academy', label: 'Academias Guiadas' },
@@ -42,6 +49,19 @@ const TAB_ORDER: { id: HubTabId; label: string }[] = [
   { id: 'action3d', label: 'Acción 3D' },
   { id: 'all', label: 'Todo' },
 ];
+
+const ACADEMY_SUB_ORDER: { id: AcademySubFilter; label: string }[] = [
+  { id: 'all', label: 'Todas' },
+  { id: 'music', label: 'Música e Instrumentos' },
+  { id: 'iq', label: 'IQ y Lógica' },
+  { id: 'strategy', label: 'Estrategia y 3D' },
+];
+
+const ACADEMY_GROUP_LABELS: Record<Exclude<AcademySubFilter, 'all'>, string> = {
+  music: 'Instrumento · Música Real',
+  iq: 'IQ · Razonamiento',
+  strategy: 'Estrategia · Tablero / 3D',
+};
 
 function normalizeSearch(text: string): string {
   return text
@@ -59,14 +79,23 @@ function matchesSearch(id: StandaloneGameId, queryNorm: string): boolean {
   return haystack.includes(queryNorm);
 }
 
-function matchesTab(id: StandaloneGameId, tab: HubTabId): boolean {
+function matchesTab(
+  id: StandaloneGameId,
+  tab: HubTabId,
+  academySub: AcademySubFilter
+): boolean {
+  const desc = GAME_CATALOG[id];
   if (tab === 'all') return true;
-  return GAME_CATALOG[id].category === tab;
+  if (desc.category !== tab) return false;
+  if (tab === 'academy' && academySub !== 'all') {
+    return desc.academyGroup === academySub;
+  }
+  return true;
 }
 
 export class HubView {
   private root: HTMLElement;
-  private onLaunch: (modeId: GameModeId, practiceMode?: boolean) => void;
+  private onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void;
   private activeModal: 'none' | 'settings' | 'cloud' = 'none';
   private activeGuide: GuideOverlay | null = null;
   private searchQuery = '';
@@ -74,7 +103,10 @@ export class HubView {
   private pulseData: EcoPulseSummary = readEcoPulse();
   private destroyed = false;
 
-  constructor(root: HTMLElement, onLaunch: (modeId: GameModeId, practiceMode?: boolean) => void) {
+  constructor(
+    root: HTMLElement,
+    onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void
+  ) {
     this.root = root;
     this.onLaunch = onLaunch;
   }
@@ -89,6 +121,10 @@ export class HubView {
   private getActiveTab(profile: PlayerProfile): HubTabId {
     if (profile.settings.hubTab) return profile.settings.hubTab;
     return profile.history.length === 0 ? 'academy' : 'all';
+  }
+
+  private getAcademySubFilter(profile: PlayerProfile): AcademySubFilter {
+    return profile.settings.academySubFilter ?? 'all';
   }
 
   public render(): void {
@@ -108,10 +144,11 @@ export class HubView {
     const xpPct = Math.min(100, Math.round((profile.xp / nextXp) * 100));
     const triad = getDailyTriad();
     const activeDiff = profile.settings.difficulty ?? 'adaptive';
-    const diffInfo = DIFFICULTY_META[activeDiff];
+    const diffInfo = DIFFICULTY_META[activeDiff] ?? DIFFICULTY_META.adaptive;
     const cloudCfg = arenaCloudSync.reloadConfig();
     const cloudReady = arenaCloudSync.isConfigured();
     const activeTab = this.getActiveTab(profile);
+    const activeAcademySub = this.getAcademySubFilter(profile);
 
     const countAll = STANDALONE_IDS.length;
     const countAcademy = ACADEMY_IDS.length;
@@ -127,6 +164,13 @@ export class HubView {
       dexterity2d: countDexterity,
       action3d: countAction3d,
       all: countAll,
+    };
+
+    const academySubCounts: Record<AcademySubFilter, number> = {
+      all: countAcademy,
+      music: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'music').length,
+      iq: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'iq').length,
+      strategy: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'strategy').length,
     };
 
     const circuitCount = CIRCUIT_IDS.length;
@@ -148,11 +192,13 @@ export class HubView {
       .slice(0, 5)
       .map((rec) => {
         const desc = GAME_CATALOG[rec.modeId];
+        if (!desc) return '';
         const diffTag = rec.difficulty ? DIFFICULTY_META[rec.difficulty]?.label : '';
+        const infTag = rec.infiniteMode ? ' · INF' : '';
         return `
         <div class="oa-hist-row">
           <span class="oa-hist-dot" style="background:${desc.accent}"></span>
-          <span class="oa-hist-name">${desc.title}${diffTag ? ` <small>${diffTag}</small>` : ''}</span>
+          <span class="oa-hist-name">${desc.title}${diffTag ? ` <small>${diffTag}${infTag}</small>` : ''}</span>
           <span class="oa-hist-rank">${rec.rank}</span>
           <span class="oa-hist-score">${rec.score.toLocaleString('es-ES')}</span>
         </div>
@@ -166,6 +212,18 @@ export class HubView {
         isActive ? 'true' : 'false'
       }" data-tab="${t.id}" tabindex="${isActive ? '0' : '-1'}">${t.label} (${tabCounts[t.id]})</button>`;
     }).join('');
+
+    const academySubPillsHtml =
+      activeTab === 'academy'
+        ? `<div class="oa-academy-subfilters" role="tablist" aria-label="Subfiltros de Academias Guiadas">
+            ${ACADEMY_SUB_ORDER.map((sub) => {
+              const isAct = sub.id === activeAcademySub;
+              return `<button type="button" class="oa-subfilter-pill ${isAct ? 'is-active' : ''}" role="tab" aria-selected="${
+                isAct ? 'true' : 'false'
+              }" data-academy-sub="${sub.id}">${sub.label} (${academySubCounts[sub.id]})</button>`;
+            }).join('')}
+          </div>`
+        : '';
 
     this.root.innerHTML = `
       ${renderEcoSwitchBar('arena')}
@@ -204,7 +262,7 @@ export class HubView {
           <div class="oa-hero-deck">
             <div class="oa-hero-copy">
               <h1>ENTRENA Y DOMINA TODAS LAS DIMENSIONES</h1>
-              <p>${countAll} disciplinas entre Academias Guiadas de estrategia, música e inteligencia (${countAcademy}) y pruebas rápidas 2D/3D (${circuitCount}).</p>
+              <p>${countAll} disciplinas entre Academias Guiadas de instrumentos reales, IQ, lógica y estrategia (${countAcademy}) y pruebas rápidas 2D/3D (${circuitCount}).</p>
             </div>
 
             <div class="oa-diff-block">
@@ -212,7 +270,7 @@ export class HubView {
                 <span>DIFICULTAD DE ENTRENAMIENTO</span>
                 <span class="oa-diff-desc">${diffInfo.desc}</span>
               </div>
-              <div class="oa-diff-pills">${difficultyPills}</div>
+              <div class="oa-diff-pills oa-diff-pills-5">${difficultyPills}</div>
             </div>
 
             <div class="oa-hero-actions">
@@ -279,12 +337,13 @@ export class HubView {
               </div>
               <label class="oa-search-field">
                 <span class="oa-search-label">${Icons.search(15)}<span>Buscar juego</span></span>
-                <input type="search" id="oa-hub-search" value="${this.escapeAttr(this.searchQuery)}" placeholder="Ajedrez, piano, puntería... (/)" autocomplete="off" />
+                <input type="search" id="oa-hub-search" value="${this.escapeAttr(this.searchQuery)}" placeholder="Piano, batería, guitarra, IQ, ajedrez... (/)" autocomplete="off" />
               </label>
             </div>
           </div>
+          ${academySubPillsHtml}
           <div class="oa-modes-grid" id="oa-modes-grid">
-            ${this.renderGridCards(profile, activeTab, triad)}
+            ${this.renderGridCards(profile, activeTab, activeAcademySub, triad)}
           </div>
         </section>
 
@@ -453,11 +512,12 @@ export class HubView {
   private renderGridCards(
     profile: PlayerProfile,
     activeTab: HubTabId,
+    activeAcademySub: AcademySubFilter,
     triad: StandaloneGameId[]
   ): string {
     const queryNorm = normalizeSearch(this.searchQuery.trim());
     const filteredIds = STANDALONE_IDS.filter(
-      (id) => matchesTab(id, activeTab) && matchesSearch(id, queryNorm)
+      (id) => matchesTab(id, activeTab, activeAcademySub) && matchesSearch(id, queryNorm)
     );
 
     if (filteredIds.length === 0) {
@@ -466,7 +526,7 @@ export class HubView {
         <div class="oa-empty-search">
           <p>Sin resultados aquí${queryNorm ? ` para «${this.escapeAttr(this.searchQuery.trim())}»` : ''}.</p>
           ${
-            allCount > 0 && activeTab !== 'all'
+            allCount > 0 && (activeTab !== 'all' || activeAcademySub !== 'all')
               ? `<button type="button" class="oa-btn oa-btn-primary" id="oa-switch-all-tab">Ver ${allCount} en Todo</button>`
               : `<button type="button" class="oa-btn" id="oa-clear-search">Limpiar búsqueda</button>`
           }
@@ -478,11 +538,15 @@ export class HubView {
       .map((id: StandaloneGameId) => {
         const desc = GAME_CATALOG[id];
         const best = profile.bestScores[id] ?? 0;
+        const bestInf = profile.bestInfiniteScores?.[id] ?? 0;
         const axis = desc.axis as SkillAxis;
         const axisRating = profile.ratings[axis];
         const isDaily = triad.includes(id);
         const dailyDone = profile.dailyCompletedIds.includes(id);
         const isDirect = Boolean(profile.settings.skipGuideFor?.[id]);
+        const contextLabel = desc.academyGroup
+          ? ACADEMY_GROUP_LABELS[desc.academyGroup]
+          : desc.subtitle;
 
         return `
         <article class="oa-mode-tile" style="--tile-accent: ${desc.accent}; --tile-soft: ${desc.accentSoft}">
@@ -493,6 +557,7 @@ export class HubView {
                 <span class="oa-diamond-core">${getModeIconSvg(id, 22)}</span>
               </div>
               <span class="oa-mode-dim">${desc.dimension}</span>
+              <span class="oa-mode-context-tag">${contextLabel}</span>
               ${
                 isDaily
                   ? `<span class="oa-daily-tag ${dailyDone ? 'is-done' : ''}">${
@@ -510,6 +575,11 @@ export class HubView {
             <div class="oa-mode-stats">
               <span>${AXIS_META[axis].short} ${axisRating}</span>
               <span>RÉCORD ${best.toLocaleString('es-ES')}</span>
+              ${
+                bestInf > 0
+                  ? `<span class="oa-inf-record-tag" title="Mejor puntuación en Modo Infinito">INF ${bestInf.toLocaleString('es-ES')}</span>`
+                  : ''
+              }
             </div>
             <div class="oa-mode-foot-actions">
               ${isDirect ? '<span class="oa-direct-tag">Entrada directa</span>' : ''}
@@ -559,9 +629,9 @@ export class HubView {
     this.activeGuide?.close(true);
     this.activeGuide = new GuideOverlay(this.root, modeId, {
       context: 'hub',
-      onStart: (chosenId, practiceMode) => {
+      onStart: (chosenId, practiceMode, infiniteMode) => {
         this.activeGuide = null;
-        this.onLaunch(chosenId, practiceMode);
+        this.onLaunch(chosenId, practiceMode, infiniteMode);
       },
       onClose: () => {
         this.activeGuide = null;
@@ -576,9 +646,11 @@ export class HubView {
         synthAudio.ensure();
         synthAudio.uiClick();
         const mode = btn.dataset.launchMode as GameModeId;
-        const skip = Boolean(profileStore.get().settings.skipGuideFor?.[mode]);
+        const s = profileStore.get().settings;
+        const skip = Boolean(s.skipGuideFor?.[mode]);
         if (skip) {
-          this.onLaunch(mode, false);
+          const inf = Boolean(s.infiniteModeDefault && GAME_CATALOG[mode].supportsInfinite);
+          this.onLaunch(mode, false, inf);
         } else {
           this.openGuideFor(mode);
         }
@@ -596,7 +668,7 @@ export class HubView {
 
     this.root.querySelector('#oa-switch-all-tab')?.addEventListener('click', () => {
       synthAudio.uiClick();
-      profileStore.updateSettings({ hubTab: 'all' });
+      profileStore.updateSettings({ hubTab: 'all', academySubFilter: 'all' });
       this.render();
     });
 
@@ -673,15 +745,25 @@ export class HubView {
       });
     });
 
+    this.root.querySelectorAll<HTMLButtonElement>('[data-academy-sub]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        synthAudio.uiClick();
+        const sub = btn.dataset.academySub as AcademySubFilter;
+        profileStore.updateSettings({ academySubFilter: sub });
+        this.render();
+      });
+    });
+
     const searchInput = this.root.querySelector<HTMLInputElement>('#oa-hub-search');
     searchInput?.addEventListener('input', () => {
       this.searchQuery = searchInput.value;
       const profile = profileStore.get();
       const activeTab = this.getActiveTab(profile);
+      const activeAcademySub = this.getAcademySubFilter(profile);
       const triad = getDailyTriad();
       const grid = this.root.querySelector('#oa-modes-grid');
       if (grid) {
-        grid.innerHTML = this.renderGridCards(profile, activeTab, triad);
+        grid.innerHTML = this.renderGridCards(profile, activeTab, activeAcademySub, triad);
         this.bindGridEvents();
       }
     });

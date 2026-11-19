@@ -30,6 +30,7 @@ export class LaserTrack2DGame implements MiniGame {
   private lockStreak = 0;
   private tickAccum = 0;
   private decoyHoverTime = 0;
+  private offTargetTime = 0;
   private shiftTimer = 2.4;
 
   private hits = 0;
@@ -75,7 +76,7 @@ export class LaserTrack2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'RASTREO QUIRÚRGICO',
       accent: '#EC4899',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'FIJACIÓN 100% · SIGUE EL NÚCLEO',
     });
   }
@@ -108,7 +109,7 @@ export class LaserTrack2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -119,20 +120,26 @@ export class LaserTrack2DGame implements MiniGame {
 
     const w = this.canvas.width;
     const h = this.canvas.height;
-    const intensity = this.ctx.getIntensity();
+    const baseIntensity = this.ctx.getIntensity();
+    const progBoost =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.65, this.elapsed * 0.008)
+        : 0;
+    const intensity = baseIntensity + progBoost;
     const speedScale = 0.85 + intensity * 0.38;
 
-    this.targetRadius = Math.max(26, Math.round(42 - intensity * 4.5));
+    const minRad = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 22 : 26;
+    this.targetRadius = Math.max(minRad, Math.round(42 - intensity * 4.5));
 
     this.shiftTimer -= dt;
     if (this.shiftTimer <= 0) {
       const angle = (Math.random() - 0.5) * 2.1;
       const spd = Math.hypot(this.tvx, this.tvy);
       const curAngle = Math.atan2(this.tvy, this.tvx) + angle;
-      const targetSpd = Math.min(360, Math.max(165, spd * (0.94 + Math.random() * 0.16)));
+      const targetSpd = Math.min(390, Math.max(165, spd * (0.94 + Math.random() * 0.16)));
       this.tvx = Math.cos(curAngle) * targetSpd;
       this.tvy = Math.sin(curAngle) * targetSpd;
-      this.shiftTimer = Math.max(1.1, 2.3 / Math.max(0.8, intensity));
+      this.shiftTimer = Math.max(0.85, 2.3 / Math.max(0.8, intensity));
     }
 
     const pad = this.targetRadius + 24;
@@ -190,6 +197,28 @@ export class LaserTrack2DGame implements MiniGame {
       }
     } else {
       this.decoyHoverTime = Math.max(0, this.decoyHoverTime - dt * 2);
+    }
+
+    if (this.ctx.infiniteMode && !this.isGauntletSlice && (this.hasPointer || this.elapsed > 3)) {
+      if (!inOuter) {
+        this.offTargetTime += dt;
+        if (this.offTargetTime >= 3.2) {
+          this.offTargetTime = 0;
+          this.misses += 1;
+          this.combo = 0;
+          this.lockStreak = 0;
+          this.ctx.breakCombo();
+          synthAudio.damage();
+          this.ctx.toast('SEÑAL PERDIDA -1 ESCUDO', 'bad');
+          const left = this.ctx.damage(1);
+          if (left <= 0) {
+            this.ctx.finish(this.getMetrics(false));
+            return;
+          }
+        }
+      } else {
+        this.offTargetTime = Math.max(0, this.offTargetTime - dt * 2.5);
+      }
     }
 
     this.tickAccum += dt;
@@ -321,8 +350,11 @@ export class LaserTrack2DGame implements MiniGame {
   }
 
   public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const pct = this.totalTicks > 0 ? (this.trackTicks / this.totalTicks) * 100 : 80;
-    const aimScore = Math.min(980, 240 + pct * 6.5 + this.maxCombo * 8 - this.misses * 25);
+    const pct = this.totalTicks > 0 ? (this.trackTicks / this.totalTicks) * 100 : 0;
+    const aimScore =
+      this.totalTicks === 0
+        ? 140
+        : Math.min(980, 240 + pct * 6.5 + this.maxCombo * 8 - this.misses * 25);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

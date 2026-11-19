@@ -110,7 +110,7 @@ export class Aim3DGame implements MiniGame {
       dimension: '3D',
       phaseLabel: 'PUNTERÍA TÁCTICA 3D',
       accent: '#FF4D38',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'PRECISIÓN 100%',
     });
   }
@@ -356,10 +356,8 @@ export class Aim3DGame implements MiniGame {
         this.spawnExplosion(target.mesh.position, target.kind === 'gold' ? '#FFB800' : target.kind === 'drone' ? '#00E5FF' : '#FF4D38');
         this.removeTarget(idx);
 
-        // Respawn replacement + occasional gold orb
-        const nextKind: TargetEntity['kind'] =
-          Math.random() < 0.14 ? 'gold' : Math.random() < 0.4 ? 'drone' : 'flick';
-        this.spawnTarget(nextKind);
+        // Respawn replacement + occasional gold orb, scaling target density in infinite/progressive
+        this.ensureTargets();
       }
     } else {
       this.combo = 0;
@@ -375,13 +373,42 @@ export class Aim3DGame implements MiniGame {
     });
   }
 
+  private desiredTargetCount(): number {
+    if (!this.ctx.infiniteMode && this.ctx.difficulty !== 'progressive') {
+      return 3;
+    }
+    const intensity = this.ctx.getIntensity();
+    if (intensity >= 1.75 || this.hits >= 42) return 5;
+    if (intensity >= 1.35 || this.hits >= 18) return 4;
+    return 3;
+  }
+
+  private ensureTargets(): void {
+    const desired = this.desiredTargetCount();
+    const intensity = this.ctx.getIntensity();
+    const droneChance =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.65, 0.4 + Math.max(0, intensity - 1) * 0.2)
+        : 0.4;
+    while (this.targets.length < desired) {
+      const nextKind: TargetEntity['kind'] =
+        Math.random() < 0.13 ? 'gold' : Math.random() < droneChance ? 'drone' : 'flick';
+      this.spawnTarget(nextKind);
+    }
+  }
+
   private spawnTarget(kind: TargetEntity['kind']): void {
     const intensity = this.ctx.getIntensity();
+    const progressiveBoost =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.45, this.elapsed * 0.004)
+        : 0;
+    const effIntensity = intensity + progressiveBoost;
     const z = -9 - Math.random() * 11;
     const x = (Math.random() - 0.5) * 12.5;
     const y = 1.4 + Math.random() * 4.4;
 
-    const sizeMult = Math.max(0.72, Math.min(1.18, 1.12 - (intensity - 0.8) * 0.28));
+    const sizeMult = Math.max(0.68, Math.min(1.18, 1.12 - (effIntensity - 0.8) * 0.26));
     const radius = (kind === 'gold' ? 0.44 : kind === 'drone' ? 0.56 : 0.64) * sizeMult;
     const color = kind === 'gold' ? '#FFB800' : kind === 'drone' ? '#00E5FF' : '#FF4D38';
 
@@ -414,12 +441,13 @@ export class Aim3DGame implements MiniGame {
     const vel =
       kind === 'drone'
         ? new THREE.Vector3(
-            (Math.random() < 0.5 ? -1 : 1) * (2.6 + Math.random() * 2.2) * intensity,
-            (Math.random() - 0.5) * 1.4 * intensity,
+            (Math.random() < 0.5 ? -1 : 1) * (2.6 + Math.random() * 2.2) * effIntensity,
+            (Math.random() - 0.5) * 1.4 * effIntensity,
             0
           )
         : new THREE.Vector3(0, 0, 0);
 
+    const minLife = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 1.75 : 2.1;
     this.targets.push({
       id: this.nextId++,
       mesh,
@@ -429,7 +457,7 @@ export class Aim3DGame implements MiniGame {
       vel,
       radius,
       spawnedAt: performance.now(),
-      lifeLimit: Math.max(2.1, (kind === 'gold' ? 3.2 : 4.6) / Math.pow(intensity, 0.7)),
+      lifeLimit: Math.max(minLife, (kind === 'gold' ? 3.2 : 4.6) / Math.pow(effIntensity, 0.7)),
       phase: Math.random() * Math.PI * 2,
     });
   }
@@ -476,7 +504,7 @@ export class Aim3DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const rem = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: rem });
       if (rem <= 0) {
@@ -533,7 +561,7 @@ export class Aim3DGame implements MiniGame {
             return;
           }
         }
-        this.spawnTarget(Math.random() < 0.4 ? 'drone' : 'flick');
+        this.ensureTargets();
       }
     }
 
@@ -584,7 +612,7 @@ export class Aim3DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const accuracy = this.shots > 0 ? (this.hits / this.shots) * 100 : 100;
+    const accuracy = this.shots > 0 ? (this.hits / this.shots) * 100 : 0;
     const avgReactionMs = this.reactionSamples.length
       ? this.reactionSamples.reduce((a, b) => a + b, 0) / this.reactionSamples.length
       : 450;
@@ -593,7 +621,10 @@ export class Aim3DGame implements MiniGame {
     const speedScore = Math.max(0, Math.min(450, (900 - avgReactionMs) * 0.72));
     const accScore = accuracy * 3.8;
     const volumeBonus = Math.min(200, this.hits * 6);
-    const aimPerf = Math.max(150, Math.min(1000, Math.round(speedScore + accScore + volumeBonus)));
+    const aimPerf =
+      this.shots === 0
+        ? 150
+        : Math.max(150, Math.min(1000, Math.round(speedScore + accScore + volumeBonus)));
 
     return {
       score: this.score,

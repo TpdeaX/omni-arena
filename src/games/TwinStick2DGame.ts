@@ -250,8 +250,15 @@ export class TwinStick2DGame implements MiniGame {
     }
 
     const r = Math.random();
+    const intensity = this.ctx.getIntensity();
+    const splitCut = Math.min(0.32, 0.22 + Math.max(0, intensity - 1.1) * 0.08);
+    const chargeCut = Math.min(0.62, splitCut + 0.22 + Math.max(0, intensity - 1.1) * 0.08);
     const kind: Enemy['kind'] =
-      r < 0.22 && this.elapsed > 5 ? 'splitter' : r < 0.44 && this.elapsed > 3 ? 'charger' : 'chaser';
+      r < splitCut && this.elapsed > 5
+        ? 'splitter'
+        : r < chargeCut && this.elapsed > 3
+        ? 'charger'
+        : 'chaser';
 
     this.enemies.push({
       x,
@@ -340,12 +347,17 @@ export class TwinStick2DGame implements MiniGame {
 
     // Spawn enemies
     const intensity = this.ctx.getIntensity();
+    const isProgressive = this.ctx.difficulty === 'progressive';
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
       this.spawnEnemy();
+      const minPace = isProgressive ? 0.19 : 0.26;
+      const elapsedCut = isProgressive
+        ? Math.min(0.75, this.elapsed * 0.018)
+        : this.elapsed * 0.018;
       const pace = Math.max(
-        0.26,
-        (1.05 - this.elapsed * 0.018 - (this.isGauntletSlice ? 0.15 : 0)) / Math.sqrt(intensity)
+        minPace,
+        (1.05 - elapsedCut - (this.isGauntletSlice ? 0.15 : 0)) / Math.sqrt(intensity)
       );
       this.spawnTimer = pace;
     }
@@ -379,7 +391,10 @@ export class TwinStick2DGame implements MiniGame {
     }
 
     // Update enemies
-    const diffMult = (1 + Math.min(0.75, this.elapsed * 0.015)) * (0.85 + intensity * 0.22);
+    const timeDiff = isProgressive
+      ? Math.min(1.25, this.elapsed * 0.018)
+      : Math.min(0.75, this.elapsed * 0.015);
+    const diffMult = (1 + timeDiff) * (0.85 + intensity * 0.22);
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const en = this.enemies[i];
       const ang = Math.atan2(this.py - en.y, this.px - en.x);
@@ -624,16 +639,17 @@ export class TwinStick2DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const acc = this.shots > 0 ? Math.min(100, (this.hits / this.shots) * 100) : 100;
-    const aimPerf = Math.max(
-      180,
-      Math.min(1000, Math.round(220 + this.kills * 16 + acc * 2.4))
-    );
+    const acc = this.shots > 0 ? Math.min(100, (this.hits / this.shots) * 100) : 0;
+    const aimPerf =
+      this.shots === 0 && this.kills === 0
+        ? 140
+        : Math.max(150, Math.min(1000, Math.round(180 + this.kills * 16 + acc * 2.4)));
     return {
       score: this.score,
       maxCombo: this.maxCombo,
       accuracy: acc,
       hits: this.kills,
+      wavesCleared: Math.floor(this.kills / 10),
       survived: true,
       axisPerformances: {
         aim: aimPerf,

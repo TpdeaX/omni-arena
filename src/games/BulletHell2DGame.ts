@@ -171,19 +171,22 @@ export class BulletHell2DGame implements MiniGame {
 
     if (this.invuln > 0) this.invuln -= dt;
 
+    const isProgressive = this.ctx.difficulty === 'progressive';
+    const timeRamp = isProgressive
+      ? Math.min(2.2, this.elapsed * 0.036)
+      : Math.min(1.4, this.elapsed * 0.032);
     const difficulty =
-      (1 + Math.min(1.4, this.elapsed * 0.032) + (this.isGauntletSlice ? 0.2 : 0)) *
-      this.ctx.getIntensity();
+      (1 + timeRamp + (this.isGauntletSlice ? 0.2 : 0)) * this.ctx.getIntensity();
     const cx = this.width / 2;
     const cy = Math.max(78, this.height * 0.2);
 
     // Pattern 1: Spiral emitter
-    this.emitterAngle += dt * 2.1 * difficulty;
+    this.emitterAngle += dt * 2.1 * Math.min(3.2, difficulty);
     this.spiralTimer -= dt;
     if (this.spiralTimer <= 0) {
-      this.spiralTimer = Math.max(0.085, 0.17 / Math.sqrt(difficulty));
-      const arms = difficulty > 1.7 ? 4 : 3;
-      const spd = 165 * Math.sqrt(difficulty);
+      this.spiralTimer = Math.max(isProgressive ? 0.072 : 0.085, 0.17 / Math.sqrt(difficulty));
+      const arms = difficulty > 2.6 ? 5 : difficulty > 1.7 ? 4 : 3;
+      const spd = 165 * Math.sqrt(Math.min(3.5, difficulty));
       for (let a = 0; a < arms; a++) {
         const ang = this.emitterAngle + (a * Math.PI * 2) / arms;
         this.bullets.push({
@@ -201,8 +204,8 @@ export class BulletHell2DGame implements MiniGame {
     // Pattern 2: Aimed burst ring
     this.ringTimer -= dt;
     if (this.ringTimer <= 0) {
-      this.ringTimer = Math.max(1.5, 2.7 - difficulty * 0.35);
-      const count = 12;
+      this.ringTimer = Math.max(isProgressive ? 1.25 : 1.5, 2.7 - difficulty * 0.35);
+      const count = difficulty > 2.4 ? 16 : difficulty > 1.8 ? 14 : 12;
       const baseAng = Math.atan2(this.py - cy, this.px - cx);
       for (let i = 0; i < count; i++) {
         const ang = baseAng + (i * Math.PI * 2) / count;
@@ -221,7 +224,7 @@ export class BulletHell2DGame implements MiniGame {
     // Pattern 3: Telegraphed sniper laser
     this.beamTimer -= dt;
     if (this.beamTimer <= 0) {
-      this.beamTimer = Math.max(2.2, 4.0 - difficulty * 0.5);
+      this.beamTimer = Math.max(isProgressive ? 1.65 : 2.2, 4.0 - difficulty * 0.45);
       const fromLeft = Math.random() < 0.5;
       const sx = fromLeft ? 0 : this.width;
       const sy = Math.random() * this.height * 0.7;
@@ -449,13 +452,17 @@ export class BulletHell2DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const reflexPerf = Math.max(
-      180,
-      Math.min(1000, Math.round(240 + this.elapsed * 11 + this.grazes * 14))
-    );
+    const reflexPerf =
+      this.elapsed < 3 && this.grazes === 0
+        ? 140
+        : Math.max(
+            140,
+            Math.min(1000, Math.round(140 + this.elapsed * 11.5 + this.grazes * 15))
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,
+      hits: this.grazes,
       grazes: this.grazes,
       survived: true,
       axisPerformances: {

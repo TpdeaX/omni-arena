@@ -58,7 +58,7 @@ export class SonicRing2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'ANILLO SÓNICO',
       accent: '#14B8A6',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: this.ctx.isTouch
         ? 'Toca la pantalla cuando la aguja cruce el arco'
         : 'Espacio, clic, J o K cuando la aguja cruce el arco',
@@ -81,7 +81,8 @@ export class SonicRing2DGame implements MiniGame {
     this.targetAngle = this.normalizeAngle(this.needleAngle + offset);
     this.targetKind = Math.random() < 0.24 ? 'gold' : 'normal';
     const baseWidth = this.targetKind === 'gold' ? 0.38 : 0.56;
-    this.targetWidth = Math.max(0.26, baseWidth - Math.min(0.14, this.combo * 0.008) / Math.max(0.8, intensity));
+    const shrink = Math.min(0.18, this.combo * 0.007 + Math.max(0, intensity - 1) * 0.08);
+    this.targetWidth = Math.max(0.24, baseWidth - shrink);
     this.arcPassedOnce = false;
   }
 
@@ -149,7 +150,7 @@ export class SonicRing2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -159,7 +160,12 @@ export class SonicRing2DGame implements MiniGame {
     }
 
     const intensity = this.ctx.getIntensity();
-    this.spinSpeed = (2.45 + Math.min(1.6, this.combo * 0.06)) * (0.85 + intensity * 0.22);
+    const progSpin =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(1.35, this.elapsed * 0.012)
+        : 0;
+    this.spinSpeed =
+      (2.45 + Math.min(2.1, this.combo * 0.06 + progSpin)) * (0.85 + intensity * 0.22);
 
     this.needleAngle = this.normalizeAngle(this.needleAngle + this.spinSpeed * this.spinDir * dt);
 
@@ -285,8 +291,11 @@ export class SonicRing2DGame implements MiniGame {
 
   public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const acc = total > 0 ? (this.hits / total) * 100 : 100;
-    const rhythmScore = Math.min(980, 260 + this.hits * 24 + this.maxCombo * 14 - this.misses * 20);
+    const acc = total > 0 ? (this.hits / total) * 100 : 0;
+    const rhythmScore =
+      total === 0
+        ? 140
+        : Math.min(980, 260 + this.hits * 24 + this.maxCombo * 14 - this.misses * 20);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

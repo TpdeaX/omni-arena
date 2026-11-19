@@ -41,9 +41,11 @@ export class Rhythm2DGame implements MiniGame {
 
   private bpm = 128;
   private beatDur = 60 / 128;
+  private startIntensity = 1.0;
   private readonly travelTime = 1.35; // seconds from top to hit line
   private readonly standaloneDuration = 50;
 
+  private elapsedReal = 0;
   private trackTime = 0;
   private nextBeatIndex = 0;
   private lastAudioBeat = -1;
@@ -80,6 +82,7 @@ export class Rhythm2DGame implements MiniGame {
     synthAudio.ensure();
 
     const startIntensity = ctx.getIntensity();
+    this.startIntensity = startIntensity;
     this.bpm = Math.round(112 + (startIntensity - 0.78) * 62);
     this.bpm = Math.max(106, Math.min(156, this.bpm));
     this.beatDur = 60 / this.bpm;
@@ -97,7 +100,7 @@ export class Rhythm2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'RITMO SOBRECARGA',
       accent: '#0891B2',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: `${this.bpm} BPM · PREC 100%`,
     });
   }
@@ -109,6 +112,16 @@ export class Rhythm2DGame implements MiniGame {
     const startX = (this.width - totalW) / 2;
     const hitY = this.height - Math.max(76, this.height * 0.16);
     return { totalW, laneW, startX, hitY };
+  }
+
+  private getTempoScale(): number {
+    if (!this.ctx.infiniteMode && this.ctx.difficulty !== 'progressive') {
+      return 1;
+    }
+    const intensity = this.ctx.getIntensity();
+    const intensityBoost = Math.max(0, intensity - this.startIntensity) * 0.28;
+    const timeBoost = this.ctx.infiniteMode ? Math.min(0.24, this.elapsedReal * 0.0018) : 0;
+    return Math.min(1.48, 1 + intensityBoost + timeBoost);
   }
 
   private scheduleNotesAhead(): void {
@@ -127,7 +140,8 @@ export class Rhythm2DGame implements MiniGame {
         barPos === 11 ||
         barPos === 14 ||
         barPos === 15 ||
-        (density >= 1.25 && (barPos === 5 || barPos === 13));
+        (density >= 1.25 && (barPos === 5 || barPos === 13)) ||
+        (density >= 1.55 && (barPos === 1 || barPos === 9));
       if (isQuarter || doEighth) {
         const prev = this.notes[this.notes.length - 1];
         let lane = (eighthIdx * 3 + Math.floor(eighthIdx / 4)) % 4;
@@ -143,7 +157,11 @@ export class Rhythm2DGame implements MiniGame {
         });
 
         // Occasional chord on downbeat after beat 16
-        if (eighthIdx > 16 && barPos === 0 && Math.random() < 0.55) {
+        const chordChance =
+          this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+            ? Math.min(0.75, 0.55 + Math.max(0, density - 1.2) * 0.25)
+            : 0.55;
+        if (eighthIdx > 16 && barPos === 0 && Math.random() < chordChance) {
           this.notes.push({
             id: this.nextNoteId++,
             lane: (lane + 2) % 4,
@@ -163,12 +181,13 @@ export class Rhythm2DGame implements MiniGame {
     this.laneFlash[lane] = 1;
     this.laneHeld[lane] = true;
 
-    // Find closest unhit note in this lane within 170ms window
+    // Find closest unhit note in this lane within 175ms real-time window
+    const tempoScale = this.getTempoScale();
     let best: RhythmNote | null = null;
     let bestAbs = 999;
     for (const n of this.notes) {
       if (n.hit || n.missed || n.lane !== lane) continue;
-      const diff = Math.abs(this.trackTime - n.targetTime);
+      const diff = Math.abs(this.trackTime - n.targetTime) / tempoScale;
       if (diff <= 0.175 && diff < bestAbs) {
         best = n;
         bestAbs = diff;
@@ -183,7 +202,7 @@ export class Rhythm2DGame implements MiniGame {
     }
 
     best.hit = true;
-    const signedMs = Math.round((this.trackTime - best.targetTime) * 1000);
+    const signedMs = Math.round(((this.trackTime - best.targetTime) / tempoScale) * 1000);
     const absMs = Math.abs(signedMs);
     this.offsetAbsSum += absMs;
     this.hits += 1;
@@ -274,17 +293,20 @@ export class Rhythm2DGame implements MiniGame {
     const total = this.hits + this.misses;
     const acc = total > 0 ? Math.round((this.hits / total) * 100) : 100;
     const avgMs = this.hits > 0 ? Math.round(this.offsetAbsSum / this.hits) : 0;
+    const liveBpm = Math.round(this.bpm * this.getTempoScale());
     this.ctx.setHud({
-      subStat: `${this.bpm} BPM · PREC ${acc}% · ±${avgMs}ms`,
+      subStat: `${liveBpm} BPM · PREC ${acc}% · ±${avgMs}ms`,
     });
   }
 
   public update(dt: number): void {
     if (this.paused || this.destroyed) return;
-    this.trackTime += dt;
+    this.elapsedReal += dt;
+    const tempoScale = this.getTempoScale();
+    this.trackTime += dt * tempoScale;
 
-    if (!this.isGauntletSlice) {
-      const rem = Math.max(0, this.standaloneDuration - this.trackTime);
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
+      const rem = Math.max(0, this.standaloneDuration - this.elapsedReal);
       this.ctx.setHud({ timeLeftSec: rem });
       if (rem <= 0) {
         this.ctx.finish(this.getMetrics());
@@ -315,7 +337,7 @@ export class Rhythm2DGame implements MiniGame {
     const { startX, laneW, hitY } = this.laneGeometry();
     for (let i = this.notes.length - 1; i >= 0; i--) {
       const n = this.notes[i];
-      if (!n.hit && !n.missed && this.trackTime - n.targetTime > 0.18) {
+      if (!n.hit && !n.missed && (this.trackTime - n.targetTime) / tempoScale > 0.18) {
         n.missed = true;
         this.misses += 1;
         this.combo = 0;
@@ -481,13 +503,14 @@ export class Rhythm2DGame implements MiniGame {
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const acc = total > 0 ? (this.hits / total) * 100 : 100;
+    const acc = total > 0 ? (this.hits / total) * 100 : 0;
     const avgOffset = this.hits > 0 ? this.offsetAbsSum / this.hits : 85;
     const perfectRatio = this.hits > 0 ? this.perfects / this.hits : 0;
 
     const timingScore = Math.max(0, (130 - avgOffset) * 4.2);
     const accScore = acc * 4.2 + perfectRatio * 180;
-    const rhythmPerf = Math.max(150, Math.min(1000, Math.round(timingScore + accScore)));
+    const rhythmPerf =
+      total === 0 ? 150 : Math.max(150, Math.min(1000, Math.round(timingScore + accScore)));
 
     return {
       score: this.score,

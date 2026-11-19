@@ -160,7 +160,7 @@ export const Icons = {
     svgWrap('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s),
   closeX: (s = 16) =>
     svgWrap('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s),
-  // --- 8 Nuevas Academias ---
+  // --- Academias Estrategia / 3D / Música / IQ ---
   chess: (s = 20) =>
     svgWrap(
       '<path d="M8 19h8"/><path d="M7 22h10"/><path d="M9 19l1-7H8l1-4a3 3 0 0 1 6 0l1 4h-2l1 7"/><circle cx="12" cy="4" r="1.5"/>',
@@ -186,6 +186,21 @@ export const Icons = {
       '<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><rect x="7.5" y="5" width="3" height="8" fill="currentColor"/><rect x="13.5" y="5" width="3" height="8" fill="currentColor"/>',
       s
     ),
+  drums: (s = 20) =>
+    svgWrap(
+      '<ellipse cx="12" cy="11" rx="8" ry="3.5"/><path d="M4 11v5c0 1.9 3.6 3.5 8 3.5s8-1.6 8-3.5v-5"/><line x1="5" y1="4" x2="11" y2="10"/><line x1="19" y1="4" x2="13" y2="10"/>',
+      s
+    ),
+  guitar: (s = 20) =>
+    svgWrap(
+      '<path d="M15 4l5 5-2 2-5-5 2-2z"/><line x1="14" y1="8" x2="9" y2="13"/><circle cx="7.5" cy="16.5" r="4.5"/><circle cx="7.5" cy="16.5" r="1.5"/>',
+      s
+    ),
+  band: (s = 20) =>
+    svgWrap(
+      '<rect x="3" y="6" width="3" height="12" rx="1"/><rect x="8" y="8" width="3" height="10" rx="1"/><rect x="13" y="9" width="3" height="9" rx="1"/><rect x="18" y="10" width="3" height="8" rx="1"/><line x1="2" y1="14" x2="22" y2="14"/>',
+      s
+    ),
   matrix: (s = 20) =>
     svgWrap(
       '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><path d="M18.5 16.5v4"/><path d="M16.5 18.5h4"/>',
@@ -199,6 +214,31 @@ export const Icons = {
   hanoi: (s = 20) =>
     svgWrap(
       '<line x1="3" y1="20" x2="21" y2="20"/><line x1="6" y1="7" x2="6" y2="20"/><line x1="12" y1="7" x2="12" y2="20"/><line x1="18" y1="7" x2="18" y2="20"/><rect x="4" y="16" width="4" height="2" rx="0.5"/><rect x="9" y="13" width="6" height="2" rx="0.5"/><rect x="8" y="16" width="8" height="2" rx="0.5"/>',
+      s
+    ),
+  spatial3d: (s = 20) =>
+    svgWrap(
+      '<path d="M12 3l6 3.5v7L12 17l-6-3.5v-7L12 3z"/><path d="M12 10l6-3.5"/><path d="M12 10v7"/><path d="M12 10L6 6.5"/><path d="M17 19c1.8-1 3-2.5 3.5-4.5"/><polyline points="19 20.5 17 19 18.5 17"/>',
+      s
+    ),
+  nonogram: (s = 20) =>
+    svgWrap(
+      '<rect x="6" y="6" width="14" height="14" rx="1.5"/><line x1="13" y1="6" x2="13" y2="20"/><line x1="6" y1="13" x2="20" y2="13"/><rect x="7.5" y="7.5" width="4" height="4" fill="currentColor"/><rect x="14.5" y="14.5" width="4" height="4" fill="currentColor"/><path d="M3 9h1.5"/><path d="M3 16h1.5"/><path d="M9 3v1.5"/><path d="M16 3v1.5"/>',
+      s
+    ),
+  logicseq: (s = 20) =>
+    svgWrap(
+      '<circle cx="6" cy="12" r="3"/><circle cx="18" cy="7" r="3"/><circle cx="18" cy="17" r="3"/><line x1="8.7" y1="10.8" x2="15.3" y2="8.2"/><line x1="8.7" y1="13.2" x2="15.3" y2="15.8"/>',
+      s
+    ),
+  memorypath: (s = 20) =>
+    svgWrap(
+      '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="8" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6.5l7 1"/><path d="M16.5 10l-7 6"/><path d="M10.5 18h5"/>',
+      s
+    ),
+  infinity: (s = 18) =>
+    svgWrap(
+      '<path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/>',
       s
     ),
   // --- UI / Guía / Ecosistema ---

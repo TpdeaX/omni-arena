@@ -71,7 +71,7 @@ export class NeonSnake2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'SERPIENTE NEÓN',
       accent: '#10B981',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'ORBES 0 · LARGO 4',
     });
   }
@@ -123,6 +123,12 @@ export class NeonSnake2DGame implements MiniGame {
     }
     if (free.length > 0) {
       this.food = free[Math.floor(Math.random() * free.length)];
+    } else {
+      this.score += 1000;
+      this.ctx.addScore(1000, 3);
+      this.ctx.toast('TABLERO COMPLETADO · NUEVO CICLO +1000', 'good');
+      this.resetSnake();
+      return;
     }
     if (!this.bonusFood && Math.random() < 0.25 && free.length > 1) {
       this.bonusFood = free[Math.floor(Math.random() * free.length)];
@@ -169,7 +175,7 @@ export class NeonSnake2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -184,9 +190,14 @@ export class NeonSnake2DGame implements MiniGame {
     }
 
     const intensity = this.ctx.getIntensity();
+    const progFactor =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.028, this.elapsed * 0.00025)
+        : 0;
+    const minStep = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 0.056 : 0.068;
     const stepTime = Math.max(
-      0.068,
-      (0.135 - Math.min(0.04, this.hits * 0.002)) / Math.max(0.8, intensity)
+      minStep,
+      (0.135 - Math.min(0.045, this.hits * 0.002) - progFactor) / Math.max(0.8, intensity)
     );
     this.stepAcc += dt;
     while (this.stepAcc >= stepTime) {
@@ -333,8 +344,11 @@ export class NeonSnake2DGame implements MiniGame {
     survived = true
   ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
-    const reflexScore = Math.min(980, 260 + this.hits * 34 + this.maxCombo * 14 - this.misses * 40);
+    const accuracy = total > 0 ? (this.hits / total) * 100 : 0;
+    const reflexScore =
+      total === 0
+        ? 140
+        : Math.min(980, 260 + this.hits * 34 + this.maxCombo * 14 - this.misses * 40);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

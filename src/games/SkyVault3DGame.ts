@@ -17,6 +17,7 @@ interface Platform3D {
   phase: number;
   crumbleTimer: number; // >0 once stepped on
   gone: boolean;
+  landed: boolean;
 }
 
 interface Gem3D {
@@ -57,6 +58,8 @@ export class SkyVault3DGame implements MiniGame {
   private furthestZ = 0;
   private generatedUntilZ = 0;
   private gemsTaken = 0;
+  private platformsLanded = 0;
+  private elapsed = 0;
   private combo = 0;
   private maxCombo = 0;
   private score = 0;
@@ -92,7 +95,7 @@ export class SkyVault3DGame implements MiniGame {
     this.scene.add(sun);
 
     this.buildPlayer();
-    this.createPlatform(0, 0, 0, 5.2, 5.6, 'solid');
+    this.createPlatform(0, 0, 0, 5.2, 5.6, 'solid', true);
     this.generatedUntilZ = -3;
     this.ensureCourseAhead();
 
@@ -182,7 +185,8 @@ export class SkyVault3DGame implements MiniGame {
     z: number,
     w: number,
     d: number,
-    kind: Platform3D['kind']
+    kind: Platform3D['kind'],
+    initialLanded = false
   ): void {
     const color =
       kind === 'moving'
@@ -220,22 +224,28 @@ export class SkyVault3DGame implements MiniGame {
       phase: Math.random() * Math.PI * 2,
       crumbleTimer: 0,
       gone: false,
+      landed: initialLanded,
     });
   }
 
   private ensureCourseAhead(): void {
     const intensity = this.ctx.getIntensity();
+    const progExtra =
+      this.ctx.difficulty === 'progressive' ? Math.min(0.45, this.elapsed * 0.004) : 0;
+    const eff = Math.min(2.2, intensity + progExtra);
     while (this.generatedUntilZ > this.pz - 65) {
       const prev = this.platforms[this.platforms.length - 1];
-      const gap = 3.6 + Math.random() * (1.8 + intensity * 0.7);
+      const gap = Math.min(5.85, 3.6 + Math.random() * (1.8 + eff * 0.65));
       const nextZ = prev.z - prev.d / 2 - gap;
       const nextX = Math.max(-5.5, Math.min(5.5, prev.x + (Math.random() - 0.5) * 4.6));
       const nextY = Math.max(-1.5, Math.min(4.2, prev.y + (Math.random() - 0.45) * 1.4));
 
       const roll = Math.random();
+      const movingCut = Math.min(0.36, 0.24 + Math.max(0, eff - 1) * 0.1);
+      const fragileCut = Math.min(0.58, movingCut + 0.18 + Math.max(0, eff - 1) * 0.06);
       const kind: Platform3D['kind'] =
-        roll < 0.24 ? 'moving' : roll < 0.42 ? 'fragile' : roll < 0.54 ? 'boost' : 'solid';
-      const w = Math.max(2.1, (kind === 'solid' ? 3.2 : 2.7) - (intensity - 1) * 0.35);
+        roll < movingCut ? 'moving' : roll < fragileCut ? 'fragile' : roll < fragileCut + 0.12 ? 'boost' : 'solid';
+      const w = Math.max(2.05, (kind === 'solid' ? 3.2 : 2.7) - (eff - 1) * 0.35);
       const d = kind === 'boost' ? 2.8 : 3.2 + Math.random() * 1.2;
 
       this.createPlatform(nextX, nextY, nextZ - d / 2, w, d, kind);
@@ -286,15 +296,19 @@ export class SkyVault3DGame implements MiniGame {
 
   public update(dt: number): void {
     if (this.paused || this.destroyed) return;
+    this.elapsed += dt;
 
     const intensity = this.ctx.getIntensity();
+    const progExtra =
+      this.ctx.difficulty === 'progressive' ? Math.min(0.45, this.elapsed * 0.004) : 0;
+    const effIntensity = Math.min(2.25, intensity + progExtra);
 
     // Update moving & crumbling platforms
     for (const p of this.platforms) {
       if (p.gone) continue;
       if (p.kind === 'moving') {
         const prevX = p.x;
-        p.x = p.baseX + Math.sin(performance.now() * 0.001 * p.moveSpd * intensity + p.phase) * p.moveAmp;
+        p.x = p.baseX + Math.sin(this.elapsed * p.moveSpd * effIntensity + p.phase) * p.moveAmp;
         p.mesh.position.x = p.x;
         if (this.grounded && Math.abs(this.pz - p.z) <= p.d / 2 + 0.38 && Math.abs(this.py - 0.45 - p.y) < 0.25) {
           this.px += p.x - prevX;
@@ -352,11 +366,15 @@ export class SkyVault3DGame implements MiniGame {
         onGround = true;
         this.jumpsLeft = 2;
 
+        if (!p.landed) {
+          p.landed = true;
+          this.platformsLanded += 1;
+        }
         if (p.kind === 'solid' || p.kind === 'moving') {
           this.safePos.set(p.x, p.y + 1.2, p.z);
         }
         if (p.kind === 'fragile' && p.crumbleTimer === 0) {
-          p.crumbleTimer = 0.65;
+          p.crumbleTimer = Math.max(0.38, 0.65 / Math.max(0.85, effIntensity));
         }
         if (p.kind === 'boost') {
           this.vy = 16.5;
@@ -429,6 +447,26 @@ export class SkyVault3DGame implements MiniGame {
 
     this.ensureCourseAhead();
 
+    // Clean up far-behind platforms & gems to keep infinite runs memory-lean
+    for (let i = this.platforms.length - 1; i >= 0; i--) {
+      const p = this.platforms[i];
+      if (p.z > this.pz + 28 && this.platforms.length > 8) {
+        this.scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        (p.mesh.material as THREE.Material).dispose();
+        this.platforms.splice(i, 1);
+      }
+    }
+    for (let i = this.gems.length - 1; i >= 0; i--) {
+      const gm = this.gems[i];
+      if (gm.taken || gm.mesh.position.z > this.pz + 24) {
+        this.scene.remove(gm.mesh);
+        gm.mesh.geometry.dispose();
+        (gm.mesh.material as THREE.Material).dispose();
+        this.gems.splice(i, 1);
+      }
+    }
+
     // Update meshes & smooth chase camera
     this.playerMesh.position.set(this.px, this.py, this.pz);
     this.playerMesh.rotation.y += dt * (this.grounded ? 1.5 : 4.5);
@@ -469,14 +507,21 @@ export class SkyVault3DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const perf = Math.max(
-      180,
-      Math.min(1000, Math.round(220 + this.furthestZ * 3.8 + this.gemsTaken * 26))
-    );
+    const perf =
+      this.furthestZ < 3 && this.gemsTaken === 0 && this.platformsLanded === 0
+        ? 140
+        : Math.max(
+            180,
+            Math.min(
+              1000,
+              Math.round(180 + this.furthestZ * 3.8 + this.gemsTaken * 26 + this.platformsLanded * 10)
+            )
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,
       hits: this.gemsTaken,
+      puzzlesSolved: this.platformsLanded,
       survived: true,
       axisPerformances: {
         agility: perf,

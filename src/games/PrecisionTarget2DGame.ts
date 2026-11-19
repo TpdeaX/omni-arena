@@ -56,7 +56,7 @@ export class PrecisionTarget2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'CAZADOR DE REFLEJOS',
       accent: '#F43F5E',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'BLANCOS 0 · PRECISIÓN 100%',
     });
   }
@@ -67,9 +67,16 @@ export class PrecisionTarget2DGame implements MiniGame {
     const pad = 64;
     const roll = Math.random();
     const kind: TargetOrb['kind'] = roll < 0.16 ? 'decoy' : roll < 0.32 ? 'gold' : 'normal';
-    const r = kind === 'gold' ? 24 : 30;
     const intensity = this.ctx.getIntensity();
-    const maxTtl = Math.max(0.85, (kind === 'gold' ? 1.35 : 1.75) / Math.max(0.8, intensity));
+    const prog =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.45, this.elapsed * 0.005)
+        : 0;
+    const eff = intensity + prog;
+    const baseR = kind === 'gold' ? 24 : 30;
+    const r = Math.max(18, Math.round(baseR - Math.max(0, eff - 1) * 3.5));
+    const minTtl = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 0.72 : 0.85;
+    const maxTtl = Math.max(minTtl, (kind === 'gold' ? 1.35 : 1.75) / Math.max(0.8, eff));
 
     this.targets.push({
       x: pad + Math.random() * Math.max(40, w - pad * 2),
@@ -127,7 +134,7 @@ export class PrecisionTarget2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -137,10 +144,15 @@ export class PrecisionTarget2DGame implements MiniGame {
     }
 
     const intensity = this.ctx.getIntensity();
+    const maxTargets =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(6, 4 + Math.floor(Math.max(0, intensity - 1.1) * 2.5))
+        : 4;
+    const minSpawn = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 0.24 : 0.32;
     this.spawnTimer -= dt;
-    if (this.spawnTimer <= 0 && this.targets.length < 4) {
+    if (this.spawnTimer <= 0 && this.targets.length < maxTargets) {
       this.spawnTarget();
-      this.spawnTimer = Math.max(0.32, 0.78 / Math.max(0.8, intensity));
+      this.spawnTimer = Math.max(minSpawn, 0.78 / Math.max(0.8, intensity));
     }
 
     for (let i = this.targets.length - 1; i >= 0; i--) {
@@ -152,6 +164,15 @@ export class PrecisionTarget2DGame implements MiniGame {
           this.misses += 1;
           this.combo = 0;
           this.ctx.breakCombo();
+          if (this.ctx.infiniteMode && !this.isGauntletSlice && t.kind === 'normal') {
+            synthAudio.damage();
+            this.ctx.toast('BLANCO PERDIDO -1 ESCUDO', 'bad');
+            const left = this.ctx.damage(1);
+            if (left <= 0) {
+              this.ctx.finish(this.getMetrics(false));
+              return;
+            }
+          }
         }
       }
     }
@@ -225,12 +246,15 @@ export class PrecisionTarget2DGame implements MiniGame {
 
   public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
+    const accuracy = total > 0 ? (this.hits / total) * 100 : 0;
     const avgRx =
       this.reactionSamples.length > 0
         ? this.reactionSamples.reduce((a, b) => a + b, 0) / this.reactionSamples.length
         : 520;
-    const aimScore = Math.min(980, 260 + this.hits * 28 + Math.max(0, 580 - avgRx) * 0.45 - this.misses * 22);
+    const aimScore =
+      total === 0
+        ? 140
+        : Math.min(980, 260 + this.hits * 28 + Math.max(0, 580 - avgRx) * 0.45 - this.misses * 22);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

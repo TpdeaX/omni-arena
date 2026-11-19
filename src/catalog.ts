@@ -1,11 +1,11 @@
-import {
+import type {
   DifficultyId,
   GameDescriptor,
   GameModeId,
   GuideExampleFrame,
   SkillAxis,
   StandaloneGameId,
-} from './types';
+} from './types.ts';
 
 export const AXIS_META: Record<
   SkillAxis,
@@ -86,6 +86,14 @@ export const DIFFICULTY_META: Record<
     accent: '#D97706',
     desc: 'Se calibra según tu radar y escala en vivo con tu racha o fallos.',
   },
+  progressive: {
+    label: 'PROGRESIVA',
+    short: '↑ ESCALA',
+    baseScale: 0.85,
+    scoreMult: 1.2,
+    accent: '#7C3AED',
+    desc: 'Arranca en 0.85× y sube de nivel o velocidad continuamente cada ronda o cada 12s sin bajar al fallar.',
+  },
 };
 
 function makeFrame(accent: string, inner: string, caption: string): GuideExampleFrame {
@@ -120,9 +128,16 @@ export const ACADEMY_IDS: StandaloneGameId[] = [
   'poker2d',
   'rubik3d',
   'piano2d',
+  'drums2d',
+  'strings2d',
+  'band2d',
   'raven2d',
   'sudoku2d',
   'hanoi2d',
+  'spatial3d',
+  'nonogram2d',
+  'logicseq2d',
+  'memorypath2d',
 ];
 
 export const STANDALONE_IDS: StandaloneGameId[] = [...ACADEMY_IDS, ...CIRCUIT_IDS];
@@ -218,13 +233,15 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     },
   },
 
-  // ==================== 8 NUEVAS ACADEMIAS GUIADAS ====================
+  // ==================== 15 ACADEMIAS GUIADAS ====================
   chess2d: {
     id: 'chess2d',
     title: 'AJEDREZ ACADEMIA',
     subtitle: 'Lecciones jugables y Duelo vs Bot',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'strategy',
+    supportsInfinite: false,
     axis: 'logic',
     accent: '#A16207',
     accentSoft: 'rgba(161, 98, 7, 0.14)',
@@ -271,6 +288,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Capturas en cadena y coronación',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'strategy',
+    supportsInfinite: false,
     axis: 'logic',
     accent: '#BE123C',
     accentSoft: 'rgba(190, 18, 60, 0.14)',
@@ -316,6 +335,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: "Texas Hold'em con fichas de práctica",
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'strategy',
+    supportsInfinite: false,
     axis: 'logic',
     accent: '#047857',
     accentSoft: 'rgba(4, 120, 87, 0.14)',
@@ -360,6 +381,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Método principiante en 5 fases',
     dimension: '3D',
     category: 'academy',
+    academyGroup: 'strategy',
+    supportsInfinite: false,
     axis: 'agility',
     accent: '#C2410C',
     accentSoft: 'rgba(194, 65, 12, 0.14)',
@@ -402,23 +425,25 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   piano2d: {
     id: 'piano2d',
     title: 'PIANO MAESTRO',
-    subtitle: 'Piano, melodías, oído y pentagrama',
+    subtitle: '18 piezas, progresiones, oído y pentagrama',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'music',
+    supportsInfinite: true,
     axis: 'rhythm',
     accent: '#9333EA',
     accentSoft: 'rgba(147, 51, 234, 0.14)',
     controlsPC: 'Teclas Z–M y Q–I (ver teclas pintadas)',
     controlsTouch: 'Toca las teclas del piano',
     description:
-      'Teclado de 2 octavas (Do3–Do5) con 4 modos: Piano Libre y Acordes, Melodías Guiadas, Oído Musical y Pentagrama.',
-    keywords: ['piano', 'musica', 'oido', 'acordes', 'pentagrama'],
+      'Teclado de 2 octavas (Do3–Do5) con 18 canciones reales, progresiones de acordes, acompañamiento, oído musical y pentagrama.',
+    keywords: ['piano', 'musica', 'oido', 'acordes', 'pentagrama', 'canciones'],
     guide: {
-      objective: 'Domina notas, acordes, intervalos de oído y lectura en clave de Sol y Fa sobre el piano.',
+      objective: 'Domina 18 canciones reales, progresiones de acordes, intervalos de oído y lectura en clave de Sol y Fa.',
       howToPlay: [
         'Toca las 2 octavas (Do3–Do5) con clic, toque o con las teclas Z–M y Q–I pintadas.',
-        'Cambia entre Piano Libre/Acordes, Melodías "sigue la luz", Oído y Pentagrama.',
-        'Escucha las explicaciones de cada intervalo para entrenar el oído relativo.',
+        'Elige entre Piano Libre, 18 Melodías reales, Progresiones de Acordes, Oído y Pentagrama.',
+        'En Reto elige cualquier pieza/progresión a tempo o el Examen Completo de 3 etapas.',
       ],
       controls: [
         { keys: ['Z..M', 'Q..I'], touch: 'Toca teclas', action: 'Tocar notas Do3 a Do5', tone: 'primary' },
@@ -434,12 +459,152 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
           makeFrame(
             '#9333EA',
             '<g stroke="var(--ink-secondary)" stroke-width="1.5"><line x1="56" y1="54" x2="264" y2="54"/><line x1="56" y1="68" x2="264" y2="68"/><line x1="56" y1="82" x2="264" y2="82"/><line x1="56" y1="96" x2="264" y2="96"/><line x1="56" y1="110" x2="264" y2="110"/></g><ellipse cx="160" cy="82" rx="10" ry="7" fill="#9333EA"/><text x="160" y="142" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Lee la nota en el pentagrama y tócala en el teclado</text>',
-            'Incluye lector de pentagrama y entrenador de intervalos de oído.'
+            'Incluye 18 piezas reales, progresiones de acordes y pentagrama.'
           ),
         ],
       },
-      practice: 'Las melodías esperan a que toques la tecla iluminada; pistas en pentagrama.',
-      challenge: 'Evaluación combinada: melodía a tempo + 10 intervalos + 10 lecturas.',
+      practice: 'Las melodías esperan tu nota sin prisa; metrónomo y velocidad regulable.',
+      challenge: 'Toca la pieza o progresión elegida a tempo o completa el Examen Completo.',
+    },
+  },
+
+  drums2d: {
+    id: 'drums2d',
+    title: 'BATERÍA ACADEMIA',
+    subtitle: 'Kit de 8 piezas y 12 ritmos por género',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'music',
+    supportsInfinite: true,
+    axis: 'rhythm',
+    accent: '#E11D48',
+    accentSoft: 'rgba(225, 29, 72, 0.14)',
+    controlsPC: 'Espacio Bombo · F Caja · J/K Hi-Hat · D/S Toms · R/U Platos',
+    controlsTouch: 'Toca directamente cada pieza de la batería',
+    description:
+      'Batería interactiva de 8 piezas con 12 ritmos reales (Rock, Pop, Funk, Bossa Nova, Cumbia, Reggaetón, Jazz, Blues, Metal) e independencia.',
+    keywords: ['bateria', 'drums', 'percusion', 'ritmo', 'compas', 'cumbia', 'rock', 'jazz'],
+    guide: {
+      objective: 'Domina los 12 ritmos esenciales por género y coordina bombo, caja y platos con precisión rítmica.',
+      howToPlay: [
+        'Toca cada una de las 8 piezas con clic/toque o con las teclas indicadas en cada tambor y plato.',
+        'En Ritmos por Género sigue la parrilla de 16 pasos mientras la barra móvil marca el pulso.',
+        'En Tocar Guiado y Coordinación puedes activar Esperar golpe en práctica o tocar a tempo en Reto.',
+      ],
+      controls: [
+        { keys: ['Espacio', 'F'], touch: 'Pads Bombo / Caja', action: 'Golpear Bombo y Caja', tone: 'primary' },
+        { keys: ['J', 'K'], touch: 'Hi-Hat Cerrado / Abierto', action: 'Marcar pulso en charles' },
+        { keys: ['D', 'S', 'R', 'U'], touch: 'Toms y Platos', action: 'Toms agudo/grave, Crash y Ride' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#E11D48',
+            '<circle cx="160" cy="112" r="28" fill="var(--bg-panel)" stroke="#E11D48" stroke-width="2.5"/><text x="160" y="116" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">BOMBO</text><circle cx="104" cy="96" r="22" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><text x="104" y="100" text-anchor="middle" fill="var(--ink-primary)" font-size="10">CAJA (F)</text><circle cx="216" cy="82" r="22" fill="var(--bg-panel)" stroke="#F59E0B" stroke-width="2"/><text x="216" y="86" text-anchor="middle" fill="var(--ink-primary)" font-size="10">HI-HAT (J)</text>',
+            'Vista cenital clara con el nombre y la tecla en cada pieza.'
+          ),
+          makeFrame(
+            '#E11D48',
+            '<rect x="36" y="42" width="248" height="96" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="52" y="68" fill="#E11D48" font-size="11" font-weight="700">PARRILLA 16 PASOS · ROCK / FUNK / CUMBIA</text><rect x="52" y="82" width="18" height="18" rx="3" fill="#E11D48"/><rect x="104" y="82" width="18" height="18" rx="3" fill="#00E5FF"/><rect x="156" y="82" width="18" height="18" rx="3" fill="#E11D48"/><rect x="208" y="82" width="18" height="18" rx="3" fill="#00E5FF"/>',
+            'Observa qué piezas suenan en cada tiempo y síguelas en vivo.'
+          ),
+        ],
+      },
+      practice: 'Modo espera paso a paso, metrónomo visual y velocidad desde 0.6×.',
+      challenge: 'Elige cualquiera de los 12 ritmos o Resistencia Infinita y puntúa por precisión.',
+    },
+  },
+
+  strings2d: {
+    id: 'strings2d',
+    title: 'GUITARRA, BAJO Y UKELELE',
+    subtitle: 'Mástil interactivo, 16 acordes y 12 canciones/riffs',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'music',
+    supportsInfinite: true,
+    axis: 'rhythm',
+    accent: '#D97706',
+    accentSoft: 'rgba(217, 119, 6, 0.14)',
+    controlsPC: '1–4 Postura de acorde · Espacio Rasguear · Clic en trastes',
+    controlsTouch: 'Toca acordes o trastes · Botón Rasguear',
+    description:
+      'Cambia al instante entre Guitarra (6 cuerdas), Bajo (4 cuerdas) y Ukelele (4 cuerdas) con 16 acordes, 12 canciones/riffs y escalas.',
+    keywords: ['guitarra', 'bajo', 'ukelele', 'cuerdas', 'acordes', 'riffs', 'mastil'],
+    guide: {
+      objective: 'Aprende posiciones de acordes reales, cambios a tempo, líneas de bajo y riffs clásicos en el mástil.',
+      howToPlay: [
+        'Elige arriba tu instrumento activo: Guitarra (6 cuerdas), Bajo Eléctrico (4) o Ukelele (4).',
+        'En Canciones de acordes y Cambios, pulsa 1–4 para colocar la postura y Espacio para rasguear a tempo.',
+        'En Riffs, Bajo y Mástil Libre toca directamente cualquier cuerda y traste del 0 al 12.',
+      ],
+      controls: [
+        { keys: ['1..4'], touch: 'Barra de acordes', action: 'Colocar postura de acorde', tone: 'primary' },
+        { keys: ['Espacio'], touch: 'Botón Rasguear', action: 'Rasguear acorde activo', tone: 'primary' },
+        { keys: ['Clic', '1..6'], touch: 'Toca cuerda y traste', action: 'Pulsar nota en el mástil' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#D97706',
+            '<rect x="34" y="44" width="252" height="88" rx="6" fill="var(--bg-panel)" stroke="#D97706" stroke-width="2"/><line x1="34" y1="64" x2="286" y2="64" stroke="var(--ink-secondary)"/><line x1="34" y1="88" x2="286" y2="88" stroke="var(--ink-secondary)"/><line x1="34" y1="112" x2="286" y2="112" stroke="var(--ink-secondary)"/><line x1="96" y1="44" x2="96" y2="132" stroke="var(--border-strong)"/><line x1="160" y1="44" x2="160" y2="132" stroke="var(--border-strong)"/><circle cx="128" cy="64" r="9" fill="#D97706"/><text x="128" y="68" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">1</text><circle cx="192" cy="88" r="9" fill="#00E5FF"/><text x="192" y="92" text-anchor="middle" fill="#000" font-size="10" font-weight="700">2</text>',
+            'El mástil muestra qué dedo (1-4) y qué nota pisar en cada cuerda.'
+          ),
+          makeFrame(
+            '#D97706',
+            '<rect x="38" y="42" width="244" height="96" rx="8" fill="var(--bg-panel)" stroke="#22C55E" stroke-width="2"/><text x="160" y="72" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">GUITARRA · BAJO · UKELELE</text><text x="160" y="98" text-anchor="middle" fill="var(--ink-primary)" font-size="11">16 acordes esenciales y 12 piezas reales</text><text x="160" y="118" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">(Romance, Pop, Blues, Walking Bass, Funk, Cumbia)</text>',
+            'Practica cambios de acorde con metrónomo o toca riffs nota por nota.'
+          ),
+        ],
+      },
+      practice: 'Espera tu acorde o nota en el mástil y muestra diagramas de dedos.',
+      challenge: 'Toca cualquiera de las 12 canciones/riffs a tempo sin cortar por un fallo.',
+    },
+  },
+
+  band2d: {
+    id: 'band2d',
+    title: 'ENSAMBLE Y XILÓFONO',
+    subtitle: 'Xilófono, Melódica, Piano, Batería y Bajo en Banda',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'music',
+    supportsInfinite: true,
+    axis: 'rhythm',
+    accent: '#0D9488',
+    accentSoft: 'rgba(13, 148, 136, 0.14)',
+    controlsPC: 'Teclas Z–M / 1–8 según instrumento · Mutea pistas con 1 clic',
+    controlsTouch: 'Toca láminas o pads · Silencia la pista que quieras cubrir',
+    description:
+      'Elige Xilófono/Marimba, Melódica/Flauta, Piano, Mini-Batería o Bajo y toca encima de 8 bandas completas silenciando cualquier pista.',
+    keywords: ['ensamble', 'banda', 'xilofono', 'marimba', 'melodica', 'flauta', 'jam'],
+    guide: {
+      objective: 'Toca tu instrumento favorito acompañado por una banda completa de 4 pistas sincronizadas.',
+      howToPlay: [
+        'Selecciona arriba qué instrumento quieres tocar: Xilófono/Marimba, Melódica/Flauta, Piano, Batería o Bajo.',
+        'Elige una de las 8 bases multipista y silencia con un clic el canal que tú vas a interpretar.',
+        'Sigue las notas iluminadas junto al resto del grupo o improvisa en Jam Infinito.',
+      ],
+      controls: [
+        { keys: ['Z..M', '1..8'], touch: 'Toca láminas / teclas', action: 'Interpretar instrumento activo', tone: 'primary' },
+        { keys: ['Clic en pista'], touch: 'Botones de canal', action: 'Silenciar o activar Batería/Bajo/Acordes/Melodía' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#0D9488',
+            '<g transform="translate(48,40)"><rect x="0" y="6" width="24" height="84" rx="4" fill="#EF4444"/><rect x="28" y="10" width="24" height="76" rx="4" fill="#F59E0B"/><rect x="56" y="14" width="24" height="68" rx="4" fill="#EAB308"/><rect x="84" y="18" width="24" height="60" rx="4" fill="#22C55E"/><rect x="112" y="22" width="24" height="52" rx="4" fill="#06B6D4"/><rect x="140" y="26" width="24" height="44" rx="4" fill="#3B82F6"/><rect x="168" y="30" width="24" height="36" rx="4" fill="#8B5CF6"/><rect x="196" y="34" width="24" height="28" rx="4" fill="#EC4899"/></g><text x="160" y="152" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Xilófono / Marimba, Melódica, Piano, Batería y Bajo</text>',
+            'Cambia de instrumento en un clic y toca junto a la banda.'
+          ),
+          makeFrame(
+            '#0D9488',
+            '<rect x="36" y="36" width="248" height="108" rx="8" fill="var(--bg-panel)" stroke="#0D9488" stroke-width="2"/><text x="54" y="64" fill="#0D9488" font-size="11" font-weight="700">MEZCLADOR DE BANDA (4 CANALES)</text><text x="54" y="88" fill="var(--ink-primary)" font-size="11">[ON] Batería   [ON] Bajo   [ON] Acordes</text><text x="54" y="112" fill="#00E5FF" font-size="11" font-weight="700">[TÚ TOCAS] Melodía en Xilófono / Flauta</text>',
+            'Quita la pista que quieras cubrir y la banda te acompaña a tempo.'
+          ),
+        ],
+      },
+      practice: 'Silencia o escucha cualquier pista y practica la guía nota por nota.',
+      challenge: 'Interpreta tu parte con la banda a tempo o en Jam Infinito progresivo.',
     },
   },
 
@@ -449,6 +614,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Razonamiento abstracto tipo Raven',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#4338CA',
     accentSoft: 'rgba(67, 56, 202, 0.14)',
@@ -493,6 +660,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: '4×4 · 6×6 · 9×9 con pistas explicadas',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#0369A1',
     accentSoft: 'rgba(3, 105, 161, 0.14)',
@@ -539,6 +708,8 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Recursión visual y movimientos óptimos',
     dimension: '2D',
     category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: false,
     axis: 'logic',
     accent: '#15803D',
     accentSoft: 'rgba(21, 128, 61, 0.14)',
@@ -578,6 +749,171 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     },
   },
 
+  spatial3d: {
+    id: 'spatial3d',
+    title: 'ROTACIÓN ESPACIAL 3D',
+    subtitle: 'Poliedros Shepard-Metzler y quiralidad 3D',
+    dimension: '3D',
+    category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
+    axis: 'agility',
+    accent: '#2563EB',
+    accentSoft: 'rgba(37, 99, 235, 0.14)',
+    controlsPC: 'Teclas 1–4 o clic en candidata · Arrastra para inspeccionar en 3D',
+    controlsTouch: 'Toca la figura rotada correcta · Arrastra en práctica',
+    description:
+      'Identifica cuál de las 4 figuras 3D es exactamente el modelo rotado en el espacio y descarta imágenes especulares (espejo).',
+    keywords: ['rotacion', 'espacial', '3d', 'shepard', 'iq', 'geometria', 'espejo'],
+    guide: {
+      objective: 'Descubre qué figura candidata coincide exactamente con el modelo 3D tras rotarlo sin reflejarlo en espejo.',
+      howToPlay: [
+        'Observa el brazo principal y los giros en L del modelo 3D a la izquierda.',
+        'Mentalmente rota la estructura y compárala con las 4 opciones candidatas.',
+        'En práctica puedes orbitar la figura y ver la explicación de por qué las demás son espejo.',
+      ],
+      controls: [
+        { keys: ['1..4', 'Clic'], touch: 'Toca candidata', action: 'Seleccionar figura rotada', tone: 'primary' },
+        { keys: ['P'], touch: 'Botón Pista', action: 'Ver orientación de los brazos' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#2563EB',
+            '<rect x="36" y="34" width="96" height="112" rx="8" fill="var(--bg-panel)" stroke="#2563EB" stroke-width="2"/><text x="84" y="56" text-anchor="middle" fill="#2563EB" font-size="11" font-weight="700">MODELO 3D</text><path d="M68 112V74h26v18h16" fill="none" stroke="#00E5FF" stroke-width="8" stroke-linecap="square"/><rect x="152" y="34" width="132" height="52" rx="6" fill="var(--bg-panel)" stroke="#22C55E" stroke-width="2"/><text x="218" y="64" text-anchor="middle" fill="#22C55E" font-size="11" font-weight="700">A: ROTACIÓN REAL</text><rect x="152" y="94" width="132" height="52" rx="6" fill="var(--bg-panel)" stroke="#EF4444" stroke-width="1.5"/><text x="218" y="124" text-anchor="middle" fill="#EF4444" font-size="11">B: ESPEJO QUIRAL</text>',
+            'Distingue una rotación 3D real de una reflexión en espejo.'
+          ),
+        ],
+      },
+      practice: 'Inspección 3D interactiva, pista de eje de giro y explicación detallada.',
+      challenge: '10 rondas progresivas o Modo Infinito de 6 a 13 cubos.',
+    },
+  },
+
+  nonogram2d: {
+    id: 'nonogram2d',
+    title: 'NONOGRAMAS DEDUCTIVOS',
+    subtitle: 'Matrices lógicas 5×5 · 8×8 · 10×10 sin adivinar',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#0284C7',
+    accentSoft: 'rgba(2, 132, 199, 0.14)',
+    controlsPC: 'Clic Pintar · Clic der / X Descartar · P Pista razonada',
+    controlsTouch: 'Alterna Pintar / Marcar X y toca celdas',
+    description:
+      'Descubre la figura oculta cruzando las pistas numéricas de filas y columnas mediante solapamiento y deducción pura.',
+    keywords: ['nonograma', 'picross', 'griddlers', 'logica', 'deduccion', 'iq'],
+    guide: {
+      objective: 'Pinta los bloques exactos indicados en cada fila y columna sin adivinar ninguna celda.',
+      howToPlay: [
+        'Los números indican bloques consecutivos de celdas pintadas separados por al menos 1 casilla vacía.',
+        'Marca con una X las celdas que deduzcas que deben ir vacías para acotar el resto.',
+        'Usa Pista Razonada para aprender técnicas de solapamiento central y bordes.',
+      ],
+      controls: [
+        { keys: ['Clic'], touch: 'Toca celda (Modo Pintar)', action: 'Pintar bloque', tone: 'primary' },
+        { keys: ['X', 'Clic Der'], touch: 'Modo Marcar X', action: 'Marcar casilla vacía segura' },
+        { keys: ['P'], touch: 'Pista Razonada', action: 'Ver fila o columna deducible' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#0284C7',
+            '<g transform="translate(88,28)"><text x="-16" y="24" text-anchor="end" fill="#0284C7" font-size="12" font-weight="700">4</text><rect x="0" y="6" width="26" height="26" fill="var(--bg-panel)" stroke="var(--border-strong)"/><rect x="28" y="6" width="26" height="26" fill="#0284C7"/><rect x="56" y="6" width="26" height="26" fill="#0284C7"/><rect x="84" y="6" width="26" height="26" fill="#0284C7"/><rect x="112" y="6" width="26" height="26" fill="var(--bg-panel)" stroke="var(--border-strong)"/></g><text x="160" y="118" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Pista [4] en ancho 5: las 3 celdas centrales son seguras</text>',
+            'Técnica de solapamiento: deduce celdas seguras sin adivinar.'
+          ),
+        ],
+      },
+      practice: 'Pistas deductivas explicadas en español y verificación de líneas.',
+      challenge: 'Resuelve tableros 5×5, 8×8 o encadénalos en Modo Infinito.',
+    },
+  },
+
+  logicseq2d: {
+    id: 'logicseq2d',
+    title: 'SERIES Y SILOGISMOS',
+    subtitle: 'Sucesiones, analogías, lógica formal y sesgos',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#7C3AED',
+    accentSoft: 'rgba(124, 58, 237, 0.14)',
+    controlsPC: 'Teclas 1–4 o clic en opción · P Pista',
+    controlsTouch: 'Toca la respuesta deducida',
+    description:
+      'Entrena inteligencia verbal-numérica y pensamiento crítico: series de 2º orden, analogías, silogismos con diagramas de Venn y falacias.',
+    keywords: ['series', 'sucesiones', 'analogias', 'silogismos', 'sesgos', 'iq', 'razonamiento'],
+    guide: {
+      objective: 'Deduce la regla matemática, relación verbal, conclusión lógica o sesgo cognitivo de cada problema.',
+      howToPlay: [
+        'Alterna o filtra entre 4 áreas: Sucesiones Numéricas, Analogías, Silogismos y Pensamiento Crítico.',
+        'Analiza diferencias entre términos o dibuja mentalmente los conjuntos del silogismo.',
+        'Tras cada respuesta revisa la explicación formal y el diagrama de conjuntos en SVG.',
+      ],
+      controls: [
+        { keys: ['1..4', 'Clic'], touch: 'Toca opción A–D', action: 'Confirmar deducción', tone: 'primary' },
+        { keys: ['P'], touch: 'Botón Pista', action: 'Ver estructura de la regla' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#7C3AED',
+            '<circle cx="132" cy="86" r="36" fill="rgba(124,58,237,0.18)" stroke="#7C3AED" stroke-width="2"/><circle cx="184" cy="86" r="36" fill="rgba(0,229,255,0.18)" stroke="#00E5FF" stroke-width="2"/><text x="114" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A</text><text x="158" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A∩B</text><text x="202" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">B</text><text x="160" y="152" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">Diagramas de Venn y operadores de 2º orden explicados</text>',
+            'Cada problema explica la regla exacta o el diagrama de conjuntos.'
+          ),
+        ],
+      },
+      practice: 'Filtra por tipo de reto y consulta pistas sin límite de tiempo.',
+      challenge: 'Serie oficial evaluada o Modo Infinito con reglas cada vez más profundas.',
+    },
+  },
+
+  memorypath2d: {
+    id: 'memorypath2d',
+    title: 'PALACIO MENTAL',
+    subtitle: 'Memoria asociativa espacial y resistencia a interferencia',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'iq',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#059669',
+    accentSoft: 'rgba(5, 150, 105, 0.14)',
+    controlsPC: 'Espacio Ya lo memoricé · Clic en casillas y símbolos',
+    controlsTouch: 'Toca Ya lo memoricé y reconstruye las ubicaciones',
+    description:
+      'Codifica símbolos y conceptos en estancias espaciales, supera una breve interferencia cognitiva y reconstruye el mapa de memoria.',
+    keywords: ['palacio', 'memoria', 'loci', 'asociativa', 'mnemotecnia', 'iq'],
+    guide: {
+      objective: 'Memoriza qué símbolo y concepto ocupa cada estancia del mapa y recupéralos tras la fase de interferencia.',
+      howToPlay: [
+        'Fase 1 (Codificar): asocia cada icono y palabra clave con su sala del tablero y pulsa Ya lo memoricé.',
+        'Fase 2 (Interferencia): resuelve una pregunta breve para limpiar la memoria ecoica.',
+        'Fase 3 (Evocar): coloca cada símbolo en su ubicación u orden exacto.',
+      ],
+      controls: [
+        { keys: ['Espacio'], touch: 'Botón Ya lo memoricé', action: 'Pasar a evocación', tone: 'primary' },
+        { keys: ['Clic', '1..9'], touch: 'Toca sala y símbolo', action: 'Reconstruir asociación' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#059669',
+            '<rect x="44" y="36" width="68" height="68" rx="8" fill="var(--bg-panel)" stroke="#059669" stroke-width="2"/><text x="78" y="74" text-anchor="middle" fill="#059669" font-size="11" font-weight="700">1 · FARO</text><rect x="126" y="36" width="68" height="68" rx="8" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><text x="160" y="74" text-anchor="middle" fill="#00E5FF" font-size="11" font-weight="700">2 · LLAVE</text><rect x="208" y="36" width="68" height="68" rx="8" fill="var(--bg-panel)" stroke="#F59E0B" stroke-width="2"/><text x="242" y="74" text-anchor="middle" fill="#F59E0B" font-size="11" font-weight="700">3 · RELOJ</text><text x="160" y="138" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Método de Loci: conecta lugar + imagen + orden</text>',
+            'Aprende técnicas de palacio mental y agrupación espacial.'
+          ),
+        ],
+      },
+      practice: 'Consejos mnemotécnicos en cada ronda y tiempo libre de codificación.',
+      challenge: 'Rondas progresivas de 3 a 10 estancias con interferencia activa.',
+    },
+  },
+
   // ==================== 5 JUEGOS DE ACCIÓN 3D ====================
   aim3d: {
     id: 'aim3d',
@@ -585,6 +921,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Disparo en Primera Persona 3D',
     dimension: '3D',
     category: 'action3d',
+    supportsInfinite: true,
     axis: 'aim',
     accent: '#E11D48',
     accentSoft: 'rgba(225, 29, 72, 0.14)',
@@ -629,6 +966,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Corredor Espacial de Agilidad',
     dimension: '3D',
     category: 'action3d',
+    supportsInfinite: true,
     axis: 'agility',
     accent: '#6D28D9',
     accentSoft: 'rgba(109, 40, 217, 0.15)',
@@ -673,6 +1011,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Deflector de Bloques 3D',
     dimension: '3D',
     category: 'action3d',
+    supportsInfinite: true,
     axis: 'reflex',
     accent: '#0284C7',
     accentSoft: 'rgba(2, 132, 199, 0.15)',
@@ -716,6 +1055,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Plataformas y Doble Salto 3D',
     dimension: '3D',
     category: 'action3d',
+    supportsInfinite: true,
     axis: 'agility',
     accent: '#15803D',
     accentSoft: 'rgba(21, 128, 61, 0.14)',
@@ -760,6 +1100,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Navegación Espacial 3D',
     dimension: '3D',
     category: 'action3d',
+    supportsInfinite: true,
     axis: 'agility',
     accent: '#06B6D4',
     accentSoft: 'rgba(6, 182, 212, 0.15)',
@@ -804,6 +1145,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: '4 Carriles · Sintetizador en Vivo',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'rhythm',
     accent: '#0891B2',
     accentSoft: 'rgba(8, 145, 178, 0.15)',
@@ -847,6 +1189,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Sincronización Orbital y Pulso 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'rhythm',
     accent: '#14B8A6',
     accentSoft: 'rgba(20, 184, 166, 0.15)',
@@ -890,6 +1233,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Bloqueo de Precisión y Fintas',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'reflex',
     accent: '#D97706',
     accentSoft: 'rgba(217, 119, 6, 0.15)',
@@ -935,6 +1279,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Esquiva Extrema 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'reflex',
     accent: '#65A30D',
     accentSoft: 'rgba(101, 163, 13, 0.14)',
@@ -979,6 +1324,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Memoria, Stroop y Cálculo Ágil',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#B45309',
     accentSoft: 'rgba(180, 83, 9, 0.15)',
@@ -1022,6 +1368,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Lectura Periférica y Enfoque 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#0EA5E9',
     accentSoft: 'rgba(14, 165, 233, 0.15)',
@@ -1060,6 +1407,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Memoria de Trabajo Dual N-Back',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#7C3AED',
     accentSoft: 'rgba(124, 58, 237, 0.15)',
@@ -1105,6 +1453,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Rompecabezas de Piezas',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#4F46E5',
     accentSoft: 'rgba(79, 70, 229, 0.15)',
@@ -1147,6 +1496,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Combate Cenital 2D + Impulso',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'aim',
     accent: '#EA580C',
     accentSoft: 'rgba(234, 88, 12, 0.15)',
@@ -1187,6 +1537,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Seguimiento Motor Continuo 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'aim',
     accent: '#EC4899',
     accentSoft: 'rgba(236, 72, 153, 0.15)',
@@ -1225,6 +1576,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Matriz Visual y Trampas 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'logic',
     accent: '#8B5CF6',
     accentSoft: 'rgba(139, 92, 246, 0.15)',
@@ -1268,6 +1620,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Control Espacial Dinámico 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'reflex',
     accent: '#10B981',
     accentSoft: 'rgba(16, 185, 129, 0.15)',
@@ -1306,6 +1659,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     subtitle: 'Puntería Instantánea 2D',
     dimension: '2D',
     category: 'dexterity2d',
+    supportsInfinite: true,
     axis: 'aim',
     accent: '#F43F5E',
     accentSoft: 'rgba(244, 63, 94, 0.15)',

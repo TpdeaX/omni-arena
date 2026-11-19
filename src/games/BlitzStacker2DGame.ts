@@ -45,6 +45,8 @@ export class BlitzStacker2DGame implements MiniGame {
   private dropTimer = 0;
   private softDropHeld = false;
   private softDropAcc = 0;
+  private elapsed = 0;
+  private piecesLocked = 0;
   private linesCleared = 0;
   private combo = 0;
   private maxCombo = 0;
@@ -230,6 +232,7 @@ export class BlitzStacker2DGame implements MiniGame {
   }
 
   private lockPiece(): void {
+    this.piecesLocked += 1;
     for (let r = 0; r < this.currShape.length; r++) {
       for (let c = 0; c < this.currShape[r].length; c++) {
         if (!this.currShape[r][c]) continue;
@@ -307,6 +310,7 @@ export class BlitzStacker2DGame implements MiniGame {
 
   public update(dt: number): void {
     if (this.paused || this.destroyed) return;
+    this.elapsed += dt;
 
     if (this.flashTimer > 0) this.flashTimer -= dt;
 
@@ -323,7 +327,11 @@ export class BlitzStacker2DGame implements MiniGame {
     }
 
     const intensity = this.ctx.getIntensity();
-    const fallInterval = Math.max(0.14, 0.56 / intensity);
+    const isProgressive = this.ctx.difficulty === 'progressive';
+    const levelBoost =
+      this.linesCleared * 0.018 + (isProgressive ? Math.min(0.8, this.elapsed * 0.004) : 0);
+    const minInterval = isProgressive ? 0.085 : 0.14;
+    const fallInterval = Math.max(minInterval, 0.56 / Math.max(0.75, intensity + levelBoost));
     this.dropTimer += dt;
     if (this.dropTimer >= fallInterval) {
       this.dropTimer = 0;
@@ -518,10 +526,16 @@ export class BlitzStacker2DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const logicPerf = Math.max(
-      180,
-      Math.min(1000, Math.round(230 + this.linesCleared * 48 + this.score * 0.08))
-    );
+    const logicPerf =
+      this.linesCleared === 0 && this.piecesLocked === 0
+        ? 140
+        : Math.max(
+            150,
+            Math.min(
+              1000,
+              Math.round(160 + this.linesCleared * 52 + this.piecesLocked * 4 + this.score * 0.07)
+            )
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

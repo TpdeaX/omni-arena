@@ -3,17 +3,22 @@ import { synthAudio } from '../audio/SynthAudio';
 import { GameContext, MiniGame, RunMetrics, SkillAxis, StandaloneGameId } from '../types';
 import { renderControlHintRow } from '../ui/GuideOverlay';
 import { Aim3DGame } from './Aim3DGame';
+import { BandEnsembleGame } from './BandEnsembleGame';
 import { BlitzStacker2DGame } from './BlitzStacker2DGame';
 import { BulletHell2DGame } from './BulletHell2DGame';
 import { CheckersAcademyGame } from './CheckersAcademyGame';
 import { ChessAcademyGame } from './ChessAcademyGame';
+import { DrumsAcademyGame } from './DrumsAcademyGame';
 import { DualNBack2DGame } from './DualNBack2DGame';
 import { FlashParry2DGame } from './FlashParry2DGame';
 import { FlightPortals3DGame } from './FlightPortals3DGame';
 import { HanoiLogic2DGame } from './HanoiLogic2DGame';
 import { LaserTrack2DGame } from './LaserTrack2DGame';
+import { LogicSeq2DGame } from './LogicSeq2DGame';
 import { MemoryGrid2DGame } from './MemoryGrid2DGame';
+import { MemoryPath2DGame } from './MemoryPath2DGame';
 import { NeonSnake2DGame } from './NeonSnake2DGame';
+import { NonogramLogic2DGame } from './NonogramLogic2DGame';
 import { OrbitBreaker3DGame } from './OrbitBreaker3DGame';
 import { PianoEar2DGame } from './PianoEar2DGame';
 import { PokerAcademyGame } from './PokerAcademyGame';
@@ -26,6 +31,8 @@ import { Runner3DGame } from './Runner3DGame';
 import { SchulteGrid2DGame } from './SchulteGrid2DGame';
 import { SkyVault3DGame } from './SkyVault3DGame';
 import { SonicRing2DGame } from './SonicRing2DGame';
+import { SpatialRotation3DGame } from './SpatialRotation3DGame';
+import { StringsAcademyGame } from './StringsAcademyGame';
 import { SudokuGuide2DGame } from './SudokuGuide2DGame';
 import { TwinStick2DGame } from './TwinStick2DGame';
 
@@ -92,7 +99,7 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new NeonSnake2DGame(isSlice);
     case 'sniper2d':
       return new PrecisionTarget2DGame(isSlice);
-    // 8 Nuevas Academias
+    // 15 Academias Guiadas
     case 'chess2d':
       return new ChessAcademyGame(isSlice);
     case 'checkers2d':
@@ -103,12 +110,26 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new RubikCube3DGame(isSlice);
     case 'piano2d':
       return new PianoEar2DGame(isSlice);
+    case 'drums2d':
+      return new DrumsAcademyGame(isSlice);
+    case 'strings2d':
+      return new StringsAcademyGame(isSlice);
+    case 'band2d':
+      return new BandEnsembleGame(isSlice);
     case 'raven2d':
       return new RavenMatrix2DGame(isSlice);
     case 'sudoku2d':
       return new SudokuGuide2DGame(isSlice);
     case 'hanoi2d':
       return new HanoiLogic2DGame(isSlice);
+    case 'spatial3d':
+      return new SpatialRotation3DGame(isSlice);
+    case 'nonogram2d':
+      return new NonogramLogic2DGame(isSlice);
+    case 'logicseq2d':
+      return new LogicSeq2DGame(isSlice);
+    case 'memorypath2d':
+      return new MemoryPath2DGame(isSlice);
   }
 }
 

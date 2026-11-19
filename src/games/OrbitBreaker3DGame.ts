@@ -158,11 +158,13 @@ export class OrbitBreaker3DGame implements MiniGame {
     const startX = -((cols - 1) * spacingX) / 2;
     const startZ = -15.5;
 
+    const intensity = this.ctx.getIntensity();
+    const armorChance = Math.min(0.55, 0.34 + Math.max(0, intensity - 1) * 0.16);
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const roll = Math.random();
         const kind: Brick3D['kind'] =
-          roll < 0.12 ? 'gold' : r === 0 || (waveNum > 1 && roll < 0.34) ? 'armored' : 'normal';
+          roll < 0.12 ? 'gold' : r === 0 || (waveNum > 1 && roll < armorChance) ? 'armored' : 'normal';
         const hp = kind === 'armored' ? 2 : 1;
         const color =
           kind === 'gold'
@@ -269,15 +271,20 @@ export class OrbitBreaker3DGame implements MiniGame {
       return;
     }
 
-    // Dynamic ball speed scaled to intensity
+    // Dynamic ball speed scaled to intensity & progressive mode
     const intensity = this.ctx.getIntensity();
-    const targetSpeed = (14.5 + (this.wave - 1) * 1.4) * (0.8 + intensity * 0.25);
+    const progRamp =
+      this.ctx.difficulty === 'progressive' ? Math.min(6, this.elapsed * 0.045) : 0;
+    const targetSpeed = Math.min(
+      30,
+      (14.5 + (this.wave - 1) * 1.4 + progRamp) * (0.8 + intensity * 0.25)
+    );
     const currSpd = Math.hypot(this.ballVel.x, this.ballVel.z) || 1;
     this.ballVel.x = (this.ballVel.x / currSpd) * targetSpeed;
     this.ballVel.z = (this.ballVel.z / currSpd) * targetSpeed;
 
-    // Sub-step physics for crisp collisions
-    const steps = 2;
+    // Sub-step physics for crisp collisions even at high progressive speeds
+    const steps = targetSpeed > 22 ? 3 : 2;
     const subDt = dt / steps;
     for (let s = 0; s < steps; s++) {
       this.ballPos.x += this.ballVel.x * subDt;
@@ -448,10 +455,13 @@ export class OrbitBreaker3DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const perf = Math.max(
-      180,
-      Math.min(1000, Math.round(220 + this.bricksBroken * 14 + (this.wave - 1) * 110))
-    );
+    const perf =
+      this.bricksBroken === 0
+        ? 140
+        : Math.max(
+            180,
+            Math.min(1000, Math.round(200 + this.bricksBroken * 14 + (this.wave - 1) * 110))
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

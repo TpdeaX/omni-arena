@@ -45,7 +45,7 @@ export class SchulteGrid2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'TABLA SCHULTE PRO',
       accent: '#0EA5E9',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'BUSCA EL NÚMERO 1 · VISIÓN PERIFÉRICA',
     });
 
@@ -54,7 +54,22 @@ export class SchulteGrid2DGame implements MiniGame {
 
   private startRound(): void {
     const intensity = this.ctx.getIntensity();
-    this.gridSize = this.round >= 3 || intensity >= 1.28 ? 5 : 4;
+    const escalate6 = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive';
+    if (escalate6) {
+      this.gridSize =
+        this.round >= 4 || intensity >= 1.65
+          ? 6
+          : this.round >= 2 || intensity >= 1.25
+          ? 5
+          : 4;
+    } else {
+      this.gridSize =
+        this.round >= 5
+          ? 6
+          : this.round >= 3 || intensity >= 1.28
+          ? 5
+          : 4;
+    }
     const total = this.gridSize * this.gridSize;
     this.values = Array.from({ length: total }, (_, i) => i + 1);
     for (let i = this.values.length - 1; i > 0; i--) {
@@ -74,7 +89,9 @@ export class SchulteGrid2DGame implements MiniGame {
         <span class="oa-mem-pill">TABLA ${this.gridSize}×${this.gridSize} · RONDA ${this.round}</span>
         <span class="oa-mem-status">SIGUIENTE NÚMERO: <strong>${this.nextExpected}</strong> / ${total}</span>
       </div>
-      <div class="oa-schulte-grid" style="grid-template-columns: repeat(${this.gridSize}, minmax(0, 1fr));">
+      <div class="oa-schulte-grid" style="grid-template-columns: repeat(${this.gridSize}, minmax(0, 1fr));${
+        this.gridSize >= 6 ? 'gap:6px;' : ''
+      }">
         ${this.values
           .map((val, idx) => {
             const done = val < this.nextExpected;
@@ -123,7 +140,9 @@ export class SchulteGrid2DGame implements MiniGame {
           synthAudio.damage();
           btn.classList.add('is-wrong');
           window.setTimeout(() => btn.classList.remove('is-wrong'), 260);
-          if (this.misses % 3 === 0) {
+          const errStep = this.ctx.infiniteMode && !this.isGauntletSlice ? 2 : 3;
+          if (this.misses % errStep === 0) {
+            this.ctx.toast('ERRORES ACUMULADOS -1 ESCUDO', 'bad');
             const left = this.ctx.damage(1);
             if (left <= 0) {
               this.ctx.finish(this.getMetrics(false));
@@ -138,7 +157,7 @@ export class SchulteGrid2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -157,12 +176,22 @@ export class SchulteGrid2DGame implements MiniGame {
 
   public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const acc = total > 0 ? (this.hits / total) * 100 : 100;
+    const acc = total > 0 ? (this.hits / total) * 100 : 0;
     const avgRx =
       this.reactionSamples.length > 0
         ? this.reactionSamples.reduce((a, b) => a + b, 0) / this.reactionSamples.length
         : 900;
-    const logicScore = Math.min(980, 260 + this.hits * 16 + this.boardsCleared * 110 + Math.max(0, 950 - avgRx) * 0.25 - this.misses * 20);
+    const logicScore =
+      total === 0
+        ? 140
+        : Math.min(
+            980,
+            260 +
+              this.hits * 16 +
+              this.boardsCleared * 110 +
+              Math.max(0, 950 - avgRx) * 0.25 -
+              this.misses * 20
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

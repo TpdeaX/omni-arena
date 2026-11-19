@@ -4,25 +4,41 @@ import { GameContext, MiniGame, RunMetrics } from '../types';
 import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
 import {
   BASS_NATURAL_MIDIS,
+  chordCueAtBeat,
   ChordQuality,
   describeChordEs,
   formatMidiNameEs,
   getStaffPosition,
   GUIDED_MELODIES,
   INTERVAL_DEFINITIONS,
+  MELODY_LEVELS,
+  MelodyLevel,
+  melodyNoteStarts,
   PIANO_KEY_BY_CODE,
   PIANO_KEY_BY_MIDI,
   PIANO_KEYS,
+  PIANO_PROGRESSIONS,
+  PIANO_TEMPO_SCALES,
   PianoClef,
   TREBLE_NATURAL_MIDIS,
   WHITE_KEY_COUNT,
 } from './piano/pianoBank';
+import { gradePoints, gradeTiming, HitGrade, summarizeMusicRun } from './music/musicScore';
+import {
+  createActionButton,
+  createMetronomeControl,
+  MetronomeWidget,
+  renderMusicStatsCard,
+  shouldIgnoreGameHotkey,
+} from './music/musicUi';
 import '../styles/academy-rubik-piano.css';
+import '../styles/academy-music.css';
 
-type PianoModeTab = 'free' | 'melody' | 'ear' | 'staff';
+type PianoModeTab = 'free' | 'melody' | 'progressions' | 'ear' | 'staff';
 type LabelDisplayMode = 'names' | 'keys' | 'both';
 type FreeSubMode = 'single' | 'chord';
 type EarSubMode = 'intervals' | 'singleNote';
+type ChallengeKind = 'piece' | 'progression' | 'exam';
 
 interface EarQuestion {
   kind: 'interval' | 'single';
@@ -53,6 +69,7 @@ export class PianoEar2DGame implements MiniGame {
   private ctx!: GameContext;
   private readonly isGauntletSlice: boolean;
   private isPractice = false;
+  private isInfinite = false;
   private paused = false;
   private destroyed = false;
   private finishedEmitted = false;
@@ -66,9 +83,17 @@ export class PianoEar2DGame implements MiniGame {
   private earSubMode: EarSubMode = 'intervals';
   private staffClefChoice: PianoClef = 'treble';
 
-  // Challenge flow (1 melody + 10 intervals + 10 staff)
+  // Tempo & Metronome
+  private tempoScale = 1.0;
+  private metronomeEnabled = false;
+  private metroTimerSec = 0;
+  private metroBeatCount = 0;
+  private metroWidget: MetronomeWidget | null = null;
+
+  // Challenge flow
+  private challengeKind: ChallengeKind = 'piece';
   private challengeLevel = 1; // 0: Novato, 1: Estándar, 2: Maestro
-  private challengeStage: 'prep' | 'melody' | 'ear' | 'staff' | 'done' = 'prep';
+  private challengeStage: 'prep' | 'melody' | 'progression' | 'ear' | 'staff' | 'done' = 'prep';
   private challengeEarDone = 0;
   private challengeStaffDone = 0;
   private readonly challengeEarTotal = 10;
@@ -77,6 +102,10 @@ export class PianoEar2DGame implements MiniGame {
   // Scoring / accuracy tracking
   private hits = 0;
   private misses = 0;
+  private perfectHits = 0;
+  private goodHits = 0;
+  private okHits = 0;
+  private timingDeviationsMs: number[] = [];
   private rhythmHits = 0;
   private rhythmTotal = 0;
   private earHits = 0;
@@ -86,14 +115,37 @@ export class PianoEar2DGame implements MiniGame {
   private combo = 0;
   private maxCombo = 0;
   private score = 0;
+  private piecesCompleted = 0;
 
   // Melody mode state
+  private levelFilter: 'Todas' | MelodyLevel = 'Todas';
   private melodyIdx = 0;
   private melodyStep = 0;
   private melodyRunning = false;
+  private melodyAutoAccomp = true;
+  private melodyPracticeWait = true;
   private melodyBeatTimer = 0;
   private melodyBeatDuration = 0.55;
   private melodyStepHit = false;
+  private melodyNoteStartsCache: number[] = [];
+  private lastAccompCueBeat = -1;
+
+  // Preview playback (driven by update(dt) for instant pause/stop)
+  private previewActive = false;
+  private previewKind: 'melody' | 'progression' = 'melody';
+  private previewIndex = 0;
+  private previewElapsedSec = 0;
+  private previewStartsSec: number[] = [];
+  private previewLastChordBeat = -1;
+
+  // Progressions mode state
+  private progIdx = 0;
+  private progStep = 0;
+  private progMatchedPcs = new Set<number>();
+  private progRunning = false;
+  private progBeatTimer = 0;
+  private progBeatDuration = 2.0;
+  private progStepHit = false;
 
   // Ear & Staff state
   private currentEarQ: EarQuestion | null = null;
@@ -103,8 +155,8 @@ export class PianoEar2DGame implements MiniGame {
   private nextQuestionTimer: number | null = null;
 
   // Polyphonic active input maps
-  private activePointerNotes = new Map<number, number>(); // pointerId -> midi
-  private activeKeyCodes = new Map<string, number>(); // KeyboardEvent.code -> midi
+  private activePointerNotes = new Map<number, number>();
+  private activeKeyCodes = new Map<string, number>();
   private chordHighlightMidis = new Set<number>();
 
   // DOM refs
@@ -125,11 +177,21 @@ export class PianoEar2DGame implements MiniGame {
   public mount(ctx: GameContext): void {
     this.ctx = ctx;
     this.isPractice = ctx.practiceMode === true;
+    this.isInfinite = ctx.infiniteMode === true && !this.isPractice && !this.isGauntletSlice;
     this.destroyed = false;
     this.finishedEmitted = false;
     this.activePointerNotes.clear();
     this.activeKeyCodes.clear();
     this.chordHighlightMidis.clear();
+
+    this.tempoScale =
+      ctx.difficulty === 'chill'
+        ? 0.85
+        : ctx.difficulty === 'hyper'
+          ? 1.2
+          : ctx.difficulty === 'progressive'
+            ? 0.85
+            : 1.0;
 
     this.challengeLevel =
       ctx.difficulty === 'chill'
@@ -147,7 +209,7 @@ export class PianoEar2DGame implements MiniGame {
     const layout = createAcademyLayout(
       ctx.container,
       'PIANO MAESTRO Y OÍDO',
-      this.isPractice ? 'PRÁCTICA GUIADA' : 'MODO RETO'
+      this.isPractice ? 'PRÁCTICA GUIADA' : this.isInfinite ? 'JAM INFINITO' : 'MODO RETO'
     );
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
@@ -156,12 +218,14 @@ export class PianoEar2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: this.isPractice
         ? 'PIANO MAESTRO · PRÁCTICA'
-        : this.isGauntletSlice
-          ? 'PIANO MAESTRO · CIRCUITO'
-          : 'PIANO MAESTRO · RETO',
+        : this.isInfinite
+          ? 'PIANO MAESTRO · JAM INFINITO'
+          : this.isGauntletSlice
+            ? 'PIANO MAESTRO · CIRCUITO'
+            : 'PIANO MAESTRO · RETO',
       accent: '#9333EA',
       timeLeftSec: null,
-      subStat: '2 octavas Do3–Do5',
+      subStat: '18 piezas · Do3–Do5',
     });
 
     window.addEventListener('keydown', this.onKeyDown);
@@ -173,6 +237,14 @@ export class PianoEar2DGame implements MiniGame {
       this.buildWorkspace();
       this.syncControlsBar();
       this.renderModeContent();
+    } else if (this.isInfinite) {
+      this.challengeKind = 'piece';
+      this.challengeStage = 'melody';
+      this.activeTab = 'melody';
+      this.melodyIdx = 0;
+      this.buildWorkspace();
+      this.startMelody(true);
+      this.syncControlsBar();
     } else {
       this.challengeStage = 'prep';
       this.renderChallengePrep();
@@ -186,47 +258,145 @@ export class PianoEar2DGame implements MiniGame {
     const prep = document.createElement('div');
     prep.className = 'oa-rp-prep-card';
     prep.innerHTML = `
-      <h3 class="oa-rp-prep-title">Reto Combinado: Piano, Oído y Pentagrama</h3>
+      <h3 class="oa-rp-prep-title">Elige tu Reto de Piano</h3>
       <p class="oa-rp-prep-desc">
-        Supera 3 etapas seguidas: <strong>1) Melodía a tempo</strong>, <strong>2) 10 intervalos de oído</strong> y <strong>3) 10 lecturas en pentagrama</strong>.
+        Los fallos rompen el combo y bajan precisión, pero <strong>nunca te cortan la canción</strong> a mitad.
       </p>
-      <div class="oa-rp-choice-row" role="group" aria-label="Nivel del reto"></div>
+      <div class="oa-rp-choice-row" id="oa-piano-kind-row" role="group" aria-label="Tipo de reto"></div>
+      <div id="oa-piano-prep-config"></div>
       <button type="button" class="oa-rp-primary-btn" id="oa-piano-start-challenge">
         ${Icons.play(18)}<span>Empezar Reto Musical</span>
       </button>
     `;
 
-    const levels = [
-      { idx: 0, label: 'Novato (Clave de Sol · Tempo 0.85x)' },
-      { idx: 1, label: 'Estándar (Sol y Fa · Tempo 1.0x)' },
-      { idx: 2, label: 'Maestro (Sol y Fa · Tempo 1.2x)' },
+    const kindRow = prep.querySelector('#oa-piano-kind-row')!;
+    const configHost = prep.querySelector('#oa-piano-prep-config')!;
+
+    const kinds: { id: ChallengeKind; label: string }[] = [
+      { id: 'piece', label: '1. Elegir Pieza (18)' },
+      { id: 'progression', label: '2. Progresiones (5)' },
+      { id: 'exam', label: '3. Examen Completo' },
     ];
-    const row = prep.querySelector('.oa-rp-choice-row')!;
-    levels.forEach((lvl) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'oa-rp-pill-btn';
-      btn.textContent = lvl.label;
-      btn.setAttribute('aria-pressed', lvl.idx === this.challengeLevel ? 'true' : 'false');
-      btn.addEventListener('click', () => {
-        synthAudio.uiClick();
-        this.challengeLevel = lvl.idx;
-        row.querySelectorAll('button').forEach((b, i) => {
-          b.setAttribute('aria-pressed', i === lvl.idx ? 'true' : 'false');
+
+    const renderConfig = () => {
+      configHost.innerHTML = '';
+      if (this.challengeKind === 'piece') {
+        const sel = document.createElement('select');
+        sel.className = 'oa-mus-select';
+        sel.setAttribute('aria-label', 'Elegir pieza del catálogo');
+        GUIDED_MELODIES.forEach((m, idx) => {
+          const opt = document.createElement('option');
+          opt.value = String(idx);
+          opt.textContent = `[${m.level}] ${m.title} · ${m.genre} (${m.bpm} BPM)`;
+          if (idx === this.melodyIdx) opt.selected = true;
+          sel.appendChild(opt);
         });
+        sel.addEventListener('change', () => {
+          this.melodyIdx = Number(sel.value);
+        });
+
+        const tempoRow = document.createElement('div');
+        tempoRow.className = 'oa-rp-choice-row';
+        tempoRow.style.marginTop = '8px';
+        PIANO_TEMPO_SCALES.forEach((sc) => {
+          tempoRow.appendChild(
+            createActionButton({
+              label: `${sc}x`,
+              pressed: Math.abs(this.tempoScale - sc) < 0.01,
+              onClick: () => {
+                synthAudio.uiClick();
+                this.tempoScale = sc;
+                renderConfig();
+              },
+            })
+          );
+        });
+        configHost.append(sel, tempoRow);
+      } else if (this.challengeKind === 'progression') {
+        const sel = document.createElement('select');
+        sel.className = 'oa-mus-select';
+        sel.setAttribute('aria-label', 'Elegir progresión');
+        PIANO_PROGRESSIONS.forEach((p, idx) => {
+          const opt = document.createElement('option');
+          opt.value = String(idx);
+          opt.textContent = `${p.title} (${p.genre} · ${p.bpm} BPM)`;
+          if (idx === this.progIdx) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener('change', () => {
+          this.progIdx = Number(sel.value);
+        });
+        configHost.appendChild(sel);
+      } else {
+        const info = document.createElement('p');
+        info.className = 'oa-rp-prep-desc';
+        info.textContent =
+          'Examen Completo de 3 etapas: 1) Melodía a tempo, 2) 10 intervalos de oído y 3) 10 lecturas en pentagrama.';
+        const row = document.createElement('div');
+        row.className = 'oa-rp-choice-row';
+        row.style.marginTop = '8px';
+        const levels = [
+          { idx: 0, label: 'Novato (Sol · 0.85x)' },
+          { idx: 1, label: 'Estándar (Sol y Fa · 1.0x)' },
+          { idx: 2, label: 'Maestro (Sol y Fa · 1.2x)' },
+        ];
+        levels.forEach((lvl) => {
+          row.appendChild(
+            createActionButton({
+              label: lvl.label,
+              pressed: lvl.idx === this.challengeLevel,
+              onClick: () => {
+                synthAudio.uiClick();
+                this.challengeLevel = lvl.idx;
+                renderConfig();
+              },
+            })
+          );
+        });
+        configHost.append(info, row);
+      }
+    };
+
+    kinds.forEach((k) => {
+      const btn = createActionButton({
+        label: k.label,
+        pressed: k.id === this.challengeKind,
+        onClick: () => {
+          synthAudio.uiClick();
+          this.challengeKind = k.id;
+          kindRow.querySelectorAll('button').forEach((b, idx) => {
+            b.setAttribute('aria-pressed', kinds[idx].id === this.challengeKind ? 'true' : 'false');
+          });
+          renderConfig();
+        },
       });
-      row.appendChild(btn);
+      kindRow.appendChild(btn);
     });
+
+    renderConfig();
 
     prep.querySelector('#oa-piano-start-challenge')!.addEventListener('click', () => {
       synthAudio.uiClick();
-      this.challengeStage = 'melody';
-      this.challengeEarDone = 0;
-      this.challengeStaffDone = 0;
-      this.activeTab = 'melody';
-      this.melodyIdx = this.challengeLevel % GUIDED_MELODIES.length;
-      this.buildWorkspace();
-      this.startMelody(true);
+      if (this.challengeKind === 'progression') {
+        this.challengeStage = 'progression';
+        this.activeTab = 'progressions';
+        this.buildWorkspace();
+        this.startProgression(true);
+      } else if (this.challengeKind === 'piece') {
+        this.challengeStage = 'melody';
+        this.activeTab = 'melody';
+        this.buildWorkspace();
+        this.startMelody(true);
+      } else {
+        this.challengeStage = 'melody';
+        this.challengeEarDone = 0;
+        this.challengeStaffDone = 0;
+        this.activeTab = 'melody';
+        this.melodyIdx = this.challengeLevel % GUIDED_MELODIES.length;
+        this.tempoScale = this.challengeLevel === 0 ? 0.85 : this.challengeLevel === 2 ? 1.2 : 1.0;
+        this.buildWorkspace();
+        this.startMelody(true);
+      }
       this.syncControlsBar();
     });
 
@@ -238,7 +408,7 @@ export class PianoEar2DGame implements MiniGame {
     renderExplanationBox(
       ex,
       'Controles rápidos',
-      'Puedes usar tu teclado (filas Z–M para Do3–Si3 y Q–I para Do4–Do5) o pulsar las teclas en pantalla.',
+      'Usa tu teclado (Z–M para Do3–Si3 y Q–I para Do4–Do5) o toca las teclas en pantalla.',
       'info'
     );
     card.appendChild(ex);
@@ -255,7 +425,6 @@ export class PianoEar2DGame implements MiniGame {
     const stageCard = document.createElement('div');
     stageCard.className = 'oa-rp-stage-card';
 
-    // Top row: mode tabs + global timbre / labels
     const topToolbar = document.createElement('div');
     topToolbar.className = 'oa-piano-toolbar';
 
@@ -267,7 +436,6 @@ export class PianoEar2DGame implements MiniGame {
     const globalControls = document.createElement('div');
     globalControls.className = 'oa-piano-tabs';
 
-    // Label mode selector
     const labelModes: { id: LabelDisplayMode; label: string }[] = [
       { id: 'names', label: 'Nombres' },
       { id: 'keys', label: 'Teclas' },
@@ -294,7 +462,6 @@ export class PianoEar2DGame implements MiniGame {
       globalControls.appendChild(btn);
     });
 
-    // Timbre selector
     const timbreSelect = document.createElement('select');
     timbreSelect.className = 'oa-rp-pill-btn';
     timbreSelect.setAttribute('aria-label', 'Timbre de instrumento');
@@ -311,6 +478,20 @@ export class PianoEar2DGame implements MiniGame {
     });
     globalControls.appendChild(timbreSelect);
 
+    this.metroWidget = createMetronomeControl({
+      enabled: this.metronomeEnabled,
+      onToggle: (enabled) => {
+        this.metronomeEnabled = enabled;
+        this.metroTimerSec = 0;
+        this.metroBeatCount = 0;
+        if (enabled) {
+          synthAudio.playMetronomeClick(true);
+          this.metroWidget?.flashBeat(true);
+        }
+      },
+    });
+    globalControls.appendChild(this.metroWidget.root);
+
     topToolbar.append(tabsHost, globalControls);
 
     const modeToolbar = document.createElement('div');
@@ -326,7 +507,6 @@ export class PianoEar2DGame implements MiniGame {
     stageCard.append(topToolbar, modeToolbar, displayPanel, pianoScroll);
     this.stageEl.appendChild(stageCard);
 
-    // Side cards
     const explainCard = document.createElement('div');
     explainCard.className = 'oa-academy-card oa-piano-dyn-card';
     const explainHost = document.createElement('div');
@@ -424,12 +604,8 @@ export class PianoEar2DGame implements MiniGame {
       if (!btn) continue;
       const noteEl = btn.querySelector('.oa-piano-note-lbl') as HTMLElement | null;
       const kbdEl = btn.querySelector('.oa-piano-kbd-lbl') as HTMLElement | null;
-      if (noteEl) {
-        noteEl.classList.toggle('is-hidden', this.labelMode === 'keys');
-      }
-      if (kbdEl) {
-        kbdEl.classList.toggle('is-hidden', this.labelMode === 'names');
-      }
+      if (noteEl) noteEl.classList.toggle('is-hidden', this.labelMode === 'keys');
+      if (kbdEl) kbdEl.classList.toggle('is-hidden', this.labelMode === 'names');
     }
   }
 
@@ -438,10 +614,11 @@ export class PianoEar2DGame implements MiniGame {
     this.tabsHostEl.innerHTML = '';
 
     const tabs: { id: PianoModeTab; label: string }[] = [
-      { id: 'free', label: '1. Piano Libre y Acordes' },
-      { id: 'melody', label: '2. Melodías Guiadas' },
-      { id: 'ear', label: '3. Oído Musical' },
-      { id: 'staff', label: '4. Pentagrama' },
+      { id: 'free', label: '1. Piano Libre' },
+      { id: 'melody', label: '2. 18 Canciones' },
+      { id: 'progressions', label: '3. Progresiones' },
+      { id: 'ear', label: '4. Oído Musical' },
+      { id: 'staff', label: '5. Pentagrama' },
     ];
 
     tabs.forEach((t) => {
@@ -456,20 +633,22 @@ export class PianoEar2DGame implements MiniGame {
       if (!this.isPractice) {
         const allowed =
           (this.challengeStage === 'melody' && t.id === 'melody') ||
+          (this.challengeStage === 'progression' && t.id === 'progressions') ||
           (this.challengeStage === 'ear' && t.id === 'ear') ||
           (this.challengeStage === 'staff' && t.id === 'staff');
         btn.disabled = !allowed;
-        btn.title = allowed ? t.label : 'En Modo Reto las etapas avanzan en orden';
+        btn.title = allowed ? t.label : 'En Modo Reto sigue la etapa activa';
       }
 
       btn.textContent = t.label;
       btn.addEventListener('click', () => {
         if (!this.isPractice) return;
         synthAudio.uiClick();
-        synthAudio.stopAllNotes();
+        this.stopPlayback();
         this.clearNextQuestionTimer();
         this.activeTab = t.id;
         this.melodyRunning = false;
+        this.progRunning = false;
         this.chordHighlightMidis.clear();
         this.renderTabs();
         this.syncControlsBar();
@@ -483,8 +662,14 @@ export class PianoEar2DGame implements MiniGame {
     if (this.activeTab === 'ear') {
       this.ctx.setControls?.([
         { keys: ['R'], touch: 'Botón Repetir', action: 'Volver a escuchar el intervalo', tone: 'primary' },
-        { keys: ['1–9'], touch: 'Botones de intervalo', action: 'Elegir respuesta' },
         { keys: ['Z–M', 'Q–I'], touch: 'Teclas del piano', action: 'Comprobar notas en el teclado' },
+      ]);
+      return;
+    }
+    if (this.activeTab === 'progressions') {
+      this.ctx.setControls?.([
+        { keys: ['Espacio'], touch: 'Clic en acorde', action: 'Tocar acorde completo (1 clic)', tone: 'primary' },
+        { keys: ['Z–M', 'Q–I'], touch: 'Teclas iluminadas', action: 'Armar acorde tecla a tecla' },
       ]);
       return;
     }
@@ -505,6 +690,8 @@ export class PianoEar2DGame implements MiniGame {
       this.renderFreeAndChordsUI();
     } else if (this.activeTab === 'melody') {
       this.renderMelodyUI();
+    } else if (this.activeTab === 'progressions') {
+      this.renderProgressionsUI();
     } else if (this.activeTab === 'ear') {
       this.renderEarUI();
     } else {
@@ -518,47 +705,44 @@ export class PianoEar2DGame implements MiniGame {
     const left = document.createElement('div');
     left.className = 'oa-piano-tabs';
 
-    const singleBtn = document.createElement('button');
-    singleBtn.type = 'button';
-    singleBtn.className = 'oa-rp-pill-btn';
-    singleBtn.textContent = 'Nota suelta';
-    singleBtn.setAttribute('aria-pressed', this.freeSubMode === 'single' ? 'true' : 'false');
-    singleBtn.addEventListener('click', () => {
-      synthAudio.uiClick();
-      this.freeSubMode = 'single';
-      this.chordHighlightMidis.clear();
-      this.renderModeContent();
-    });
-
-    const chordBtn = document.createElement('button');
-    chordBtn.type = 'button';
-    chordBtn.className = 'oa-rp-pill-btn';
-    chordBtn.textContent = 'Modo Acordes';
-    chordBtn.setAttribute('aria-pressed', this.freeSubMode === 'chord' ? 'true' : 'false');
-    chordBtn.addEventListener('click', () => {
-      synthAudio.uiClick();
-      this.freeSubMode = 'chord';
-      this.renderModeContent();
-    });
-
-    left.append(singleBtn, chordBtn);
+    left.append(
+      createActionButton({
+        label: 'Nota suelta',
+        pressed: this.freeSubMode === 'single',
+        onClick: () => {
+          synthAudio.uiClick();
+          this.freeSubMode = 'single';
+          this.chordHighlightMidis.clear();
+          this.renderModeContent();
+        },
+      }),
+      createActionButton({
+        label: 'Modo Acordes',
+        pressed: this.freeSubMode === 'chord',
+        onClick: () => {
+          synthAudio.uiClick();
+          this.freeSubMode = 'chord';
+          this.renderModeContent();
+        },
+      })
+    );
     this.modeToolbarEl!.appendChild(left);
 
     if (this.freeSubMode === 'chord') {
       const qualWrap = document.createElement('div');
       qualWrap.className = 'oa-piano-tabs';
       (['major', 'minor', 'seventh'] as ChordQuality[]).forEach((q) => {
-        const qb = document.createElement('button');
-        qb.type = 'button';
-        qb.className = 'oa-rp-pill-btn';
-        qb.textContent = q === 'major' ? 'Mayor' : q === 'minor' ? 'menor' : 'Séptima';
-        qb.setAttribute('aria-pressed', this.chordQuality === q ? 'true' : 'false');
-        qb.addEventListener('click', () => {
-          synthAudio.uiClick();
-          this.chordQuality = q;
-          this.renderModeContent();
-        });
-        qualWrap.appendChild(qb);
+        qualWrap.appendChild(
+          createActionButton({
+            label: q === 'major' ? 'Mayor' : q === 'minor' ? 'menor' : 'Séptima',
+            pressed: this.chordQuality === q,
+            onClick: () => {
+              synthAudio.uiClick();
+              this.chordQuality = q;
+              this.renderModeContent();
+            },
+          })
+        );
       });
       this.modeToolbarEl!.appendChild(qualWrap);
     }
@@ -575,7 +759,7 @@ export class PianoEar2DGame implements MiniGame {
     desc.textContent =
       this.freeSubMode === 'single'
         ? 'Pulsa varias teclas a la vez con el teclado del PC o pantalla táctil para escuchar armonías.'
-        : 'Toca cualquier nota fundamental: el piano sonará el acorde completo, iluminará sus teclas y mostrará sus notas.';
+        : 'Toca cualquier nota raíz: el piano sonará el acorde completo, iluminará sus teclas y mostrará sus notas.';
 
     this.displayPanelEl!.append(heading, desc);
 
@@ -584,77 +768,187 @@ export class PianoEar2DGame implements MiniGame {
         this.explainHostEl,
         this.freeSubMode === 'single' ? 'Toca libremente' : 'Modo Acordes activo',
         this.freeSubMode === 'single'
-          ? 'Explora las 2 octavas (Do3 a Do5). Cambia entre Nombres, Teclas o Ambos arriba.'
+          ? 'Explora las 2 octavas (Do3–Do5) o activa el Metrónomo arriba.'
           : 'Elige Mayor, menor o Séptima y pulsa una tecla raíz (ej. Do4 = tecla Q).',
         'info'
       );
     }
   }
 
-  // ==================== 2. MELODÍAS GUIADAS ====================
+  // ==================== 2. 18 CANCIONES GUIADAS ====================
   private startMelody(autoTempo: boolean): void {
+    this.stopPlayback();
     this.melodyStep = 0;
     this.melodyBeatTimer = 0;
     this.melodyStepHit = false;
     this.melodyRunning = autoTempo;
     const mel = GUIDED_MELODIES[this.melodyIdx];
-    const tempoScale = this.isPractice
-      ? 1
-      : this.challengeLevel === 0
-        ? 0.85
-        : this.challengeLevel === 2
-          ? 1.2
-          : 1.0;
-    const secPerBeat = 60 / (mel.bpm * tempoScale);
+    this.melodyNoteStartsCache = melodyNoteStarts(mel);
+    this.lastAccompCueBeat = -1;
+    const secPerBeat = 60 / (mel.bpm * this.tempoScale);
     this.melodyBeatDuration = mel.notes[0].beats * secPerBeat;
+    if (autoTempo && this.melodyAutoAccomp) {
+      this.triggerAccompCueIfNeeded(0);
+    }
     this.renderModeContent();
+  }
+
+  private triggerAccompCueIfNeeded(beatPos: number): void {
+    if (!this.melodyAutoAccomp) return;
+    const mel = GUIDED_MELODIES[this.melodyIdx];
+    const cue = chordCueAtBeat(mel, beatPos);
+    if (cue && cue.beat !== this.lastAccompCueBeat) {
+      this.lastAccompCueBeat = cue.beat;
+      const midis = [
+        cue.root,
+        cue.root + (cue.quality === 'minor' ? 3 : 4),
+        cue.root + 7,
+      ];
+      synthAudio.playChord(midis, 1.1, 'soft', 0.015);
+    }
   }
 
   private renderMelodyUI(): void {
     const mel = GUIDED_MELODIES[this.melodyIdx];
 
+    if (this.isPractice) {
+      const levelWrap = document.createElement('div');
+      levelWrap.className = 'oa-piano-tabs';
+      const levels: ('Todas' | MelodyLevel)[] = ['Todas', ...MELODY_LEVELS];
+      levels.forEach((lvl) => {
+        levelWrap.appendChild(
+          createActionButton({
+            label: lvl === 'Todas' ? 'Todas (18)' : lvl,
+            pressed: this.levelFilter === lvl,
+            onClick: () => {
+              synthAudio.uiClick();
+              this.levelFilter = lvl;
+              const filtered = GUIDED_MELODIES.map((m, i) => ({ m, i })).filter(
+                (x) => lvl === 'Todas' || x.m.level === lvl
+              );
+              if (filtered.length > 0 && !filtered.some((x) => x.i === this.melodyIdx)) {
+                this.melodyIdx = filtered[0].i;
+              }
+              this.startMelody(!this.melodyPracticeWait);
+            },
+          })
+        );
+      });
+      this.modeToolbarEl!.appendChild(levelWrap);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'oa-mus-toolbar-group';
+
     const selector = document.createElement('select');
-    selector.className = 'oa-rp-pill-btn';
+    selector.className = 'oa-mus-select';
     selector.setAttribute('aria-label', 'Elegir melodía guiada');
     selector.disabled = !this.isPractice;
     GUIDED_MELODIES.forEach((m, idx) => {
+      if (this.isPractice && this.levelFilter !== 'Todas' && m.level !== this.levelFilter) return;
       const opt = document.createElement('option');
       opt.value = String(idx);
-      opt.textContent = `${m.title} (${m.composer})`;
+      opt.textContent = `[${m.level}] ${m.title} · ${m.genre} (${m.bpm} BPM)`;
       if (idx === this.melodyIdx) opt.selected = true;
       selector.appendChild(opt);
     });
     selector.addEventListener('change', () => {
       this.melodyIdx = Number(selector.value);
-      this.startMelody(!this.isPractice);
+      this.startMelody(this.isPractice ? !this.melodyPracticeWait : true);
     });
 
-    const restartBtn = document.createElement('button');
-    restartBtn.type = 'button';
-    restartBtn.className = 'oa-rp-pill-btn';
-    restartBtn.innerHTML = `${Icons.refresh(15)}<span>Reiniciar melodía</span>`;
-    restartBtn.addEventListener('click', () => {
-      synthAudio.uiClick();
-      this.startMelody(!this.isPractice);
+    const restartBtn = createActionButton({
+      label: 'Reiniciar',
+      iconHtml: Icons.refresh(15),
+      onClick: () => {
+        synthAudio.uiClick();
+        this.startMelody(this.isPractice ? !this.melodyPracticeWait : true);
+      },
     });
 
-    const previewBtn = document.createElement('button');
-    previewBtn.type = 'button';
-    previewBtn.className = 'oa-rp-pill-btn';
-    previewBtn.innerHTML = `${Icons.volumeOn(15)}<span>Escuchar ejemplo</span>`;
-    previewBtn.addEventListener('click', () => {
-      this.playMelodyPreview(mel);
+    const previewBtn = createActionButton({
+      label: this.previewActive && this.previewKind === 'melody' ? 'Detener ejemplo' : 'Escuchar ejemplo',
+      iconHtml: Icons.volumeOn(15),
+      pressed: this.previewActive && this.previewKind === 'melody',
+      onClick: () => {
+        if (this.previewActive && this.previewKind === 'melody') {
+          this.stopPlayback();
+        } else {
+          this.startMelodyPreview();
+        }
+        this.renderModeContent();
+      },
     });
 
-    this.modeToolbarEl!.append(selector, restartBtn, previewBtn);
+    const accompBtn = createActionButton({
+      label: 'Acompañamiento auto',
+      pressed: this.melodyAutoAccomp,
+      onClick: () => {
+        synthAudio.uiClick();
+        this.melodyAutoAccomp = !this.melodyAutoAccomp;
+        this.renderModeContent();
+      },
+    });
+
+    row.append(selector, restartBtn, previewBtn, accompBtn);
+
+    if (this.isPractice) {
+      row.appendChild(
+        createActionButton({
+          label: this.melodyPracticeWait ? 'Práctica: espera tu nota' : 'Práctica: a tempo',
+          pressed: !this.melodyPracticeWait,
+          onClick: () => {
+            synthAudio.uiClick();
+            this.melodyPracticeWait = !this.melodyPracticeWait;
+            this.startMelody(!this.melodyPracticeWait);
+          },
+        })
+      );
+    }
+
+    const tempoWrap = document.createElement('div');
+    tempoWrap.className = 'oa-piano-tabs';
+    PIANO_TEMPO_SCALES.forEach((sc) => {
+      tempoWrap.appendChild(
+        createActionButton({
+          label: `${sc}x`,
+          pressed: Math.abs(this.tempoScale - sc) < 0.01,
+          onClick: () => {
+            synthAudio.uiClick();
+            this.tempoScale = sc;
+            const curNote = GUIDED_MELODIES[this.melodyIdx].notes[this.melodyStep];
+            if (curNote) {
+              this.melodyBeatDuration =
+                curNote.beats * (60 / (GUIDED_MELODIES[this.melodyIdx].bpm * this.tempoScale));
+            }
+            this.renderModeContent();
+          },
+        })
+      );
+    });
+
+    this.modeToolbarEl!.append(row, tempoWrap);
+
+    const headRow = document.createElement('div');
+    headRow.className = 'oa-mus-toolbar-row';
 
     const head = document.createElement('div');
     head.className = 'oa-explain-heading';
     const currentNote = mel.notes[this.melodyStep];
     const keyInfo = currentNote ? PIANO_KEY_BY_MIDI.get(currentNote.midi) : undefined;
     head.textContent = currentNote
-      ? `${mel.title} · Nota ${this.melodyStep + 1}/${mel.notes.length}: ${keyInfo?.noteName ?? formatMidiNameEs(currentNote.midi)} (tecla ${keyInfo?.keyLabel ?? '?'})`
+      ? `${mel.title} (${mel.level}) · Nota ${this.melodyStep + 1}/${mel.notes.length}: ${keyInfo?.noteName ?? formatMidiNameEs(currentNote.midi)} (tecla ${keyInfo?.keyLabel ?? '?'})`
       : `${mel.title} · Completada`;
+
+    const currentBeat = this.melodyNoteStartsCache[this.melodyStep] ?? 0;
+    const activeCue = chordCueAtBeat(mel, currentBeat);
+    headRow.appendChild(head);
+    if (activeCue) {
+      const chordBadge = document.createElement('span');
+      chordBadge.className = 'oa-mus-chord-badge';
+      chordBadge.textContent = `Acorde: ${activeCue.label}`;
+      headRow.appendChild(chordBadge);
+    }
 
     const strip = document.createElement('div');
     strip.className = 'oa-piano-melody-strip';
@@ -667,9 +961,9 @@ export class PianoEar2DGame implements MiniGame {
       strip.appendChild(chip);
     });
 
-    this.displayPanelEl!.append(head, strip);
+    this.displayPanelEl!.append(headRow, strip);
 
-    if (!this.isPractice) {
+    if (!this.isPractice || !this.melodyPracticeWait) {
       const track = document.createElement('div');
       track.className = 'oa-piano-tempo-track';
       const fill = document.createElement('div');
@@ -682,37 +976,261 @@ export class PianoEar2DGame implements MiniGame {
     if (this.explainHostEl) {
       renderExplanationBox(
         this.explainHostEl,
-        this.isPractice ? 'Sigue la luz (sin prisa)' : 'Etapa 1/3 · Sigue el tempo',
-        this.isPractice
-          ? 'La tecla dorada espera hasta que la toques correctamente.'
-          : 'Toca cada tecla dorada antes de que la barra de tempo pase a la siguiente nota.',
+        this.isPractice && this.melodyPracticeWait
+          ? 'Sigue la luz (espera tu nota)'
+          : this.isInfinite
+            ? `Jam Infinito · Piezas completadas: ${this.piecesCompleted}`
+            : 'Toca al compás del metrónomo',
+        this.isPractice && this.melodyPracticeWait
+          ? `${mel.composer} (${mel.genre}). Toca la tecla dorada; activa Acompañamiento auto para oír la armonía.`
+          : 'Sigue la tecla dorada antes de que avance la barra de pulso. Los errores no cortan la canción.',
         'info'
       );
     }
   }
 
-  private playMelodyPreview(mel: (typeof GUIDED_MELODIES)[number]): void {
-    let offset = 0;
-    const secPerBeat = 60 / mel.bpm;
-    for (const note of mel.notes) {
-      const dur = note.beats * secPerBeat;
-      synthAudio.playMidiNote(note.midi, Math.max(0.2, dur * 0.88), this.timbre, offset);
-      offset += dur;
+  private startMelodyPreview(): void {
+    this.stopPlayback();
+    const mel = GUIDED_MELODIES[this.melodyIdx];
+    const secPerBeat = 60 / (mel.bpm * this.tempoScale);
+    const starts: number[] = [];
+    let acc = 0;
+    for (const n of mel.notes) {
+      starts.push(acc);
+      acc += n.beats * secPerBeat;
+    }
+    this.previewActive = true;
+    this.previewKind = 'melody';
+    this.previewIndex = 0;
+    this.previewElapsedSec = 0;
+    this.previewStartsSec = starts;
+    this.previewLastChordBeat = -1;
+  }
+
+  // ==================== 3. PROGRESIONES DE ACORDES ====================
+  private startProgression(autoTempo: boolean): void {
+    this.stopPlayback();
+    this.progStep = 0;
+    this.progMatchedPcs.clear();
+    this.progBeatTimer = 0;
+    this.progStepHit = false;
+    this.progRunning = autoTempo;
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+    const secPerBeat = 60 / (prog.bpm * this.tempoScale);
+    this.progBeatDuration = prog.chords[0].beats * secPerBeat;
+    this.renderModeContent();
+  }
+
+  private renderProgressionsUI(): void {
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+
+    const row = document.createElement('div');
+    row.className = 'oa-mus-toolbar-group';
+
+    const sel = document.createElement('select');
+    sel.className = 'oa-mus-select';
+    sel.setAttribute('aria-label', 'Elegir progresión armónica');
+    sel.disabled = !this.isPractice;
+    PIANO_PROGRESSIONS.forEach((p, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = `${p.title} (${p.genre} · ${p.bpm} BPM)`;
+      if (idx === this.progIdx) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+      this.progIdx = Number(sel.value);
+      this.startProgression(!this.isPractice);
+    });
+
+    const playChordBtn = createActionButton({
+      label: 'Tocar acorde actual (Espacio)',
+      iconHtml: Icons.play(15),
+      className: 'oa-rp-pill-btn is-active',
+      onClick: () => this.triggerProgressionChordClick(),
+    });
+
+    const previewBtn = createActionButton({
+      label: this.previewActive && this.previewKind === 'progression' ? 'Detener demo' : 'Escuchar progresión',
+      iconHtml: Icons.volumeOn(15),
+      pressed: this.previewActive && this.previewKind === 'progression',
+      onClick: () => {
+        if (this.previewActive && this.previewKind === 'progression') {
+          this.stopPlayback();
+        } else {
+          this.startProgressionPreview();
+        }
+        this.renderModeContent();
+      },
+    });
+
+    row.append(sel, playChordBtn, previewBtn);
+    if (this.isPractice) {
+      row.appendChild(
+        createActionButton({
+          label: this.progRunning ? 'Detener a tempo' : 'Practicar a tempo',
+          pressed: this.progRunning,
+          onClick: () => {
+            synthAudio.uiClick();
+            this.startProgression(!this.progRunning);
+          },
+        })
+      );
+    }
+    this.modeToolbarEl!.appendChild(row);
+
+    const activeChord = prog.chords[this.progStep];
+    const head = document.createElement('div');
+    head.className = 'oa-explain-heading';
+    head.textContent = activeChord
+      ? `${prog.title} · Acorde ${this.progStep + 1}/${prog.chords.length}: ${activeChord.label} (${activeChord.degree}) — ${activeChord.midis.map((m) => formatMidiNameEs(m, false)).join(' - ')}`
+      : `${prog.title} · Completada`;
+
+    const grid = document.createElement('div');
+    grid.className = 'oa-mus-prog-grid';
+    prog.chords.forEach((ch, idx) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'oa-mus-prog-card';
+      if (idx === this.progStep) card.classList.add('is-current');
+      else if (idx < this.progStep) card.classList.add('is-done');
+      card.innerHTML = `
+        <span class="oa-mus-prog-deg">${ch.degree} · ${ch.beats} pulsos</span>
+        <span class="oa-mus-prog-name">${ch.label}</span>
+        <span class="oa-explain-body">${ch.midis.map((m) => formatMidiNameEs(m, false)).join(' ')}</span>
+      `;
+      card.addEventListener('click', () => {
+        if (idx === this.progStep) {
+          this.triggerProgressionChordClick();
+        } else {
+          synthAudio.playChord(ch.midis, 0.9, this.timbre, 0.02);
+        }
+      });
+      grid.appendChild(card);
+    });
+
+    this.displayPanelEl!.append(head, grid);
+
+    if (!this.isPractice || this.progRunning) {
+      const track = document.createElement('div');
+      track.className = 'oa-piano-tempo-track';
+      const fill = document.createElement('div');
+      fill.className = 'oa-piano-tempo-fill';
+      this.tempoFillEl = fill;
+      track.appendChild(fill);
+      this.displayPanelEl!.appendChild(track);
+    }
+
+    if (this.explainHostEl) {
+      renderExplanationBox(
+        this.explainHostEl,
+        prog.title,
+        `${prog.description} Toca Espacio/clic para disparar el acorde entero o pulsa sus teclas iluminadas una a una.`,
+        'info'
+      );
     }
   }
 
-  // ==================== 3. OÍDO MUSICAL ====================
+  private triggerProgressionChordClick(): void {
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+    const ch = prog.chords[this.progStep];
+    if (!ch) return;
+    synthAudio.playChord(ch.midis, 1.0, this.timbre, 0.02);
+    this.completeProgressionStep();
+  }
+
+  private evaluateProgressionKey(midi: number): void {
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+    const ch = prog.chords[this.progStep];
+    if (!ch) return;
+    const pc = ((midi % 12) + 12) % 12;
+    const neededPcs = new Set(ch.midis.map((m) => ((m % 12) + 12) % 12));
+    if (neededPcs.has(pc)) {
+      this.progMatchedPcs.add(pc);
+      if (this.progMatchedPcs.size >= neededPcs.size) {
+        this.completeProgressionStep();
+      } else {
+        this.refreshPianoHighlights();
+      }
+    } else {
+      this.misses += 1;
+      this.combo = 0;
+      this.ctx.breakCombo();
+      this.flashWrongKey(midi);
+      this.updateStatsCard();
+    }
+  }
+
+  private completeProgressionStep(): void {
+    if (this.progStepHit) return;
+    this.progStepHit = true;
+    const deltaMs = this.progRunning
+      ? Math.round((this.progBeatTimer / Math.max(0.2, this.progBeatDuration)) * 120)
+      : 20;
+    const grade: HitGrade = this.progRunning ? gradeTiming(deltaMs) : 'perfect';
+    this.recordMusicHit(grade, deltaMs);
+
+    if (!this.progRunning) {
+      this.advanceProgressionStep();
+    } else {
+      this.updateStatsCard();
+    }
+  }
+
+  private advanceProgressionStep(): void {
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+    this.progStep += 1;
+    this.progMatchedPcs.clear();
+    this.progBeatTimer = 0;
+    this.progStepHit = false;
+
+    if (this.progStep >= prog.chords.length) {
+      this.progRunning = false;
+      this.piecesCompleted += 1;
+      synthAudio.puzzleSuccess(3);
+      if (!this.isPractice && !this.isInfinite && this.challengeKind === 'progression') {
+        this.finishMusicalPieceChallenge();
+        return;
+      }
+      if (this.explainHostEl) {
+        renderExplanationBox(
+          this.explainHostEl,
+          `${prog.title} completada`,
+          'Dominaste todos los cambios armónicos de la progresión.',
+          'good'
+        );
+      }
+      this.progStep = 0;
+    } else {
+      const secPerBeat = 60 / (prog.bpm * this.tempoScale);
+      this.progBeatDuration = prog.chords[this.progStep].beats * secPerBeat;
+    }
+    this.renderModeContent();
+  }
+
+  private startProgressionPreview(): void {
+    this.stopPlayback();
+    const prog = PIANO_PROGRESSIONS[this.progIdx];
+    const secPerBeat = 60 / (prog.bpm * this.tempoScale);
+    const starts: number[] = [];
+    let acc = 0;
+    for (const c of prog.chords) {
+      starts.push(acc);
+      acc += c.beats * secPerBeat;
+    }
+    this.previewActive = true;
+    this.previewKind = 'progression';
+    this.previewIndex = 0;
+    this.previewElapsedSec = 0;
+    this.previewStartsSec = starts;
+  }
+
+  // ==================== 4. OÍDO MUSICAL ====================
   private nextEarQuestion(): void {
     if (this.earSubMode === 'singleNote' && this.isPractice) {
       const pool = TREBLE_NATURAL_MIDIS;
       const targetMidi = pool[Math.floor(Math.random() * pool.length)];
-      this.currentEarQ = {
-        kind: 'single',
-        baseMidi: targetMidi,
-        targetMidi,
-        semitones: 0,
-        answered: false,
-      };
+      this.currentEarQ = { kind: 'single', baseMidi: targetMidi, targetMidi, semitones: 0, answered: false };
     } else {
       const maxSemitones = !this.isPractice && this.challengeLevel === 0 ? 7 : 12;
       const pool = INTERVAL_DEFINITIONS.filter((i) => i.semitones <= maxSemitones);
@@ -739,12 +1257,7 @@ export class PianoEar2DGame implements MiniGame {
       return;
     }
     if (harmonic) {
-      synthAudio.playChord(
-        [this.currentEarQ.baseMidi, this.currentEarQ.targetMidi],
-        0.95,
-        this.timbre,
-        0
-      );
+      synthAudio.playChord([this.currentEarQ.baseMidi, this.currentEarQ.targetMidi], 0.95, this.timbre, 0);
     } else {
       synthAudio.playMidiNote(this.currentEarQ.baseMidi, 0.55, this.timbre, 0);
       synthAudio.playMidiNote(this.currentEarQ.targetMidi, 0.75, this.timbre, 0.48);
@@ -760,59 +1273,53 @@ export class PianoEar2DGame implements MiniGame {
     if (this.isPractice) {
       const subWrap = document.createElement('div');
       subWrap.className = 'oa-piano-tabs';
-      const intBtn = document.createElement('button');
-      intBtn.type = 'button';
-      intBtn.className = 'oa-rp-pill-btn';
-      intBtn.textContent = 'Intervalos';
-      intBtn.setAttribute('aria-pressed', this.earSubMode === 'intervals' ? 'true' : 'false');
-      intBtn.addEventListener('click', () => {
-        synthAudio.uiClick();
-        this.earSubMode = 'intervals';
-        this.nextEarQuestion();
-      });
-
-      const noteBtn = document.createElement('button');
-      noteBtn.type = 'button';
-      noteBtn.className = 'oa-rp-pill-btn';
-      noteBtn.textContent = 'Notas sueltas';
-      noteBtn.setAttribute('aria-pressed', this.earSubMode === 'singleNote' ? 'true' : 'false');
-      noteBtn.addEventListener('click', () => {
-        synthAudio.uiClick();
-        this.earSubMode = 'singleNote';
-        this.nextEarQuestion();
-      });
-      subWrap.append(intBtn, noteBtn);
+      subWrap.append(
+        createActionButton({
+          label: 'Intervalos',
+          pressed: this.earSubMode === 'intervals',
+          onClick: () => {
+            synthAudio.uiClick();
+            this.earSubMode = 'intervals';
+            this.nextEarQuestion();
+          },
+        }),
+        createActionButton({
+          label: 'Notas sueltas',
+          pressed: this.earSubMode === 'singleNote',
+          onClick: () => {
+            synthAudio.uiClick();
+            this.earSubMode = 'singleNote';
+            this.nextEarQuestion();
+          },
+        })
+      );
       this.modeToolbarEl!.appendChild(subWrap);
     }
 
     const actionsWrap = document.createElement('div');
     actionsWrap.className = 'oa-piano-tabs';
-
-    const repeatBtn = document.createElement('button');
-    repeatBtn.type = 'button';
-    repeatBtn.className = 'oa-rp-pill-btn';
-    repeatBtn.innerHTML = `${Icons.volumeOn(15)}<span>Repetir (R)</span>`;
-    repeatBtn.addEventListener('click', () => this.playCurrentEarPrompt(false));
-    actionsWrap.appendChild(repeatBtn);
-
+    actionsWrap.append(
+      createActionButton({
+        label: 'Repetir (R)',
+        iconHtml: Icons.volumeOn(15),
+        onClick: () => this.playCurrentEarPrompt(false),
+      })
+    );
     if (this.currentEarQ.kind === 'interval') {
-      const harmBtn = document.createElement('button');
-      harmBtn.type = 'button';
-      harmBtn.className = 'oa-rp-pill-btn';
-      harmBtn.textContent = 'Oír juntas';
-      harmBtn.addEventListener('click', () => this.playCurrentEarPrompt(true));
-      actionsWrap.appendChild(harmBtn);
+      actionsWrap.appendChild(
+        createActionButton({
+          label: 'Oír juntas',
+          onClick: () => this.playCurrentEarPrompt(true),
+        })
+      );
     }
-
-    const nextBtn = document.createElement('button');
-    nextBtn.type = 'button';
-    nextBtn.className = 'oa-rp-pill-btn';
-    nextBtn.textContent = !this.isPractice
-      ? `Intervalo ${this.challengeEarDone + 1}/${this.challengeEarTotal}`
-      : 'Nuevo reto';
-    nextBtn.disabled = !this.isPractice && !this.currentEarQ.answered;
-    nextBtn.addEventListener('click', () => this.nextEarQuestion());
-    actionsWrap.appendChild(nextBtn);
+    actionsWrap.appendChild(
+      createActionButton({
+        label: !this.isPractice ? `Intervalo ${this.challengeEarDone + 1}/${this.challengeEarTotal}` : 'Nuevo reto',
+        disabled: !this.isPractice && !this.currentEarQ.answered,
+        onClick: () => this.nextEarQuestion(),
+      })
+    );
     this.modeToolbarEl!.appendChild(actionsWrap);
 
     if (this.currentEarQ.kind === 'single') {
@@ -832,7 +1339,6 @@ export class PianoEar2DGame implements MiniGame {
 
     const grid = document.createElement('div');
     grid.className = 'oa-piano-interval-grid';
-
     INTERVAL_DEFINITIONS.forEach((def) => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -859,19 +1365,14 @@ export class PianoEar2DGame implements MiniGame {
 
     if (ok) {
       clickedBtn.classList.add('is-correct');
-      this.hits += 1;
       this.earHits += 1;
-      this.combo += 1;
-      this.maxCombo = Math.max(this.maxCombo, this.combo);
-      this.score += 120 + Math.min(80, this.combo * 10);
-      this.ctx.addScore(120, 1);
+      this.recordMusicHit('perfect', 0, 120);
       synthAudio.puzzleSuccess(this.combo);
     } else {
       clickedBtn.classList.add('is-wrong');
       this.misses += 1;
       this.combo = 0;
       this.ctx.breakCombo();
-      this.ctx.damage(1);
     }
 
     if (this.explainHostEl) {
@@ -882,7 +1383,6 @@ export class PianoEar2DGame implements MiniGame {
         ok ? 'good' : 'bad'
       );
     }
-
     this.updateStatsCard();
 
     if (!this.isPractice) {
@@ -907,16 +1407,11 @@ export class PianoEar2DGame implements MiniGame {
     }
   }
 
-  // ==================== 4. LECTURA EN PENTAGRAMA ====================
+  // ==================== 5. LECTURA EN PENTAGRAMA ====================
   private nextStaffQuestion(): void {
     let clef: PianoClef = this.staffClefChoice;
     if (!this.isPractice) {
-      clef =
-        this.challengeLevel === 0
-          ? 'treble'
-          : this.challengeStaffDone % 2 === 0
-            ? 'treble'
-            : 'bass';
+      clef = this.challengeLevel === 0 ? 'treble' : this.challengeStaffDone % 2 === 0 ? 'treble' : 'bass';
     }
     const pool = clef === 'treble' ? TREBLE_NATURAL_MIDIS : BASS_NATURAL_MIDIS;
     const prevMidi = this.currentStaffQ?.midi;
@@ -925,13 +1420,7 @@ export class PianoEar2DGame implements MiniGame {
       midi = pool[(pool.indexOf(midi) + 1) % pool.length];
     }
 
-    this.currentStaffQ = {
-      clef,
-      midi,
-      elapsedSec: 0,
-      hintShown: false,
-      answered: false,
-    };
+    this.currentStaffQ = { clef, midi, elapsedSec: 0, hintShown: false, answered: false };
     this.renderModeContent();
   }
 
@@ -944,29 +1433,26 @@ export class PianoEar2DGame implements MiniGame {
     if (this.isPractice) {
       const clefWrap = document.createElement('div');
       clefWrap.className = 'oa-piano-tabs';
-      const trebleBtn = document.createElement('button');
-      trebleBtn.type = 'button';
-      trebleBtn.className = 'oa-rp-pill-btn';
-      trebleBtn.textContent = 'Clave de Sol (Do4–Do5)';
-      trebleBtn.setAttribute('aria-pressed', this.staffClefChoice === 'treble' ? 'true' : 'false');
-      trebleBtn.addEventListener('click', () => {
-        synthAudio.uiClick();
-        this.staffClefChoice = 'treble';
-        this.nextStaffQuestion();
-      });
-
-      const bassBtn = document.createElement('button');
-      bassBtn.type = 'button';
-      bassBtn.className = 'oa-rp-pill-btn';
-      bassBtn.textContent = 'Clave de Fa (Do3–Si3)';
-      bassBtn.setAttribute('aria-pressed', this.staffClefChoice === 'bass' ? 'true' : 'false');
-      bassBtn.addEventListener('click', () => {
-        synthAudio.uiClick();
-        this.staffClefChoice = 'bass';
-        this.nextStaffQuestion();
-      });
-
-      clefWrap.append(trebleBtn, bassBtn);
+      clefWrap.append(
+        createActionButton({
+          label: 'Clave de Sol (Do4–Do5)',
+          pressed: this.staffClefChoice === 'treble',
+          onClick: () => {
+            synthAudio.uiClick();
+            this.staffClefChoice = 'treble';
+            this.nextStaffQuestion();
+          },
+        }),
+        createActionButton({
+          label: 'Clave de Fa (Do3–Si3)',
+          pressed: this.staffClefChoice === 'bass',
+          onClick: () => {
+            synthAudio.uiClick();
+            this.staffClefChoice = 'bass';
+            this.nextStaffQuestion();
+          },
+        })
+      );
       this.modeToolbarEl!.appendChild(clefWrap);
     } else {
       const stageBadge = document.createElement('span');
@@ -998,26 +1484,18 @@ export class PianoEar2DGame implements MiniGame {
     accidental: '#' | '',
     ledgerSteps: number[]
   ): string {
-    // 5 lines: steps 0, 2, 4, 6, 8; stepY = 7px per diatonic step
     const bottomLineY = 92;
     const stepPx = 7;
     const yForStep = (step: number) => bottomLineY - step * stepPx;
 
     const linesSvg = [0, 2, 4, 6, 8]
-      .map((s) => {
-        const y = yForStep(s);
-        return `<line x1="28" y1="${y}" x2="332" y2="${y}" stroke="currentColor" stroke-opacity="0.48" stroke-width="1.5"/>`;
-      })
+      .map((s) => `<line x1="28" y1="${yForStep(s)}" x2="332" y2="${yForStep(s)}" stroke="currentColor" stroke-opacity="0.48" stroke-width="1.5"/>`)
       .join('');
 
     const ledgerSvg = ledgerSteps
-      .map((s) => {
-        const y = yForStep(s);
-        return `<line x1="176" y1="${y}" x2="216" y2="${y}" stroke="currentColor" stroke-width="2"/>`;
-      })
+      .map((s) => `<line x1="176" y1="${yForStep(s)}" x2="216" y2="${yForStep(s)}" stroke="currentColor" stroke-width="2"/>`)
       .join('');
 
-    // Single-weight vector clef symbols
     const clefSvg =
       clef === 'treble'
         ? `<g stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1093,6 +1571,11 @@ export class PianoEar2DGame implements MiniGame {
       return;
     }
 
+    if (this.activeTab === 'progressions') {
+      this.evaluateProgressionKey(midi);
+      return;
+    }
+
     if (this.activeTab === 'ear' && this.currentEarQ?.kind === 'single' && !this.currentEarQ.answered) {
       this.evaluateSingleEarNote(midi);
       return;
@@ -1105,12 +1588,24 @@ export class PianoEar2DGame implements MiniGame {
 
   private handleNoteRelease(voiceId: string, midi: number): void {
     synthAudio.noteOff(voiceId);
-    // Keep visual pressed state if still held by another input source
     const stillHeldPtr = Array.from(this.activePointerNotes.values()).includes(midi);
     const stillHeldKey = Array.from(this.activeKeyCodes.values()).includes(midi);
     if (!stillHeldPtr && !stillHeldKey) {
       this.keyButtons.get(midi)?.classList.remove('is-pressed');
     }
+  }
+
+  private recordMusicHit(grade: HitGrade, deltaMs: number, customPts?: number): void {
+    this.hits += 1;
+    this.combo += 1;
+    this.maxCombo = Math.max(this.maxCombo, this.combo);
+    if (grade === 'perfect') this.perfectHits += 1;
+    else if (grade === 'good') this.goodHits += 1;
+    else if (grade === 'ok') this.okHits += 1;
+    this.timingDeviationsMs.push(deltaMs);
+    const pts = customPts ?? gradePoints(grade, this.combo);
+    this.score += pts;
+    this.ctx.addScore(pts, 1);
   }
 
   private evaluateMelodyNote(midi: number): void {
@@ -1121,15 +1616,13 @@ export class PianoEar2DGame implements MiniGame {
     if (midi === target.midi) {
       if (!this.melodyStepHit) {
         this.melodyStepHit = true;
-        this.hits += 1;
         this.rhythmHits += 1;
         this.rhythmTotal += 1;
-        this.combo += 1;
-        this.maxCombo = Math.max(this.maxCombo, this.combo);
-        this.score += 75 + Math.min(50, this.combo * 5);
-        this.ctx.addScore(75, 1);
-
-        if (this.isPractice) {
+        const deltaMs = this.melodyRunning
+          ? Math.round((this.melodyBeatTimer / Math.max(0.15, this.melodyBeatDuration)) * 120)
+          : 25;
+        this.recordMusicHit(this.melodyRunning ? gradeTiming(deltaMs) : 'perfect', deltaMs);
+        if (!this.melodyRunning) {
           this.advanceMelodyStep();
         }
       }
@@ -1139,15 +1632,13 @@ export class PianoEar2DGame implements MiniGame {
       this.combo = 0;
       this.ctx.breakCombo();
       this.flashWrongKey(midi);
-      if (this.isPractice && this.explainHostEl) {
+      if (this.explainHostEl) {
         renderExplanationBox(
           this.explainHostEl,
           'Nota distinta a la guía',
           `Tocaste ${formatMidiNameEs(midi)}, la tecla iluminada es ${formatMidiNameEs(target.midi)}.`,
           'warn'
         );
-      } else {
-        this.ctx.damage(1);
       }
       this.updateStatsCard();
     }
@@ -1161,8 +1652,18 @@ export class PianoEar2DGame implements MiniGame {
 
     if (this.melodyStep >= mel.notes.length) {
       this.melodyRunning = false;
+      this.piecesCompleted += 1;
       synthAudio.puzzleSuccess(2);
-      if (!this.isPractice && this.challengeStage === 'melody') {
+
+      if (this.isInfinite) {
+        this.melodyIdx = (this.melodyIdx + 1) % GUIDED_MELODIES.length;
+        this.tempoScale = Math.min(1.3, Number((this.tempoScale + 0.05).toFixed(2)));
+        this.ctx.toast(`Pieza completada · Siguiente: ${GUIDED_MELODIES[this.melodyIdx].title}`, 'good');
+        this.startMelody(true);
+        return;
+      }
+
+      if (!this.isPractice && this.challengeKind === 'exam' && this.challengeStage === 'melody') {
         this.ctx.toast('Melodía completada · Etapa 2: Oído musical', 'good');
         this.challengeStage = 'ear';
         this.activeTab = 'ear';
@@ -1172,24 +1673,27 @@ export class PianoEar2DGame implements MiniGame {
         this.nextEarQuestion();
         return;
       }
+
+      if (!this.isPractice && this.challengeKind === 'piece') {
+        this.finishMusicalPieceChallenge();
+        return;
+      }
+
       if (this.explainHostEl) {
         renderExplanationBox(
           this.explainHostEl,
           `${mel.title} completada`,
-          'Excelente lectura y pulso. Puedes elegir otra melodía arriba.',
+          'Excelente lectura y pulso. Puedes elegir otra de las 18 piezas arriba.',
           'good'
         );
       }
       this.melodyStep = 0;
     } else {
-      const tempoScale = this.isPractice
-        ? 1
-        : this.challengeLevel === 0
-          ? 0.85
-          : this.challengeLevel === 2
-            ? 1.2
-            : 1.0;
-      const secPerBeat = 60 / (mel.bpm * tempoScale);
+      const beatStart = this.melodyNoteStartsCache[this.melodyStep] ?? 0;
+      if (this.melodyRunning) {
+        this.triggerAccompCueIfNeeded(beatStart);
+      }
+      const secPerBeat = 60 / (mel.bpm * this.tempoScale);
       this.melodyBeatDuration = mel.notes[this.melodyStep].beats * secPerBeat;
     }
     this.renderModeContent();
@@ -1202,11 +1706,8 @@ export class PianoEar2DGame implements MiniGame {
     this.earTotal += 1;
     const ok = midi === q.targetMidi;
     if (ok) {
-      this.hits += 1;
       this.earHits += 1;
-      this.combo += 1;
-      this.maxCombo = Math.max(this.maxCombo, this.combo);
-      this.ctx.addScore(110, 1);
+      this.recordMusicHit('perfect', 0, 110);
       synthAudio.puzzleSuccess(this.combo);
     } else {
       this.misses += 1;
@@ -1234,13 +1735,9 @@ export class PianoEar2DGame implements MiniGame {
 
     if (ok) {
       q.answered = true;
-      this.hits += 1;
       this.staffHits += 1;
       this.staffTotal += 1;
-      this.combo += 1;
-      this.maxCombo = Math.max(this.maxCombo, this.combo);
-      this.score += 110 + Math.min(60, this.combo * 8);
-      this.ctx.addScore(110, 1);
+      this.recordMusicHit('perfect', 0, 110);
       synthAudio.puzzleSuccess(this.combo);
 
       if (this.explainHostEl) {
@@ -1251,13 +1748,12 @@ export class PianoEar2DGame implements MiniGame {
           'good'
         );
       }
-
       this.updateStatsCard();
 
       if (!this.isPractice) {
         this.challengeStaffDone += 1;
         if (this.challengeStaffDone >= this.challengeStaffTotal) {
-          this.finishChallengeRun();
+          this.finishExamChallengeRun();
         } else {
           this.scheduleNextQuestion(420, () => {
             if (!this.destroyed && this.challengeStage === 'staff') {
@@ -1278,13 +1774,12 @@ export class PianoEar2DGame implements MiniGame {
       this.combo = 0;
       this.ctx.breakCombo();
       this.flashWrongKey(midi);
-      this.ctx.damage(1);
 
       if (this.explainHostEl) {
         renderExplanationBox(
           this.explainHostEl,
           'Nota incorrecta en pentagrama',
-          `Tocaste ${formatMidiNameEs(midi)}. Recuerda: en clave de Sol la 2ª línea es Sol4; en clave de Fa la 4ª línea es Fa3.`,
+          `Tocaste ${formatMidiNameEs(midi)}. En clave de Sol la 2ª línea es Sol4; en clave de Fa la 4ª línea es Fa3.`,
           'warn'
         );
       }
@@ -1292,10 +1787,45 @@ export class PianoEar2DGame implements MiniGame {
     }
   }
 
-  private finishChallengeRun(): void {
+  private finishMusicalPieceChallenge(): void {
     if (this.finishedEmitted) return;
     this.finishedEmitted = true;
     this.challengeStage = 'done';
+    this.stopPlayback();
+    synthAudio.puzzleSuccess(4);
+
+    const totalTargets = Math.max(1, this.hits + this.misses);
+    const summary = summarizeMusicRun({
+      hits: this.hits,
+      misses: this.misses,
+      perfect: this.perfectHits,
+      good: this.goodHits,
+      ok: this.okHits,
+      totalTargets,
+      timingDeviationsMs: this.timingDeviationsMs,
+      maxCombo: this.maxCombo,
+    });
+
+    this.ctx.finish({
+      score: Math.max(summary.score, this.score),
+      maxCombo: this.maxCombo,
+      accuracy: summary.accuracy,
+      hits: this.hits,
+      misses: this.misses,
+      puzzlesSolved: this.piecesCompleted,
+      survived: true,
+      infiniteMode: this.isInfinite,
+      axisPerformances: {
+        rhythm: summary.rhythmPerf,
+      },
+    });
+  }
+
+  private finishExamChallengeRun(): void {
+    if (this.finishedEmitted) return;
+    this.finishedEmitted = true;
+    this.challengeStage = 'done';
+    this.stopPlayback();
     synthAudio.puzzleSuccess(4);
 
     const totalAttempts = Math.max(1, this.hits + this.misses);
@@ -1342,6 +1872,14 @@ export class PianoEar2DGame implements MiniGame {
         this.keyButtons.get(target.midi)?.classList.add('is-target');
       }
     }
+    if (this.activeTab === 'progressions') {
+      const ch = PIANO_PROGRESSIONS[this.progIdx].chords[this.progStep];
+      if (ch) {
+        for (const m of ch.midis) {
+          this.keyButtons.get(m)?.classList.add('is-target');
+        }
+      }
+    }
     if (this.activeTab === 'free' && this.freeSubMode === 'chord') {
       for (const m of this.chordHighlightMidis) {
         this.keyButtons.get(m)?.classList.add('is-chord');
@@ -1354,27 +1892,31 @@ export class PianoEar2DGame implements MiniGame {
 
   private updateStatsCard(): void {
     if (!this.statsCardEl) return;
-    const total = this.hits + this.misses;
-    const acc = total > 0 ? Math.round((this.hits / total) * 100) : 100;
-    this.statsCardEl.innerHTML = `
-      <div class="oa-explain-heading">Registro de sesión</div>
-      <p class="oa-explain-body">Aciertos: <strong>${this.hits}</strong> · Fallos: <strong>${this.misses}</strong> · Precisión: <strong>${acc}%</strong></p>
-      <p class="oa-explain-body">Racha máxima: <strong>${this.maxCombo}</strong></p>
-    `;
-    this.ctx.setHud({
-      subStat: `${acc}% precisión · ${this.hits} aciertos`,
+    renderMusicStatsCard(this.statsCardEl, this.ctx, {
+      hits: this.hits,
+      misses: this.misses,
+      maxCombo: this.maxCombo,
+      extraLine: this.piecesCompleted > 0 ? `Piezas: <strong>${this.piecesCompleted}</strong>` : undefined,
     });
   }
 
+  private stopPlayback(): void {
+    this.previewActive = false;
+    synthAudio.stopAllNotes();
+  }
+
   private onKeyDown = (e: KeyboardEvent): void => {
-    if (this.paused || this.destroyed) return;
-    if (e.key === 'Escape' || e.key === '?') return;
-    const tag = (e.target as HTMLElement | null)?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (this.paused || this.destroyed || shouldIgnoreGameHotkey(e)) return;
 
     if (this.activeTab === 'ear' && e.code === 'KeyR' && !e.repeat) {
       e.preventDefault();
       this.playCurrentEarPrompt(false);
+      return;
+    }
+
+    if (this.activeTab === 'progressions' && e.code === 'Space' && !e.repeat) {
+      e.preventDefault();
+      this.triggerProgressionChordClick();
       return;
     }
 
@@ -1401,6 +1943,7 @@ export class PianoEar2DGame implements MiniGame {
     for (const btn of this.keyButtons.values()) {
       btn.classList.remove('is-pressed');
     }
+    this.metroWidget?.clearPulse();
     synthAudio.stopAllNotes();
   };
 
@@ -1415,13 +1958,81 @@ export class PianoEar2DGame implements MiniGame {
       }
     }
 
-    // Challenge melody tempo progression
-    if (!this.isPractice && this.activeTab === 'melody' && this.melodyRunning) {
+    if (this.metronomeEnabled) {
+      const baseBpm =
+        this.activeTab === 'melody'
+          ? GUIDED_MELODIES[this.melodyIdx].bpm
+          : this.activeTab === 'progressions'
+            ? PIANO_PROGRESSIONS[this.progIdx].bpm
+            : 100;
+      const beatDur = 60 / (baseBpm * this.tempoScale);
+      this.metroTimerSec += dt;
+      if (this.metroTimerSec >= beatDur) {
+        this.metroTimerSec -= beatDur;
+        this.metroBeatCount = (this.metroBeatCount + 1) % 4;
+        const accent = this.metroBeatCount === 0;
+        synthAudio.playMetronomeClick(accent);
+        this.metroWidget?.flashBeat(accent);
+      }
+    }
+
+    if (this.previewActive) {
+      this.previewElapsedSec += dt;
+      if (this.previewKind === 'melody') {
+        const mel = GUIDED_MELODIES[this.melodyIdx];
+        const secPerBeat = 60 / (mel.bpm * this.tempoScale);
+        while (
+          this.previewIndex < mel.notes.length &&
+          this.previewElapsedSec >= this.previewStartsSec[this.previewIndex]
+        ) {
+          const n = mel.notes[this.previewIndex];
+          synthAudio.playMidiNote(n.midi, Math.max(0.18, n.beats * secPerBeat * 0.88), this.timbre);
+          if (this.melodyAutoAccomp && mel.chords) {
+            const cue = chordCueAtBeat(mel, this.previewStartsSec[this.previewIndex] / secPerBeat);
+            if (cue && cue.beat !== this.previewLastChordBeat) {
+              this.previewLastChordBeat = cue.beat;
+              synthAudio.playChord(
+                [cue.root, cue.root + (cue.quality === 'minor' ? 3 : 4), cue.root + 7],
+                1.0,
+                'soft',
+                0.015
+              );
+            }
+          }
+          this.previewIndex += 1;
+        }
+        const endAt =
+          (this.previewStartsSec[mel.notes.length - 1] ?? 0) +
+          (mel.notes[mel.notes.length - 1]?.beats ?? 1) * secPerBeat;
+        if (this.previewElapsedSec >= endAt) {
+          this.previewActive = false;
+          this.renderModeContent();
+        }
+      } else {
+        const prog = PIANO_PROGRESSIONS[this.progIdx];
+        const secPerBeat = 60 / (prog.bpm * this.tempoScale);
+        while (
+          this.previewIndex < prog.chords.length &&
+          this.previewElapsedSec >= this.previewStartsSec[this.previewIndex]
+        ) {
+          const c = prog.chords[this.previewIndex];
+          synthAudio.playChord(c.midis, Math.max(0.4, c.beats * secPerBeat * 0.9), this.timbre, 0.02);
+          this.previewIndex += 1;
+        }
+        const endAt =
+          (this.previewStartsSec[prog.chords.length - 1] ?? 0) +
+          (prog.chords[prog.chords.length - 1]?.beats ?? 4) * secPerBeat;
+        if (this.previewElapsedSec >= endAt) {
+          this.previewActive = false;
+          this.renderModeContent();
+        }
+      }
+    }
+
+    if (this.activeTab === 'melody' && this.melodyRunning) {
       this.melodyBeatTimer += dt;
       const pct = Math.min(100, (this.melodyBeatTimer / Math.max(0.15, this.melodyBeatDuration)) * 100);
-      if (this.tempoFillEl) {
-        this.tempoFillEl.style.width = `${pct.toFixed(1)}%`;
-      }
+      if (this.tempoFillEl) this.tempoFillEl.style.width = `${pct.toFixed(1)}%`;
       if (this.melodyBeatTimer >= this.melodyBeatDuration) {
         if (!this.melodyStepHit) {
           this.rhythmTotal += 1;
@@ -1434,7 +2045,21 @@ export class PianoEar2DGame implements MiniGame {
       }
     }
 
-    // Practice staff 3s hint reveal
+    if (this.activeTab === 'progressions' && this.progRunning) {
+      this.progBeatTimer += dt;
+      const pct = Math.min(100, (this.progBeatTimer / Math.max(0.2, this.progBeatDuration)) * 100);
+      if (this.tempoFillEl) this.tempoFillEl.style.width = `${pct.toFixed(1)}%`;
+      if (this.progBeatTimer >= this.progBeatDuration) {
+        if (!this.progStepHit) {
+          this.misses += 1;
+          this.combo = 0;
+          this.ctx.breakCombo();
+          this.updateStatsCard();
+        }
+        this.advanceProgressionStep();
+      }
+    }
+
     if (
       this.isPractice &&
       this.activeTab === 'staff' &&
@@ -1451,30 +2076,41 @@ export class PianoEar2DGame implements MiniGame {
   }
 
   public onResize(): void {
-    // CSS grid/flex handles resizing smoothly
+    // Responsive CSS grid/flex handles layout
   }
 
   public setPaused(paused: boolean): void {
     this.paused = paused;
     if (paused) {
+      this.clearNextQuestionTimer();
+      this.previewActive = false;
       this.onWindowBlur();
     }
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const total = Math.max(1, this.hits + this.misses);
-    const acc = Math.round((this.hits / total) * 100);
-    return {
-      score: this.score,
-      maxCombo: this.maxCombo,
-      accuracy: acc,
+    const summary = summarizeMusicRun({
       hits: this.hits,
       misses: this.misses,
-      puzzlesSolved: this.earHits + this.staffHits,
+      perfect: this.perfectHits,
+      good: this.goodHits,
+      ok: this.okHits,
+      totalTargets: Math.max(1, this.hits + this.misses),
+      timingDeviationsMs: this.timingDeviationsMs,
+      maxCombo: this.maxCombo,
+    });
+    return {
+      score: Math.max(this.score, summary.score),
+      maxCombo: this.maxCombo,
+      accuracy: summary.accuracy,
+      hits: this.hits,
+      misses: this.misses,
+      puzzlesSolved: this.piecesCompleted + this.earHits + this.staffHits,
       survived: true,
+      infiniteMode: this.isInfinite,
       axisPerformances: {
-        rhythm: Math.max(30, acc),
-        logic: Math.max(30, acc),
+        rhythm: summary.rhythmPerf,
+        logic: this.staffTotal > 0 ? Math.max(25, Math.round((this.staffHits / this.staffTotal) * 100)) : undefined,
       },
     };
   }
@@ -1496,7 +2132,10 @@ export class PianoEar2DGame implements MiniGame {
 
   public destroy(): void {
     this.destroyed = true;
+    this.previewActive = false;
+    this.metronomeEnabled = false;
     this.clearNextQuestionTimer();
+    this.metroWidget?.clearPulse();
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('blur', this.onWindowBlur);

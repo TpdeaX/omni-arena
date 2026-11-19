@@ -29,6 +29,7 @@ export class SudokuGuide2DGame implements MiniGame {
   private ctx!: GameContext;
   private isGauntletSlice = false;
   private practiceMode = false;
+  private infiniteMode = false;
   private paused = false;
   private destroyed = false;
   private finished = false;
@@ -54,9 +55,15 @@ export class SudokuGuide2DGame implements MiniGame {
 
   private errors = 0;
   private hintsUsed = 0;
+  private boardHintsUsed = 0;
+  private boardsSolved = 0;
+  private boardStartElapsed = 0;
   private hits = 0;
+  private combo = 0;
+  private maxCombo = 0;
   private score = 0;
   private elapsed = 0;
+  private runSeed = Date.now() & 0x7fffffff;
 
   constructor(isGauntletSlice = false) {
     this.isGauntletSlice = isGauntletSlice;
@@ -65,8 +72,9 @@ export class SudokuGuide2DGame implements MiniGame {
   public mount(ctx: GameContext): void {
     this.ctx = ctx;
     this.practiceMode = Boolean(ctx.practiceMode);
+    this.infiniteMode = Boolean(ctx.infiniteMode && !this.isGauntletSlice && !this.practiceMode);
 
-    if (ctx.difficulty === 'chill') {
+    if (this.infiniteMode || ctx.difficulty === 'progressive' || ctx.difficulty === 'chill') {
       this.selectedSize = 4;
       this.selectedDifficulty = 'easy';
     } else if (ctx.difficulty === 'hyper') {
@@ -80,7 +88,7 @@ export class SudokuGuide2DGame implements MiniGame {
     const layout = createAcademyLayout(
       ctx.container,
       'SUDOKU RAZONADO',
-      this.practiceMode ? 'PRÁCTICA' : 'RETO'
+      this.practiceMode ? 'PRÁCTICA' : this.infiniteMode ? 'INFINITO' : 'RETO'
     );
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
@@ -141,6 +149,8 @@ export class SudokuGuide2DGame implements MiniGame {
     p.className = 'oa-intel-prep-sub';
     p.textContent = this.practiceMode
       ? 'Todos los tableros tienen solución única verificada. Usa Candidatos, Deshacer y Pista Razonada cuando necesites ver el porqué.'
+      : this.infiniteMode
+      ? 'Modo Infinito: al resolver un tablero se genera automáticamente el siguiente escalando 4×4 → 6×6 → 9×9. Los errores restan escudos del HUD.'
       : `Modo Reto: tablero de solución única. Máximo ${MAX_CHALLENGE_ERRORS} errores y ${MAX_CHALLENGE_HINTS} pistas razonadas.`;
 
     // Size selector
@@ -232,20 +242,28 @@ export class SudokuGuide2DGame implements MiniGame {
     this.actionBoxEl.innerHTML = '';
   }
 
-  private startPuzzle(): void {
+  private startPuzzle(resetSession = true): void {
     this.phase = 'playing';
     this.finished = false;
-    this.errors = 0;
-    this.hintsUsed = 0;
-    this.hits = 0;
-    this.score = 0;
-    this.elapsed = 0;
+    if (resetSession) {
+      this.errors = 0;
+      this.hintsUsed = 0;
+      this.boardsSolved = 0;
+      this.hits = 0;
+      this.combo = 0;
+      this.maxCombo = 0;
+      this.score = 0;
+      this.elapsed = 0;
+      this.runSeed = (Date.now() ^ (this.selectedSize * 997)) >>> 0;
+    }
+    this.boardHintsUsed = 0;
+    this.boardStartElapsed = this.elapsed;
     this.history = [];
     this.hintHighlights = [];
     this.lastErrorIdx = null;
     this.notesMode = false;
 
-    const seed = (Date.now() ^ (this.selectedSize * 997)) >>> 0;
+    const seed = (this.runSeed + this.boardsSolved * 7919 + this.selectedSize * 131) >>> 0;
     this.puzzle = generateSudokuPuzzle(this.selectedSize, this.selectedDifficulty, seed);
     this.board = [...this.puzzle.givens];
     this.notes = Array.from({ length: this.board.length }, () => new Set<number>());
@@ -269,6 +287,8 @@ export class SudokuGuide2DGame implements MiniGame {
     const emptyCount = this.board.filter((v) => v === 0).length;
     const errText = this.practiceMode
       ? `FALTAN ${emptyCount}`
+      : this.infiniteMode
+      ? `TABLEROS ${this.boardsSolved} · ${this.puzzle.size}×${this.puzzle.size} · FALTAN ${emptyCount}`
       : `ERRORES ${this.errors}/${MAX_CHALLENGE_ERRORS} · FALTAN ${emptyCount}`;
     this.ctx.setHud({
       subStat: errText,
@@ -333,10 +353,30 @@ export class SudokuGuide2DGame implements MiniGame {
 
     if (!this.practiceMode && digit !== this.puzzle.solution[idx]) {
       this.errors++;
+      this.combo = 0;
       this.lastErrorIdx = idx;
-      this.ctx.damage(1);
+      const shieldsLeft = this.ctx.damage(1);
       this.ctx.breakCombo();
       synthAudio.damage();
+
+      if (this.infiniteMode) {
+        renderExplanationBox(
+          this.explainEl,
+          `Número incorrecto · Escudos: ${shieldsLeft}`,
+          `El ${digit} no va en Fila ${r + 1}, Columna ${c + 1}. ${
+            shieldsLeft > 0
+              ? `Te quedan ${shieldsLeft} escudos en Modo Infinito.`
+              : 'Te has quedado sin escudos.'
+          }`,
+          'bad'
+        );
+        this.renderBoard();
+        this.updateHud();
+        if (shieldsLeft <= 0) {
+          this.finishRun(false);
+        }
+        return;
+      }
 
       const remaining = MAX_CHALLENGE_ERRORS - this.errors;
       renderExplanationBox(
@@ -348,7 +388,7 @@ export class SudokuGuide2DGame implements MiniGame {
       this.renderBoard();
       this.updateHud();
 
-      if (this.errors >= MAX_CHALLENGE_ERRORS) {
+      if (this.errors >= MAX_CHALLENGE_ERRORS || shieldsLeft <= 0) {
         this.finishRun(false);
       }
       return;
@@ -369,6 +409,8 @@ export class SudokuGuide2DGame implements MiniGame {
 
     if (digit === this.puzzle.solution[idx]) {
       this.hits++;
+      this.combo++;
+      this.maxCombo = Math.max(this.maxCombo, this.combo);
       const pts = 40 + size * 5;
       this.score += pts;
       this.ctx.addScore(pts, 1);
@@ -414,8 +456,8 @@ export class SudokuGuide2DGame implements MiniGame {
 
   private showReasonedHint(): void {
     if (this.phase !== 'playing') return;
-    if (!this.practiceMode && this.hintsUsed >= MAX_CHALLENGE_HINTS) {
-      this.ctx.toast('Sin pistas restantes en Modo Reto.', 'warn');
+    if (!this.practiceMode && this.boardHintsUsed >= MAX_CHALLENGE_HINTS) {
+      this.ctx.toast('Sin pistas restantes en este tablero.', 'warn');
       return;
     }
 
@@ -443,6 +485,7 @@ export class SudokuGuide2DGame implements MiniGame {
     if (!hint) return;
 
     this.hintsUsed++;
+    this.boardHintsUsed++;
     this.selectedIdx = hint.row * size + hint.col;
     this.hintHighlights = hint.highlightCells;
 
@@ -483,13 +526,45 @@ export class SudokuGuide2DGame implements MiniGame {
 
   private onSolved(): void {
     const size = this.puzzle.size;
+    this.boardsSolved += 1;
     const sizeMult = size === 4 ? 1 : size === 6 ? 1.5 : 2.3;
     const diffMult =
       this.puzzle.difficulty === 'easy' ? 1 : this.puzzle.difficulty === 'medium' ? 1.3 : 1.7;
-    const timeBonus = Math.max(0, Math.round(450 - this.elapsed * 1.5));
-    const bonus = Math.round(700 * sizeMult * diffMult + timeBonus - this.errors * 120 - this.hintsUsed * 40);
-    this.score = Math.max(200, this.score + Math.max(200, bonus));
+    const boardElapsed = Math.max(1, this.elapsed - this.boardStartElapsed);
+    const timeBonus = Math.max(0, Math.round(450 - boardElapsed * 1.5));
+    const errPenalty = this.infiniteMode ? this.errors * 40 : this.errors * 120;
+    const bonus = Math.max(
+      200,
+      Math.round(700 * sizeMult * diffMult + timeBonus - errPenalty - this.boardHintsUsed * 40)
+    );
+    this.score += bonus;
+    this.ctx.addScore(bonus, 2);
     synthAudio.puzzleSuccess(3);
+
+    if (this.infiniteMode) {
+      if (this.selectedSize === 4) {
+        this.selectedSize = 6;
+        this.selectedDifficulty = 'easy';
+      } else if (this.selectedSize === 6) {
+        this.selectedSize = 9;
+        this.selectedDifficulty = 'medium';
+      } else {
+        this.selectedDifficulty = this.selectedDifficulty === 'easy' ? 'medium' : 'hard';
+      }
+
+      this.ctx.toast(
+        `TABLERO #${this.boardsSolved} RESUELTO · SIGUIENTE ${this.selectedSize}×${this.selectedSize}`,
+        'good'
+      );
+      this.startPuzzle(false);
+      renderExplanationBox(
+        this.explainEl,
+        `Tablero #${this.boardsSolved} resuelto · Ahora ${this.selectedSize}x${this.selectedSize}`,
+        `Excelente deducción (+${bonus} pts). Nuevo tablero ${this.selectedSize}x${this.selectedSize} generado automáticamente.`,
+        'good'
+      );
+      return;
+    }
 
     renderExplanationBox(
       this.explainEl,
@@ -533,10 +608,14 @@ export class SudokuGuide2DGame implements MiniGame {
     infoChip.textContent = `${size}x${size} · ${diffName}`;
 
     const rightChip = document.createElement('span');
-    rightChip.className = `oa-intel-stat-chip${!this.practiceMode && this.errors >= 2 ? ' is-danger' : ''}`;
+    rightChip.className = `oa-intel-stat-chip${
+      !this.practiceMode && !this.infiniteMode && this.errors >= 2 ? ' is-danger' : ''
+    }`;
     rightChip.textContent = this.practiceMode
       ? `Pistas usadas: ${this.hintsUsed}`
-      : `Errores: ${this.errors}/${MAX_CHALLENGE_ERRORS} · Pistas: ${MAX_CHALLENGE_HINTS - this.hintsUsed}`;
+      : this.infiniteMode
+      ? `Resueltos: ${this.boardsSolved} · Pistas: ${Math.max(0, MAX_CHALLENGE_HINTS - this.boardHintsUsed)}`
+      : `Errores: ${this.errors}/${MAX_CHALLENGE_ERRORS} · Pistas: ${Math.max(0, MAX_CHALLENGE_HINTS - this.boardHintsUsed)}`;
 
     meta.append(infoChip, rightChip);
 
@@ -667,7 +746,7 @@ export class SudokuGuide2DGame implements MiniGame {
 
     const hintBtn = document.createElement('button');
     hintBtn.type = 'button';
-    hintBtn.disabled = !this.practiceMode && this.hintsUsed >= MAX_CHALLENGE_HINTS;
+    hintBtn.disabled = !this.practiceMode && this.boardHintsUsed >= MAX_CHALLENGE_HINTS;
     hintBtn.innerHTML = `${Icons.lightbulb(16)}<span>Pista razonada (P)</span>`;
     hintBtn.addEventListener('click', () => this.showReasonedHint());
 
@@ -791,17 +870,32 @@ export class SudokuGuide2DGame implements MiniGame {
     const totalToFill = this.puzzle ? this.puzzle.givens.filter((v) => v === 0).length : 1;
     const progressRatio = Math.min(1, filled / Math.max(1, totalToFill));
     const sizeBonus = this.selectedSize === 4 ? 0 : this.selectedSize === 6 ? 120 : 250;
-    const logicScore = survived
-      ? Math.min(1000, Math.round(520 + sizeBonus + progressRatio * 200 - this.errors * 45 - this.hintsUsed * 25))
-      : Math.min(600, Math.round(220 + progressRatio * 300));
+    const totalAttempts = this.hits + this.errors;
+    const accuracy = totalAttempts > 0 ? Math.round((this.hits / totalAttempts) * 100) : 0;
+
+    let logicScore: number;
+    if (this.boardsSolved >= 1) {
+      const extraBoards = (this.boardsSolved - 1) * 140 + (this.infiniteMode ? progressRatio * 100 : 0);
+      logicScore = Math.min(
+        1000,
+        Math.round(520 + sizeBonus + 200 + extraBoards - this.errors * 40 - this.hintsUsed * 25)
+      );
+    } else if (totalAttempts === 0) {
+      logicScore = 140;
+    } else {
+      logicScore = Math.min(
+        620,
+        Math.round(160 + progressRatio * 360 + this.hits * 4 - this.errors * 35)
+      );
+    }
 
     return {
       score: this.score,
-      maxCombo: Math.max(1, this.hits),
-      accuracy: Math.round((this.hits / Math.max(1, this.hits + this.errors)) * 100),
+      maxCombo: this.maxCombo,
+      accuracy,
       hits: this.hits,
       misses: this.errors,
-      puzzlesSolved: survived ? 1 : 0,
+      puzzlesSolved: this.boardsSolved,
       survived,
       axisPerformances: {
         logic: Math.max(100, logicScore),

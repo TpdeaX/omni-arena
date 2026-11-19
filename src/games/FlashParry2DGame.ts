@@ -78,7 +78,7 @@ export class FlashParry2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'DUELO DE REFLEJO',
       accent: '#FFB800',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'PARRIES 0 · ESPERA DESTELLO',
     });
   }
@@ -172,7 +172,7 @@ export class FlashParry2DGame implements MiniGame {
         life: 0.85,
       };
       this.activeThreat = null;
-      this.spawnDelay = Math.max(0.24, 0.55 / this.ctx.getIntensity());
+      this.spawnDelay = Math.max(0.2, 0.55 / Math.max(0.8, this.effectiveIntensity()));
       this.updateHudStats();
     } else {
       th.resolved = true;
@@ -208,11 +208,21 @@ export class FlashParry2DGame implements MiniGame {
     });
   }
 
+  private effectiveIntensity(): number {
+    const base = this.ctx.getIntensity();
+    const prog =
+      this.ctx.infiniteMode || this.ctx.difficulty === 'progressive'
+        ? Math.min(0.55, this.parries * 0.015)
+        : 0;
+    return base + prog;
+  }
+
   private spawnThreat(): void {
-    const intensity = this.ctx.getIntensity();
+    const intensity = this.effectiveIntensity();
     const lane = Math.floor(Math.random() * 3) as ThreatLane;
-    const isFeint = this.parries >= 2 && Math.random() < Math.min(0.28, 0.14 * intensity);
-    const duration = Math.max(0.55, 1.05 / Math.pow(intensity, 0.75));
+    const isFeint = this.parries >= 2 && Math.random() < Math.min(0.32, 0.14 * intensity);
+    const minDuration = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 0.46 : 0.55;
+    const duration = Math.max(minDuration, 1.05 / Math.pow(intensity, 0.72));
     this.activeThreat = {
       lane,
       progress: 0,
@@ -228,7 +238,7 @@ export class FlashParry2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const rem = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: rem });
       if (rem <= 0) {
@@ -269,11 +279,15 @@ export class FlashParry2DGame implements MiniGame {
 
       // Feint aborts harmlessly at 0.88 if player resisted!
       if (th.isFeint && th.progress >= 0.88) {
+        this.parries += 1;
+        this.combo += 1;
+        this.maxCombo = Math.max(this.maxCombo, this.combo);
         this.score += 120;
         this.ctx.addScore(120, 1);
         this.centerMsg = { text: 'FINTA ESQUIVADA +120', color: '#A6FF00', life: 0.7 };
         this.activeThreat = null;
-        this.spawnDelay = 0.38;
+        this.spawnDelay = Math.max(0.24, 0.38 / Math.max(0.85, this.effectiveIntensity()));
+        this.updateHudStats();
       } else if (!th.isFeint && th.progress >= 1.05) {
         this.triggerFail('IMPACTO SIN BLOQUEO');
         return;
@@ -411,15 +425,15 @@ export class FlashParry2DGame implements MiniGame {
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.parries + this.misses;
-    const acc = total > 0 ? (this.parries / total) * 100 : 100;
+    const acc = total > 0 ? (this.parries / total) * 100 : 0;
     const avgRx = this.reactionSamples.length
       ? this.reactionSamples.reduce((a, b) => a + b, 0) / this.reactionSamples.length
       : 220;
     const rxScore = Math.max(0, (300 - avgRx) * 1.4);
-    const reflexPerf = Math.max(
-      160,
-      Math.min(1000, Math.round(rxScore + acc * 4.5 + this.parries * 18))
-    );
+    const reflexPerf =
+      total === 0
+        ? 150
+        : Math.max(160, Math.min(1000, Math.round(rxScore + acc * 4.5 + this.parries * 18)));
 
     return {
       score: this.score,

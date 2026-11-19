@@ -1,7 +1,22 @@
+import { DifficultyId } from '../types';
+
 export interface AcademyLayoutRefs {
   root: HTMLDivElement;
   stageEl: HTMLDivElement;
   sideEl: HTMLElement;
+}
+
+const DIFF_LABELS: Record<DifficultyId, string> = {
+  chill: 'CADETE',
+  standard: 'ESTÁNDAR',
+  hyper: 'ÉLITE',
+  adaptive: 'DINÁMICA IA',
+  progressive: 'PROGRESIVA',
+};
+
+export function renderDifficultyBadge(difficulty: DifficultyId, infiniteMode = false): string {
+  const label = DIFF_LABELS[difficulty] ?? 'ESTÁNDAR';
+  return infiniteMode ? `${label} · INFINITO` : label;
 }
 
 export function createAcademyLayout(

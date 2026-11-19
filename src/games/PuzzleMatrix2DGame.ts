@@ -76,7 +76,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'MATRIZ MENTAL',
       accent: '#FFB800',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'RESUELTOS 0 · RACHA 0',
     });
 
@@ -204,7 +204,11 @@ export class PuzzleMatrix2DGame implements MiniGame {
 
   private renderMath(): void {
     const intensity = this.ctx.getIntensity();
-    const tier = Math.min(4, Math.floor(this.solved / 4) + (intensity >= 1.25 ? 1 : 0));
+    const maxTier = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 6 : 4;
+    const tier = Math.min(
+      maxTier,
+      Math.floor(this.solved / 4) + Math.floor(Math.max(0, intensity - 1) * 2.5)
+    );
     let a = 4 + Math.floor(Math.random() * (9 + tier * 5));
     let b = 3 + Math.floor(Math.random() * (8 + tier * 4));
     const op = Math.random() < 0.45 ? '×' : Math.random() < 0.5 ? '+' : '−';
@@ -246,8 +250,10 @@ export class PuzzleMatrix2DGame implements MiniGame {
   }
 
   private renderChimp(): void {
-    const bonus = this.ctx.getIntensity() >= 1.28 ? 1 : 0;
-    this.chimpMax = Math.min(8, 4 + Math.floor(this.solved / 5) + bonus);
+    const intensity = this.ctx.getIntensity();
+    const bonus = (intensity >= 1.25 ? 1 : 0) + (intensity >= 1.65 ? 1 : 0);
+    const maxCap = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 10 : 8;
+    this.chimpMax = Math.min(maxCap, 4 + Math.floor(this.solved / 4) + bonus);
     this.chimpNext = 1;
     this.chimpHidden = false;
 
@@ -304,8 +310,10 @@ export class PuzzleMatrix2DGame implements MiniGame {
 
   private renderSimon(): void {
     const intensity = this.ctx.getIntensity();
-    const len = Math.min(7, 3 + Math.floor(this.solved / 5) + (intensity >= 1.3 ? 1 : 0));
-    this.simonStepSec = Math.max(0.21, 0.36 / Math.sqrt(intensity));
+    const maxLen = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive' ? 9 : 7;
+    const bonus = (intensity >= 1.3 ? 1 : 0) + (intensity >= 1.7 ? 1 : 0);
+    const len = Math.min(maxLen, 3 + Math.floor(this.solved / 4) + bonus);
+    this.simonStepSec = Math.max(0.18, 0.36 / Math.sqrt(intensity));
     this.simonSeq = Array.from({ length: len }, () => Math.floor(Math.random() * 9));
     this.simonStep = 0;
     this.simonPlaying = true;
@@ -406,7 +414,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
     this.elapsed += dt;
     this.updateSimonTimeline(dt);
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const rem = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: rem });
       if (rem <= 0) {
@@ -424,7 +432,7 @@ export class PuzzleMatrix2DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const acc = this.attempts > 0 ? (this.solved / this.attempts) * 100 : 100;
+    const acc = this.attempts > 0 ? (this.solved / this.attempts) * 100 : 0;
     const avgRx = this.reactionSamples.length
       ? this.reactionSamples.reduce((a, b) => a + b, 0) / this.reactionSamples.length
       : 1800;
@@ -432,7 +440,10 @@ export class PuzzleMatrix2DGame implements MiniGame {
     const speedScore = Math.max(0, Math.min(350, (3600 - avgRx) * 0.14));
     const solveScore = Math.min(420, this.solved * 32);
     const accScore = acc * 2.3;
-    const logicPerf = Math.max(150, Math.min(1000, Math.round(speedScore + solveScore + accScore)));
+    const logicPerf =
+      this.attempts === 0
+        ? 150
+        : Math.max(150, Math.min(1000, Math.round(speedScore + solveScore + accScore)));
 
     return {
       score: this.score,

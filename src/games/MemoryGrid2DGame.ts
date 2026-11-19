@@ -46,7 +46,7 @@ export class MemoryGrid2DGame implements MiniGame {
       dimension: '2D',
       phaseLabel: 'MEMORIA RELÁMPAGO',
       accent: '#8B5CF6',
-      timeLeftSec: this.isGauntletSlice ? null : this.standaloneDuration,
+      timeLeftSec: this.isGauntletSlice || this.ctx.infiniteMode ? null : this.standaloneDuration,
       subStat: 'RONDA 1 · PATRÓN 3×3',
     });
 
@@ -54,10 +54,23 @@ export class MemoryGrid2DGame implements MiniGame {
   }
 
   private startRound(): void {
-    this.gridSize = this.round <= 2 ? 3 : this.round <= 6 ? 4 : 5;
+    const intensity = this.ctx.getIntensity();
+    const escalate6 = this.ctx.infiniteMode || this.ctx.difficulty === 'progressive';
+    if (escalate6) {
+      this.gridSize =
+        this.round <= 2
+          ? 3
+          : this.round <= 5
+          ? 4
+          : this.round <= 9 && intensity < 1.65
+          ? 5
+          : 6;
+    } else {
+      this.gridSize = this.round <= 2 ? 3 : this.round <= 6 ? 4 : this.round <= 10 ? 5 : 6;
+    }
     const total = this.gridSize * this.gridSize;
-    const targetCount = Math.min(total - 2, 3 + Math.floor(this.round / 2));
-    const trapCount = this.round >= 3 ? Math.min(3, Math.floor((this.round - 1) / 2)) : 0;
+    const targetCount = Math.min(Math.min(total - 4, 14), 3 + Math.floor(this.round / 2));
+    const trapCount = this.round >= 3 ? Math.min(5, Math.floor((this.round - 1) / 2)) : 0;
 
     const indices = Array.from({ length: total }, (_, i) => i);
     for (let i = indices.length - 1; i > 0; i--) {
@@ -70,8 +83,10 @@ export class MemoryGrid2DGame implements MiniGame {
     this.revealedCells = new Set();
     this.wrongCell = null;
     this.phase = 'memorize';
-    const intensity = this.ctx.getIntensity();
-    this.phaseTimer = Math.max(0.85, (1.55 + targetCount * 0.14) / Math.max(0.8, intensity));
+    this.phaseTimer = Math.max(
+      0.85,
+      (1.55 + targetCount * 0.14) / Math.max(0.8, Math.min(1.85, intensity))
+    );
 
     this.renderBoard();
   }
@@ -92,7 +107,9 @@ export class MemoryGrid2DGame implements MiniGame {
         <span class="oa-mem-pill">RONDA ${this.round} · ${this.gridSize}×${this.gridSize}</span>
         <span class="oa-mem-status">${statusText}</span>
       </div>
-      <div class="oa-mem-grid" style="grid-template-columns: repeat(${this.gridSize}, minmax(0, 1fr));">
+      <div class="oa-mem-grid" style="grid-template-columns: repeat(${this.gridSize}, minmax(0, 1fr));${
+        this.gridSize >= 6 ? 'gap:6px;' : ''
+      }">
         ${Array.from({ length: total }, (_, idx) => {
           const isTarget = this.targetCells.has(idx);
           const isTrap = this.trapCells.has(idx);
@@ -161,7 +178,7 @@ export class MemoryGrid2DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    if (!this.isGauntletSlice) {
+    if (!this.isGauntletSlice && !this.ctx.infiniteMode) {
       const left = Math.max(0, this.standaloneDuration - this.elapsed);
       this.ctx.setHud({ timeLeftSec: left });
       if (left <= 0) {
@@ -199,8 +216,11 @@ export class MemoryGrid2DGame implements MiniGame {
     survived = true
   ): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
-    const logicScore = Math.min(980, 260 + this.hits * 26 + this.round * 45 - this.misses * 40);
+    const accuracy = total > 0 ? (this.hits / total) * 100 : 0;
+    const logicScore =
+      total === 0
+        ? 140
+        : Math.min(980, 260 + this.hits * 26 + this.round * 45 - this.misses * 40);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

@@ -187,9 +187,13 @@ export class FlightPortals3DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
     const intensity = this.ctx.getIntensity();
-    const moveSpeed = this.speed * (0.85 + intensity * 0.25) + Math.min(12, this.elapsed * 0.22);
+    const isProgressive = this.ctx.difficulty === 'progressive';
+    const timeRamp = isProgressive
+      ? Math.min(20, this.elapsed * 0.3)
+      : Math.min(12, this.elapsed * 0.22);
+    const moveSpeed = this.speed * (0.85 + intensity * 0.25) + timeRamp;
 
-    const kSpeed = 7.5;
+    const kSpeed = 7.5 * (0.9 + Math.min(1.6, intensity) * 0.14);
     if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) this.targetX -= kSpeed * dt;
     if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) this.targetX += kSpeed * dt;
     if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) this.targetY += kSpeed * dt;
@@ -226,13 +230,13 @@ export class FlightPortals3DGame implements MiniGame {
     this.gateSpawnTimer -= dt;
     if (this.gateSpawnTimer <= 0) {
       this.spawnGate();
-      this.gateSpawnTimer = Math.max(0.75, 1.45 / Math.max(0.8, intensity));
+      this.gateSpawnTimer = Math.max(isProgressive ? 0.58 : 0.75, 1.45 / Math.max(0.8, intensity));
     }
 
     this.meteorSpawnTimer -= dt;
     if (this.meteorSpawnTimer <= 0) {
       this.spawnMeteor();
-      this.meteorSpawnTimer = Math.max(0.45, 1.05 / Math.max(0.8, intensity));
+      this.meteorSpawnTimer = Math.max(isProgressive ? 0.3 : 0.45, 1.05 / Math.max(0.8, intensity));
     }
 
     // Update gates
@@ -253,6 +257,8 @@ export class FlightPortals3DGame implements MiniGame {
           this.ctx.addScore(140, 1);
           synthAudio.pickup();
           this.scene.remove(g.mesh);
+          g.mesh.geometry.dispose();
+          (g.mesh.material as THREE.Material).dispose();
           this.gates.splice(i, 1);
           continue;
         }
@@ -265,6 +271,8 @@ export class FlightPortals3DGame implements MiniGame {
           this.ctx.breakCombo();
         }
         this.scene.remove(g.mesh);
+        g.mesh.geometry.dispose();
+        (g.mesh.material as THREE.Material).dispose();
         this.gates.splice(i, 1);
       }
     }
@@ -287,6 +295,8 @@ export class FlightPortals3DGame implements MiniGame {
           synthAudio.damage();
           const left = this.ctx.damage(1);
           this.scene.remove(m.mesh);
+          m.mesh.geometry.dispose();
+          (m.mesh.material as THREE.Material).dispose();
           this.meteors.splice(i, 1);
           if (left <= 0) {
             this.ctx.finish(this.getMetrics(false));
@@ -298,6 +308,8 @@ export class FlightPortals3DGame implements MiniGame {
 
       if (m.z > 6) {
         this.scene.remove(m.mesh);
+        m.mesh.geometry.dispose();
+        (m.mesh.material as THREE.Material).dispose();
         this.meteors.splice(i, 1);
       }
     }
@@ -323,8 +335,11 @@ export class FlightPortals3DGame implements MiniGame {
 
   public getMetrics(survived = true): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
     const total = this.hits + this.misses;
-    const accuracy = total > 0 ? (this.hits / total) * 100 : 100;
-    const agilityScore = Math.min(980, 260 + this.hits * 32 + this.maxCombo * 18 - this.misses * 25);
+    const accuracy = total > 0 ? (this.hits / total) * 100 : 0;
+    const agilityScore =
+      total === 0
+        ? 140
+        : Math.min(980, 260 + this.hits * 32 + this.maxCombo * 18 - this.misses * 25);
     return {
       score: this.score,
       maxCombo: this.maxCombo,

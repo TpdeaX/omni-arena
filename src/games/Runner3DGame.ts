@@ -283,11 +283,15 @@ export class Runner3DGame implements MiniGame {
     if (this.paused || this.destroyed) return;
     this.elapsed += dt;
 
-    // Speed ramp + Dynamic Intensity scaling
+    // Speed ramp + Dynamic/Progressive Intensity scaling
     const intensity = this.ctx.getIntensity();
-    const speedBoost =
-      (this.isGauntletSlice ? 25 + this.elapsed * 0.55 : 22 + Math.min(24, this.elapsed * 0.45)) *
-      (0.84 + intensity * 0.24);
+    const isProgressive = this.ctx.difficulty === 'progressive';
+    const baseRun = this.isGauntletSlice
+      ? 25 + this.elapsed * 0.55
+      : isProgressive
+      ? 22 + Math.min(38, this.elapsed * 0.52)
+      : 22 + Math.min(24, this.elapsed * 0.45);
+    const speedBoost = baseRun * (0.84 + intensity * 0.24);
     this.speed = speedBoost;
     this.distance += this.speed * dt;
     const distPts = Math.round(this.speed * dt * 1.4);
@@ -296,7 +300,9 @@ export class Runner3DGame implements MiniGame {
 
     // Move grid floor loop for speed illusion
     this.gridFloor.position.z = -40 + ((this.distance * 1) % 2.5);
-    const targetFov = this.ctx.settings.reduceMotion ? 72 : 72 + (this.speed - 22) * 0.35;
+    const targetFov = this.ctx.settings.reduceMotion
+      ? 72
+      : Math.min(88, 72 + (this.speed - 22) * 0.32);
     if (this.camera.fov !== targetFov) {
       this.camera.fov = targetFov;
       this.camera.updateProjectionMatrix();
@@ -329,7 +335,8 @@ export class Runner3DGame implements MiniGame {
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
       this.spawnWave();
-      this.spawnTimer = Math.max(0.42, 0.92 - (this.speed - 22) * 0.015);
+      const minSpawn = isProgressive ? 0.34 : 0.42;
+      this.spawnTimer = Math.max(minSpawn, 0.92 - (this.speed - 22) * 0.015);
     }
 
     // Update objects & check collision
@@ -418,10 +425,16 @@ export class Runner3DGame implements MiniGame {
   }
 
   public getMetrics(): Omit<RunMetrics, 'modeId' | 'durationSec' | 'difficulty' | 'peakIntensity'> {
-    const agilityPerf = Math.max(
-      180,
-      Math.min(1000, Math.round(240 + this.distance * 0.45 + this.coresCollected * 22))
-    );
+    const agilityPerf =
+      this.distance < 30 && this.coresCollected === 0
+        ? 140
+        : Math.max(
+            160,
+            Math.min(
+              1000,
+              Math.round(160 + this.distance * 0.48 + this.coresCollected * 24 + this.nearMisses * 8)
+            )
+          );
     return {
       score: this.score,
       maxCombo: this.maxCombo,

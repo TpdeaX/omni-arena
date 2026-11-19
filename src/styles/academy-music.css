@@ -1,0 +1,652 @@
+/* ==================== ACADEMIAS MUSICALES (PIANO, BATERIA, CUERDAS, ENSAMBLE) ==================== */
+
+.oa-mus-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.oa-mus-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.oa-mus-toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.oa-mus-select {
+  min-height: 38px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.oa-mus-bpm-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.oa-mus-bpm-step {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.oa-mus-bpm-readout {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0 6px;
+  color: var(--ink-primary);
+  white-space: nowrap;
+}
+
+.oa-mus-metro-btn {
+  position: relative;
+}
+
+.oa-mus-metro-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: transform 0.08s ease, background-color 0.08s ease;
+}
+
+.oa-mus-metro-dot.is-beat {
+  background: var(--accent-cyan);
+  transform: scale(1.25);
+}
+
+.oa-mus-metro-dot.is-accent {
+  background: var(--accent-gold);
+  transform: scale(1.4);
+}
+
+.oa-mus-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+}
+
+.oa-mus-chord-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--accent-violet);
+  background: rgba(123, 97, 255, 0.14);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-mus-prog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.oa-mus-prog-card {
+  min-height: 68px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  text-align: left;
+  transition: border-color 0.12s ease, background-color 0.12s ease, transform 0.1s ease;
+}
+
+.oa-mus-prog-card:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+}
+
+.oa-mus-prog-card.is-current {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.16);
+  box-shadow: 0 0 0 1px var(--accent-cyan);
+}
+
+.oa-mus-prog-card.is-done {
+  border-color: var(--accent-lime);
+}
+
+.oa-mus-prog-deg {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.oa-mus-prog-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* ==================== BATERIA 2D ==================== */
+.oa-drums-kit {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: radial-gradient(circle at 50% 35%, var(--bg-elevated), var(--bg-void));
+}
+
+.oa-drum-pad {
+  position: relative;
+  min-height: 86px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--drum-color, var(--border-strong));
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.07s ease, background-color 0.08s ease, box-shadow 0.08s ease;
+}
+
+.oa-drum-pad.is-cymbal {
+  border-radius: 999px;
+}
+
+.oa-drum-pad:hover {
+  background: var(--bg-elevated);
+}
+
+.oa-drum-pad.is-hit {
+  transform: scale(0.95);
+  background: color-mix(in srgb, var(--drum-color, var(--accent-cyan)) 28%, var(--bg-panel));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--drum-color, var(--accent-cyan)) 48%, transparent);
+}
+
+.oa-drum-pad.is-target {
+  box-shadow: 0 0 0 3px var(--accent-gold), 0 0 18px rgba(255, 184, 0, 0.45);
+  background: rgba(255, 184, 0, 0.16);
+}
+
+.oa-drum-pad-name {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.oa-drum-pad-key {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-secondary);
+}
+
+.oa-drums-grid-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.oa-drums-seq-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 600px;
+}
+
+.oa-drums-seq-row {
+  display: grid;
+  grid-template-columns: 112px repeat(var(--drum-steps, 16), minmax(24px, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.oa-drums-seq-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 6px;
+}
+
+.oa-drums-seq-cell {
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oa-drums-seq-cell.is-beat-start {
+  border-left: 2px solid var(--border-strong);
+}
+
+.oa-drums-seq-cell.is-on {
+  background: var(--drum-color, var(--accent-cyan));
+  border-color: var(--drum-color, var(--accent-cyan));
+}
+
+.oa-drums-seq-cell.is-accent::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.oa-drums-seq-cell.is-playhead {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: -1px;
+}
+
+.oa-drums-feedback-pill {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.oa-drums-feedback-pill.is-perfect {
+  border-color: var(--accent-lime);
+  color: var(--accent-lime);
+}
+
+.oa-drums-feedback-pill.is-good {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.oa-drums-feedback-pill.is-miss {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+/* ==================== CUERDAS (GUITARRA / BAJO / UKELELE) ==================== */
+.oa-strings-posture-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.oa-strings-posture-btn {
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.oa-strings-posture-btn.is-selected {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.16);
+}
+
+.oa-strings-posture-btn.is-target {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(255, 184, 0, 0.45);
+}
+
+.oa-strings-strum-btn {
+  min-height: 44px;
+  padding: 8px 18px;
+}
+
+.oa-fretboard-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.oa-fretboard {
+  min-width: 720px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, #271b14 0%, #1d140f 100%);
+  color: #f8fafc;
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oa-fret-numbers,
+.oa-fret-row {
+  display: grid;
+  grid-template-columns: 76px 46px repeat(12, minmax(0, 1fr));
+  align-items: center;
+}
+
+.oa-fret-num {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  padding-bottom: 4px;
+}
+
+.oa-fret-num.is-marker {
+  color: #fbbf24;
+}
+
+.oa-string-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  padding-right: 6px;
+  white-space: nowrap;
+}
+
+.oa-fret-cell {
+  position: relative;
+  height: 34px;
+  border: none;
+  border-right: 2px solid #94a3b8;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f8fafc;
+}
+
+.oa-fret-cell.is-nut {
+  border-right: 4px solid #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.oa-fret-cell::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--string-thick, 2px);
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, #f8fafc 0%, #94a3b8 100%);
+  pointer-events: none;
+}
+
+.oa-fret-cell:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.oa-fret-dot {
+  position: relative;
+  z-index: 2;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  background: var(--accent-cyan);
+  color: #081018;
+  pointer-events: none;
+}
+
+.oa-fret-dot.is-root {
+  background: var(--accent-gold);
+  color: #081018;
+}
+
+.oa-fret-dot.is-target {
+  background: #f59e0b;
+  color: #081018;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.75);
+}
+
+.oa-fret-dot.is-muted {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+
+.oa-fret-dot.is-flash {
+  background: var(--accent-lime);
+  color: #081018;
+}
+
+.oa-chord-library {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ==================== ENSAMBLE / XILOFONO / MELODICA ==================== */
+.oa-band-mixer {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.oa-band-track-btn {
+  min-height: 54px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  text-align: left;
+}
+
+.oa-band-track-btn.is-playing {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.12);
+}
+
+.oa-band-track-btn.is-muted-for-player {
+  border-color: var(--accent-gold);
+  background: rgba(255, 184, 0, 0.14);
+}
+
+.oa-band-track-state {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.oa-band-track-btn.is-muted-for-player .oa-band-track-state {
+  color: var(--accent-gold);
+}
+
+.oa-marimba-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.oa-marimba-rack {
+  min-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: #101520;
+}
+
+.oa-marimba-sharps {
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  gap: 5px;
+  height: 62px;
+}
+
+.oa-marimba-naturals {
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  gap: 5px;
+  align-items: end;
+  height: 128px;
+}
+
+.oa-marimba-bar {
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #081018;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 2px;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.06s ease, box-shadow 0.08s ease;
+}
+
+.oa-marimba-bar.is-sharp {
+  height: 100%;
+  background: #334155;
+  color: #f8fafc;
+}
+
+.oa-marimba-bar.is-pressed {
+  transform: translateY(2px);
+  filter: brightness(1.16);
+}
+
+.oa-marimba-bar.is-target {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 18px var(--accent-gold);
+}
+
+.oa-marimba-spacer {
+  visibility: hidden;
+}
+
+.oa-flute-holes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+}
+
+.oa-flute-hole {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-secondary);
+  background: transparent;
+}
+
+.oa-flute-hole.is-closed {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.oa-band-timeline {
+  display: grid;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.oa-band-beat-pip {
+  height: 10px;
+  border-radius: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+}
+
+.oa-band-beat-pip.is-bar-start {
+  border-left: 2px solid var(--border-strong);
+}
+
+.oa-band-beat-pip.is-active {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+@media (max-width: 899px) {
+  .oa-drums-kit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .oa-band-mixer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+:root[data-motion='reduced'] .oa-mus-metro-dot,
+:root[data-motion='reduced'] .oa-mus-prog-card,
+:root[data-motion='reduced'] .oa-drum-pad,
+:root[data-motion='reduced'] .oa-marimba-bar {
+  transition: none;
+}

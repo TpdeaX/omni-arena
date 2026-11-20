@@ -32,6 +32,17 @@ import {
   remainingOptimalSteps,
 } from '../src/games/intel/hanoiEngine.ts';
 
+import {
+  ANALOGY_BANK,
+  BIAS_BANK,
+  DOMAIN_TRIPLES,
+  SYLLOGISM_FORMS,
+  generateLogicRound,
+  renderSyllogismVennSvg,
+  type LogicCategory,
+  type LogicLevel,
+} from '../src/games/intel/logicSeqEngine.ts';
+
 test('ravenEngine: niveles 1-4 tienen exactamente 1 opción válida, distractores distintos y explicación en español', () => {
   const levels: RavenLevel[] = [1, 2, 3, 4];
   const seeds = [101, 202, 303, 404, 505];
@@ -207,4 +218,87 @@ test('hanoiEngine: validación de movimientos ilegales y siguiente paso óptimo 
   }
   assert.equal(isSolved(cur), true);
   assert.equal(stepsTaken, expectedRem);
+});
+
+test('logicSeqEngine: bancos curados ampliados (72+ analogías, 48+ sesgos, 20+ ternas, 8+ plantillas silogismo, 150+ ítems) sin duplicados ni emojis', () => {
+  const emojiRe = /\p{Extended_Pictographic}/u;
+
+  assert.ok(ANALOGY_BANK.length >= 72, `ANALOGY_BANK debe tener >= 72, tiene ${ANALOGY_BANK.length}`);
+  assert.ok(BIAS_BANK.length >= 48, `BIAS_BANK debe tener >= 48, tiene ${BIAS_BANK.length}`);
+  assert.ok(DOMAIN_TRIPLES.length >= 20, `DOMAIN_TRIPLES debe tener >= 20, tiene ${DOMAIN_TRIPLES.length}`);
+  assert.ok(SYLLOGISM_FORMS.length >= 8, `SYLLOGISM_FORMS debe tener >= 8, tiene ${SYLLOGISM_FORMS.length}`);
+
+  const totalCurated = ANALOGY_BANK.length + BIAS_BANK.length + DOMAIN_TRIPLES.length;
+  assert.ok(totalCurated >= 150, `Total curado debe ser >= 150, tiene ${totalCurated}`);
+
+  // Verificar unicidad y opciones distintas en ANALOGY_BANK
+  const analogyKeys = new Set<string>();
+  const analogyByLevel: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (const item of ANALOGY_BANK) {
+    const key = `${item.a}|${item.b}|${item.c}`;
+    assert.equal(analogyKeys.has(key), false, `Analogía duplicada: ${key}`);
+    analogyKeys.add(key);
+    analogyByLevel[item.level]++;
+
+    const opts = new Set([item.correct, ...item.distractors]);
+    assert.equal(opts.size, 4, `Analogía con opciones repetidas: ${key}`);
+    assert.ok(item.explanation.trim().length > 15);
+    assert.equal(emojiRe.test(`${item.a} ${item.b} ${item.c} ${item.correct} ${item.distractors.join(' ')} ${item.relation} ${item.explanation}`), false);
+  }
+  for (const lv of [1, 2, 3, 4]) {
+    assert.ok(analogyByLevel[lv] >= 18, `Analogías nivel ${lv} debe tener >= 18, tiene ${analogyByLevel[lv]}`);
+  }
+
+  // Verificar unicidad y opciones distintas en BIAS_BANK
+  const biasPrompts = new Set<string>();
+  const biasByLevel: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (const item of BIAS_BANK) {
+    assert.equal(biasPrompts.has(item.prompt), false, `Sesgo duplicado: ${item.prompt.slice(0, 40)}`);
+    biasPrompts.add(item.prompt);
+    biasByLevel[item.level]++;
+
+    const opts = new Set([item.correct, ...item.distractors]);
+    assert.equal(opts.size, 4, `Sesgo con opciones repetidas: ${item.prompt.slice(0, 40)}`);
+    assert.ok(item.hint.trim().length > 10);
+    assert.ok(item.explanation.trim().length > 20);
+    assert.equal(emojiRe.test(`${item.prompt} ${item.correct} ${item.distractors.join(' ')} ${item.hint} ${item.explanation}`), false);
+  }
+  for (const lv of [1, 2, 3, 4]) {
+    assert.ok(biasByLevel[lv] >= 12, `Sesgos nivel ${lv} debe tener >= 12, tiene ${biasByLevel[lv]}`);
+  }
+
+  // Verificar unicidad de DOMAIN_TRIPLES y SVGs de todas las formas de silogismo
+  const tripleKeys = new Set<string>();
+  for (const t of DOMAIN_TRIPLES) {
+    const k = `${t.x}|${t.y}|${t.z}`;
+    assert.equal(tripleKeys.has(k), false, `Terna duplicada: ${k}`);
+    tripleKeys.add(k);
+    assert.equal(new Set([t.x, t.y, t.z]).size, 3);
+    assert.equal(emojiRe.test(k), false);
+  }
+  for (const form of SYLLOGISM_FORMS) {
+    const svg = renderSyllogismVennSvg(form, 'Alfas', 'Betas', 'Gammas');
+    assert.ok(svg.startsWith('<svg') && svg.includes('</svg>'));
+    assert.equal(emojiRe.test(svg), false);
+  }
+
+  // Muestreo de rondas generadas en todas las categorías y niveles
+  const categories: LogicCategory[] = ['sequence', 'analogy', 'syllogism', 'bias'];
+  const levels: LogicLevel[] = [1, 2, 3, 4];
+  for (const cat of categories) {
+    for (const lv of levels) {
+      for (let seed = 1; seed <= 12; seed++) {
+        const q = generateLogicRound(cat, lv, seed * 37);
+        assert.equal(q.options.length, 4);
+        assert.equal(new Set(q.options).size, 4, `Opciones repetidas en ${cat} L${lv} seed ${seed}`);
+        assert.ok(q.correctIndex >= 0 && q.correctIndex < 4);
+        assert.ok(q.hint.trim().length > 10);
+        assert.ok(q.explanation.trim().length > 15);
+        assert.equal(emojiRe.test(`${q.prompt} ${q.options.join(' ')} ${q.hint} ${q.explanation}`), false);
+        if (cat === 'syllogism') {
+          assert.ok(q.vennSvg && q.vennSvg.startsWith('<svg'));
+        }
+      }
+    }
+  }
 });

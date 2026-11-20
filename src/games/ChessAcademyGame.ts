@@ -4,8 +4,10 @@ import { Icons } from '../icons';
 import { ControlHint, GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderExplanationBox,
   renderLessonStepper,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   applyMove,
@@ -140,6 +142,7 @@ export class ChessAcademyGame implements MiniGame {
   private lessonsCompleted = 0;
 
   // Explanation & UI refs
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private stepperEl!: HTMLDivElement;
   private boardContainerEl!: HTMLDivElement;
@@ -172,12 +175,13 @@ export class ChessAcademyGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.stepperEl = document.createElement('div');
     this.sideContentEl = document.createElement('div');
     this.sideContentEl.className = 'oa-academy-card';
     this.explainEl = document.createElement('div');
 
-    this.sideEl.append(this.stepperEl, this.sideContentEl, this.explainEl);
+    this.sideEl.append(this.tutorialSlotEl, this.stepperEl, this.sideContentEl, this.explainEl);
 
     this.ctx.setHud({
       dimension: '2D',
@@ -205,8 +209,49 @@ export class ChessAcademyGame implements MiniGame {
     this.ctx.setControls?.(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'lesson') {
+      const lesson = this.getCurrentLesson();
+      info = {
+        id: `chess:lesson:${lesson.id}`,
+        sectionName: `Lección: ${lesson.title}`,
+        steps: [
+          'Lee el objetivo del paso en la caja inferior y localiza tus piezas activas en el tablero.',
+          'Haz clic en tu pieza para ver los puntos verdes (jugadas legales) y anillos rojos (capturas).',
+          'Ejecuta la jugada táctica exacta o pulsa Pista (P) para resaltar casilla de origen y destino.',
+        ],
+        tip: 'Puedes saltar libremente entre las 10 lecciones guiadas usando los botones numerados de arriba.',
+      };
+    } else if (this.phase === 'duel') {
+      info = {
+        id: 'chess:duel',
+        sectionName: 'Duelo contra el Bot',
+        steps: [
+          'Desarrolla caballos y alfiles hacia el centro en las primeras jugadas y pon a salvo tu rey con el enroque.',
+          'Antes de soltar una pieza, revisa si queda indefensa o si abres una clavada o tenedor.',
+          'Usa Pista (P) para recibir una explicación táctica en español y Girar (F) si prefieres cambiar la perspectiva.',
+        ],
+        tip: 'En Práctica Guiada el motor te avisa en tiempo real si cometes un error grave y te deja deshacer (U).',
+      };
+    } else {
+      info = {
+        id: 'chess:prep',
+        sectionName: 'Configurar sesión de Ajedrez',
+        steps: [
+          `Elige Lecciones (${CHESS_LESSONS.length}) en Práctica Guiada para dominar piezas, mates, clavadas, tenedores y enfiladas.`,
+          'Elige Duelo vs Bot para jugar partida completa con reglas FIDE (enroque, al paso y coronación).',
+          'Selecciona nivel del bot (Novato, Club o Maestro) y tu color antes de pulsar Empezar.',
+        ],
+        tip: 'Si eres nuevo, completa primero las 4 bases y pasa luego a los 6 módulos de táctica.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.stepperEl.innerHTML = '';
     this.sideContentEl.innerHTML = '';
 
@@ -220,14 +265,14 @@ export class ChessAcademyGame implements MiniGame {
       <h3 class="oa-board-prep-title">Configurar entrenamiento</h3>
       <p class="oa-board-prep-desc">${
         isPractice
-          ? 'En Práctica Guiada puedes recorrer las 4 lecciones interactivas o jugar contra el bot con deshacer ilimitado y aviso de errores.'
+          ? `En Práctica Guiada puedes recorrer las ${CHESS_LESSONS.length} lecciones interactivas (movimiento, mates y táctica) o jugar contra el bot con deshacer ilimitado y aviso de errores.`
           : 'En Modo Reto juegas una partida oficial sin deshacer. Tu resultado y precisión actualizan tu eje de Lógica.'
       }</p>
 
       <div class="oa-board-field">
         <span class="oa-board-field-label">Actividad</span>
         <div class="oa-board-seg" id="oa-chess-act-seg">
-          <button type="button" class="oa-board-seg-btn" data-act="lesson" aria-pressed="${this.prepActivity === 'lesson'}">Lecciones (4)</button>
+          <button type="button" class="oa-board-seg-btn" data-act="lesson" aria-pressed="${this.prepActivity === 'lesson'}">Lecciones (${CHESS_LESSONS.length})</button>
           <button type="button" class="oa-board-seg-btn" data-act="duel" aria-pressed="${this.prepActivity === 'duel'}">Duelo vs Bot</button>
         </div>
       </div>
@@ -362,8 +407,10 @@ export class ChessAcademyGame implements MiniGame {
     this.lessonStarsRemaining = new Set(step.stars ?? []);
 
     this.ctx.setHud({
-      subStat: `LECCIÓN ${this.activeLessonIndex + 1}/4 · PASO ${this.activeStepIndex + 1}/${lesson.steps.length}`,
+      subStat: `LECCIÓN ${this.activeLessonIndex + 1}/${CHESS_LESSONS.length} · PASO ${this.activeStepIndex + 1}/${lesson.steps.length}`,
     });
+
+    this.updateSectionTutorial();
 
     renderLessonStepper(
       this.stepperEl,
@@ -450,6 +497,8 @@ export class ChessAcademyGame implements MiniGame {
     this.ctx.setHud({
       subStat: `DUELO · NIVEL ${lvlLabel.toUpperCase()}`,
     });
+
+    this.updateSectionTutorial();
 
     renderExplanationBox(
       this.explainEl,

@@ -6,8 +6,10 @@ import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderDifficultyBadge,
   renderExplanationBox,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   ROTATIONS_24,
@@ -99,6 +101,7 @@ export class SpatialRotation3DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
   private viewportEl: HTMLElement | null = null;
@@ -184,10 +187,11 @@ export class SpatialRotation3DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -233,8 +237,48 @@ export class SpatialRotation3DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'spatial3d:prep',
+        sectionName: 'Preparar Rotación Espacial 3D',
+        steps: [
+          'Elige la complejidad inicial (de 6 a 12 cubos) o Progresivo para escalar durante la sesión.',
+          'Todas las figuras son quirales: solo una opción es la misma pieza rotada en 3D; las demás son espejos o mutaciones.',
+          'Arrastra el visor principal para orbitar la figura modelo desde cualquier ángulo.',
+        ],
+        tip: 'Busca primero la columna vertebral (el tramo recto más largo) y sigue hacia qué lado giran sus dos extremos.',
+      };
+    } else if (this.answered && this.practiceMode) {
+      info = {
+        id: 'spatial3d:inspect',
+        sectionName: 'Inspector 3D y Quiralidad',
+        steps: [
+          'Toca cualquiera de las candidatas para cargarla en el visor 3D interactivo.',
+          'Pulsa "Alinear con modelo" para aplicar la rotación 3D y ver si encaja o si es un reflejo especular.',
+          'Activa "Superponer fantasma" para comparar cubo por cubo dónde difiere una figura espejo.',
+        ],
+        tip: 'Un reflejo en espejo nunca puede superponerse mediante giros rígidos en 3 dimensiones.',
+      };
+    } else {
+      info = {
+        id: `spatial3d:play:L${this.puzzle.level}`,
+        sectionName: `Deducción 3D · Nivel ${this.puzzle.level} (${this.puzzle.cubeCount} cubos)`,
+        steps: [
+          'Orbita la figura modelo arrastrando el visor 3D (o pulsa R para restablecer el ángulo base).',
+          'Cuenta cuántos bloques tiene cada brazo en L y verifica la regla de la mano derecha en los codos.',
+          'Selecciona la candidata correcta con clic o teclas 1–4 (usa P en Práctica para una pista de orientación).',
+        ],
+        tip: 'Si dos opciones tienen las mismas longitudes de brazos, fíjate en el sentido de giro del último cubo.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.disposeMainViewport();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
@@ -362,6 +406,7 @@ export class SpatialRotation3DGame implements MiniGame {
     this.alignAnim = null;
     this.roundTimeLeft = this.roundTimeLimit;
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -947,6 +992,7 @@ export class SpatialRotation3DGame implements MiniGame {
       this.showGhostModel = false;
     }
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -975,6 +1021,7 @@ export class SpatialRotation3DGame implements MiniGame {
       return;
     }
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();

@@ -101,7 +101,10 @@ function m(name: string): number {
   return (Number(res[3]) + 1) * 12 + NOTE_PC[res[1]] + acc;
 }
 
-function makeDrums(bars: number, kind: 'pop' | 'funk' | 'cumbia' | 'bossa' | 'jazz' | 'rock' | 'reggae' | 'latin'): BandDrumNote[] {
+function makeDrums(
+  bars: number,
+  kind: 'pop' | 'funk' | 'cumbia' | 'bossa' | 'jazz' | 'rock' | 'reggae' | 'latin' | 'disco' | 'blues' | 'afro' | 'ska'
+): BandDrumNote[] {
   const out: BandDrumNote[] = [];
   for (let b = 0; b < bars; b++) {
     const off = b * 4;
@@ -110,6 +113,31 @@ function makeDrums(bars: number, kind: 'pop' | 'funk' | 'cumbia' | 'bossa' | 'ja
       out.push({ beat: off + 0, piece: 'kick', velocity: 1 }, { beat: off + 2, piece: 'kick', velocity: 0.95 });
       if (kind === 'pop') out.push({ beat: off + 2.5, piece: 'kick', velocity: 0.8 });
       out.push({ beat: off + 1, piece: 'snare', velocity: 0.95 }, { beat: off + 3, piece: 'snare', velocity: 0.95 });
+    } else if (kind === 'disco') {
+      for (let i = 0; i < 4; i++) {
+        out.push({ beat: off + i, piece: 'kick', velocity: 1 });
+        out.push({ beat: off + i, piece: 'hihat_closed', velocity: 0.7 });
+        out.push({ beat: off + i + 0.5, piece: 'hihat_open', velocity: 0.8 });
+      }
+      out.push({ beat: off + 1, piece: 'snare', velocity: 0.95 }, { beat: off + 3, piece: 'snare', velocity: 0.95 });
+    } else if (kind === 'ska') {
+      for (let i = 0; i < 4; i++) {
+        out.push({ beat: off + i, piece: 'hihat_closed', velocity: 0.7 });
+        out.push({ beat: off + i + 0.5, piece: 'hihat_open', velocity: 0.85 });
+      }
+      out.push({ beat: off + 0, piece: 'kick', velocity: 1 }, { beat: off + 2, piece: 'kick', velocity: 0.95 });
+      out.push({ beat: off + 1, piece: 'snare', velocity: 0.9 }, { beat: off + 3, piece: 'snare', velocity: 0.9 });
+    } else if (kind === 'blues') {
+      for (let i = 0; i < 4; i++) {
+        out.push({ beat: off + i, piece: 'ride', velocity: 0.95 });
+        out.push({ beat: off + i + 0.66, piece: 'ride', velocity: 0.7 });
+      }
+      out.push({ beat: off + 0, piece: 'kick', velocity: 1 }, { beat: off + 2, piece: 'kick', velocity: 0.95 });
+      out.push({ beat: off + 1, piece: 'snare', velocity: 0.9 }, { beat: off + 3, piece: 'snare', velocity: 0.9 });
+    } else if (kind === 'afro') {
+      for (let i = 0; i < 8; i++) out.push({ beat: off + i * 0.5, piece: 'ride', velocity: i % 3 === 0 ? 0.95 : 0.65 });
+      out.push({ beat: off + 0, piece: 'kick', velocity: 1 }, { beat: off + 1.5, piece: 'kick', velocity: 0.9 }, { beat: off + 2.5, piece: 'kick', velocity: 0.9 });
+      out.push({ beat: off + 1, piece: 'snare', velocity: 0.85 }, { beat: off + 3, piece: 'tom_high', velocity: 0.85 }, { beat: off + 3.5, piece: 'tom_low', velocity: 0.8 });
     } else if (kind === 'funk') {
       for (let i = 0; i < 8; i++) out.push({ beat: off + i * 0.5, piece: i === 7 ? 'hihat_open' : 'hihat_closed', velocity: i % 2 === 0 ? 0.9 : 0.6 });
       out.push({ beat: off + 0, piece: 'kick', velocity: 1 }, { beat: off + 1.5, piece: 'kick', velocity: 0.85 }, { beat: off + 2.5, piece: 'kick', velocity: 0.9 });
@@ -365,6 +393,256 @@ export const BAND_SONGS: readonly BandSong[] = [
         [['F5', 0, 0.8], ['D5', 1, 0.8], ['A4', 2, 1.4]],
         [['D5', 0, 0.8], ['B4', 1, 0.8], ['G4', 2, 1.4]],
         [['C5', 0, 0.8], ['E5', 1, 0.8], ['G5', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'salsa_descarga',
+    title: 'Salsa Descarga (Am - G - F - E7)',
+    genre: 'Salsa',
+    keyLabel: 'La menor',
+    bpm: 116,
+    bars: 4,
+    description: 'Cadencia andaluza en clave salsa; ideal para improvisar con Xilófono o Melódica.',
+    tracks: {
+      drums: makeDrums(4, 'latin'),
+      bass: bassFromRoots([['A1', 'E2'], ['G1', 'D2'], ['F1', 'C2'], ['E1', 'B1']]),
+      chords: chordsFromProg([
+        ['Am', [57, 60, 64]],
+        ['G', [55, 59, 62]],
+        ['F', [53, 57, 60]],
+        ['E7', [52, 56, 59, 62]],
+      ]),
+      melody: melodyBars([
+        [['E5', 0, 0.7], ['C5', 1, 0.7], ['A4', 2, 1.4]],
+        [['D5', 0, 0.7], ['B4', 1, 0.7], ['G4', 2, 1.4]],
+        [['C5', 0, 0.7], ['A4', 1, 0.7], ['F4', 2, 1.4]],
+        [['B4', 0, 0.7], ['G#4', 1, 0.7], ['E4', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'blues_chicago',
+    title: 'Blues Chicago Shuffle (C7 - F7 - G7)',
+    genre: 'Blues',
+    keyLabel: 'Do Mayor / Blues',
+    bpm: 102,
+    bars: 4,
+    description: 'Ride ternario con progresión blues en Do para practicar frases pentatónicas.',
+    tracks: {
+      drums: makeDrums(4, 'blues'),
+      bass: bassFromRoots([['C2', 'G2'], ['F1', 'C2'], ['C2', 'G2'], ['G1', 'D2']]),
+      chords: chordsFromProg([
+        ['C7', [48, 52, 55, 58]],
+        ['F7', [53, 57, 60, 63]],
+        ['C7', [48, 52, 55, 58]],
+        ['G7', [55, 59, 62, 65]],
+      ]),
+      melody: melodyBars([
+        [['E4', 0, 0.8], ['G4', 1, 0.8], ['Bb4', 2, 1.4]],
+        [['A4', 0, 0.8], ['C5', 1, 0.8], ['Eb5', 2, 1.4]],
+        [['E5', 0, 0.8], ['C5', 1, 0.8], ['G4', 2, 1.4]],
+        [['D5', 0, 0.8], ['B4', 1, 0.8], ['G4', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'disco_night',
+    title: 'Disco Groove Nocturno (Em7 - Am7 - D7 - Gmaj7)',
+    genre: 'Disco',
+    keyLabel: 'Mi menor',
+    bpm: 118,
+    bars: 4,
+    description: 'Bombo a negras con hi-hat abierto en contratiempos y bajo en octavas.',
+    tracks: {
+      drums: makeDrums(4, 'disco'),
+      bass: bassFromRoots([['E1', 'E2'], ['A1', 'A2'], ['D2', 'A2'], ['G1', 'G2']]),
+      chords: chordsFromProg([
+        ['Em7', [52, 55, 59, 62]],
+        ['Am7', [57, 60, 64, 67]],
+        ['D7', [50, 54, 57, 60]],
+        ['Gmaj7', [55, 59, 62, 66]],
+      ]),
+      melody: melodyBars([
+        [['B4', 0, 0.8], ['E5', 1, 0.8], ['G5', 2, 1.4]],
+        [['E5', 0, 0.8], ['C5', 1, 0.8], ['A4', 2, 1.4]],
+        [['A4', 0, 0.8], ['D5', 1, 0.8], ['F#5', 2, 1.4]],
+        [['G5', 0, 0.8], ['D5', 1, 0.8], ['B4', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'festejo_banda',
+    title: 'Festejo Afroperuano (Dm - C - Bb - A7)',
+    genre: 'Afroperuano',
+    keyLabel: 'Re menor',
+    bpm: 114,
+    bars: 4,
+    description: 'Base criolla con acentos sincopados en toms y bombo sobre cadencia menor.',
+    tracks: {
+      drums: makeDrums(4, 'afro'),
+      bass: bassFromRoots([['D2', 'A2'], ['C2', 'G2'], ['Bb1', 'F2'], ['A1', 'E2']]),
+      chords: chordsFromProg([
+        ['Dm', [50, 53, 57]],
+        ['C', [48, 52, 55]],
+        ['Bb', [58, 62, 65]],
+        ['A7', [57, 61, 64, 67]],
+      ]),
+      melody: melodyBars([
+        [['D5', 0, 0.7], ['F5', 1, 0.7], ['D5', 2, 1.2]],
+        [['C5', 0, 0.7], ['E5', 1, 0.7], ['G5', 2, 1.2]],
+        [['F5', 0, 0.7], ['D5', 1, 0.7], ['Bb4', 2, 1.2]],
+        [['A4', 0, 0.7], ['C#5', 1, 0.7], ['E5', 2, 1.2]],
+      ]),
+    },
+  },
+  {
+    id: 'neo_soul_jam',
+    title: 'Neo-Soul Suave (Fmaj7 - Em7 - Dm7 - Cmaj7)',
+    genre: 'Neo-Soul',
+    keyLabel: 'Do Mayor',
+    bpm: 86,
+    bars: 4,
+    description: 'Séptimas descendentes a tempo relajado para lucir piano o flauta.',
+    tracks: {
+      drums: makeDrums(4, 'funk'),
+      bass: bassFromRoots([['F1', 'C2'], ['E1', 'B1'], ['D2', 'A2'], ['C2', 'G2']]),
+      chords: chordsFromProg([
+        ['Fmaj7', [53, 57, 60, 64]],
+        ['Em7', [52, 55, 59, 62]],
+        ['Dm7', [50, 53, 57, 60]],
+        ['Cmaj7', [48, 52, 55, 59]],
+      ]),
+      melody: melodyBars([
+        [['A4', 0, 0.8], ['C5', 1, 0.8], ['E5', 2, 1.5]],
+        [['G4', 0, 0.8], ['B4', 1, 0.8], ['D5', 2, 1.5]],
+        [['F4', 0, 0.8], ['A4', 1, 0.8], ['C5', 2, 1.5]],
+        [['E4', 0, 0.8], ['G4', 1, 0.8], ['B4', 2, 1.5]],
+      ]),
+    },
+  },
+  {
+    id: 'ska_brass',
+    title: 'Ska Energético (G - D - Em - C)',
+    genre: 'Ska',
+    keyLabel: 'Sol Mayor',
+    bpm: 134,
+    bars: 4,
+    description: 'Contratiempos rápidos de hi-hat abierto y melodía saltarina en Sol mayor.',
+    tracks: {
+      drums: makeDrums(4, 'ska'),
+      bass: bassFromRoots([['G1', 'D2'], ['D2', 'A2'], ['E1', 'B1'], ['C2', 'G2']]),
+      chords: chordsFromProg([
+        ['G', [55, 59, 62]],
+        ['D', [50, 54, 57]],
+        ['Em', [52, 55, 59]],
+        ['C', [48, 52, 55]],
+      ]),
+      melody: melodyBars([
+        [['G4', 0.5, 0.5], ['B4', 1.5, 0.5], ['D5', 2.5, 1.0]],
+        [['F#4', 0.5, 0.5], ['A4', 1.5, 0.5], ['D5', 2.5, 1.0]],
+        [['G4', 0.5, 0.5], ['B4', 1.5, 0.5], ['E5', 2.5, 1.0]],
+        [['E4', 0.5, 0.5], ['G4', 1.5, 0.5], ['C5', 2.5, 1.0]],
+      ]),
+    },
+  },
+  {
+    id: 'synth_pop_80s',
+    title: 'Synth Pop Retro (Am - F - C - G)',
+    genre: 'Pop',
+    keyLabel: 'La menor',
+    bpm: 114,
+    bars: 4,
+    description: 'Pulso ochentero claro con bombo anticipado y progresión de himno pop.',
+    tracks: {
+      drums: makeDrums(4, 'pop'),
+      bass: bassFromRoots([['A1', 'E2'], ['F1', 'C2'], ['C2', 'G2'], ['G1', 'D2']]),
+      chords: chordsFromProg([
+        ['Am', [57, 60, 64]],
+        ['F', [53, 57, 60]],
+        ['C', [48, 52, 55]],
+        ['G', [55, 59, 62]],
+      ]),
+      melody: melodyBars([
+        [['E5', 0, 0.8], ['C5', 1, 0.8], ['A4', 2, 1.4]],
+        [['C5', 0, 0.8], ['A4', 1, 0.8], ['F4', 2, 1.4]],
+        [['G4', 0, 0.8], ['C5', 1, 0.8], ['E5', 2, 1.4]],
+        [['D5', 0, 0.8], ['B4', 1, 0.8], ['G4', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'afrobeat_sun',
+    title: 'Afrobeat Solar (Dm7 - G7)',
+    genre: 'Afrobeat',
+    keyLabel: 'Re Dórico',
+    bpm: 110,
+    bars: 4,
+    description: 'Vamp dórico hipnótico entre Re menor 7 y Sol 7 con percusión rica.',
+    tracks: {
+      drums: makeDrums(4, 'afro'),
+      bass: bassFromRoots([['D2', 'A2'], ['G1', 'D2'], ['D2', 'A2'], ['G1', 'D2']]),
+      chords: chordsFromProg([
+        ['Dm7', [50, 53, 57, 60]],
+        ['G7', [55, 59, 62, 65]],
+        ['Dm7', [50, 53, 57, 60]],
+        ['G7', [55, 59, 62, 65]],
+      ]),
+      melody: melodyBars([
+        [['D5', 0, 0.7], ['F5', 1, 0.7], ['D5', 2, 0.7], ['C5', 3, 0.7]],
+        [['B4', 0, 0.7], ['G4', 1, 0.7], ['A4', 2, 1.4]],
+        [['F4', 0, 0.7], ['A4', 1, 0.7], ['C5', 2, 0.7], ['D5', 3, 0.7]],
+        [['B4', 0, 0.7], ['D5', 1, 0.7], ['G4', 2, 1.4]],
+      ]),
+    },
+  },
+  {
+    id: 'jazz_bossa_night',
+    title: 'Jazz Nocturno (Cm7 - Fm7 - Bb7 - Ebmaj7)',
+    genre: 'Jazz',
+    keyLabel: 'Do menor',
+    bpm: 104,
+    bars: 4,
+    description: 'Cadencia menor moderna en Mib mayor con ritmo bossa suave.',
+    tracks: {
+      drums: makeDrums(4, 'bossa'),
+      bass: bassFromRoots([['C2', 'G2'], ['F1', 'C2'], ['Bb1', 'F2'], ['Eb2', 'Bb2']]),
+      chords: chordsFromProg([
+        ['Cm7', [48, 51, 55, 58]],
+        ['Fm7', [53, 56, 60, 63]],
+        ['Bb7', [58, 62, 65, 68]],
+        ['Ebmaj7', [51, 55, 58, 62]],
+      ]),
+      melody: melodyBars([
+        [['G4', 0, 0.8], ['Bb4', 1, 0.8], ['Eb5', 2, 1.5]],
+        [['C5', 0, 0.8], ['Ab4', 1, 0.8], ['F4', 2, 1.5]],
+        [['D5', 0, 0.8], ['Bb4', 1, 0.8], ['F4', 2, 1.5]],
+        [['G4', 0, 0.8], ['Bb4', 1, 0.8], ['D5', 2, 1.5]],
+      ]),
+    },
+  },
+  {
+    id: 'indie_folk_jam',
+    title: 'Indie Folk Acústico (G - Em - C - D)',
+    genre: 'Folk',
+    keyLabel: 'Sol Mayor',
+    bpm: 106,
+    bars: 4,
+    description: 'Progresión abierta en Sol mayor con melodía cantable en registro agudo.',
+    tracks: {
+      drums: makeDrums(4, 'pop'),
+      bass: bassFromRoots([['G1', 'D2'], ['E1', 'B1'], ['C2', 'G2'], ['D2', 'A2']]),
+      chords: chordsFromProg([
+        ['G', [55, 59, 62]],
+        ['Em', [52, 55, 59]],
+        ['C', [48, 52, 55]],
+        ['D', [50, 54, 57]],
+      ]),
+      melody: melodyBars([
+        [['B4', 0, 0.8], ['D5', 1, 0.8], ['G5', 2, 1.5]],
+        [['E5', 0, 0.8], ['B4', 1, 0.8], ['G4', 2, 1.5]],
+        [['C5', 0, 0.8], ['E5', 1, 0.8], ['G5', 2, 1.5]],
+        [['F#5', 0, 0.8], ['D5', 1, 0.8], ['A4', 2, 1.5]],
       ]),
     },
   },

@@ -175,6 +175,86 @@ export const CHORD_SHAPES: readonly ChordShape[] = [
     frets: [0, 2, 0, 2, 0, -1], fingers: [0, 2, 0, 1, 0, 0],
     tip: 'Solo dos dedos en el traste 2 (cuerdas 4ª y 2ª); la 3ª suena al aire dando Sol.',
   },
+  {
+    id: 'Cmaj7', instrument: 'guitar', name: 'Do Mayor 7 (Cmaj7)', shortLabel: 'Cmaj7',
+    rootPc: 0, pcs: [0, 4, 7, 11],
+    frets: [0, 0, 0, 2, 3, -1], fingers: [0, 0, 0, 2, 3, 0],
+    tip: 'Como Do Mayor levantando el índice para dejar sonar Si3 al aire en la 2ª cuerda.',
+  },
+  {
+    id: 'Fmaj7', instrument: 'guitar', name: 'Fa Mayor 7 (Fmaj7)', shortLabel: 'Fmaj7',
+    rootPc: 5, pcs: [5, 9, 0, 4],
+    frets: [0, 1, 2, 3, -1, -1], fingers: [0, 1, 2, 3, 0, 0],
+    tip: 'Escalera cómoda sin cejilla dejando la 1ª cuerda al aire (Mi4).',
+  },
+  {
+    id: 'Am7', instrument: 'guitar', name: 'La menor 7 (Am7)', shortLabel: 'Am7',
+    rootPc: 9, pcs: [9, 0, 4, 7],
+    frets: [0, 1, 0, 2, 0, -1], fingers: [0, 1, 0, 2, 0, 0],
+    tip: 'Solo dos dedos respecto a La menor; libera el Sol3 en la 3ª cuerda al aire.',
+  },
+  {
+    id: 'Dm7', instrument: 'guitar', name: 'Re menor 7 (Dm7)', shortLabel: 'Dm7',
+    rootPc: 2, pcs: [2, 5, 9, 0],
+    frets: [1, 1, 2, 0, -1, -1], fingers: [1, 1, 2, 0, 0, 0],
+    tip: 'Media cejilla del índice en traste 1 (cuerdas 1ª y 2ª) con el dedo 2 en la 3ª.',
+  },
+  {
+    id: 'Em7', instrument: 'guitar', name: 'Mi menor 7 (Em7)', shortLabel: 'Em7',
+    rootPc: 4, pcs: [4, 7, 11, 2],
+    frets: [0, 3, 0, 2, 2, 0], fingers: [0, 3, 0, 2, 1, 0],
+    tip: 'Añade el anular en el traste 3 de la 2ª cuerda (Re4) sobre Mi menor.',
+  },
+  {
+    id: 'B7', instrument: 'guitar', name: 'Si Séptima (B7)', shortLabel: 'B7',
+    rootPc: 11, pcs: [11, 3, 6, 9],
+    frets: [2, 0, 2, 1, 2, -1], fingers: [4, 0, 3, 1, 2, 0],
+    tip: 'Acorde dominante clásico del blues en Mi; evita rasguear la 6ª cuerda.',
+  },
+  {
+    id: 'Bb', instrument: 'guitar', name: 'Si bemol Mayor (Bb)', shortLabel: 'Bb',
+    rootPc: 10, pcs: [10, 2, 5],
+    frets: [1, 3, 3, 3, 1, -1], fingers: [1, 4, 3, 2, 1, 0],
+    tip: 'Cejilla con índice en traste 1 desde la 5ª cuerda y tríada de La Mayor en traste 3.',
+  },
+  {
+    id: 'C#m', instrument: 'guitar', name: 'Do# menor (C#m)', shortLabel: 'C#m',
+    rootPc: 1, pcs: [1, 4, 8],
+    frets: [4, 5, 6, 6, 4, -1], fingers: [1, 2, 4, 3, 1, 0],
+    tip: 'Forma móvil de Si menor transportada al traste 4.',
+  },
+
+  // ---------- Bajo Eléctrico (4 cuerdas: G2, D2, A1, E1) ----------
+  {
+    id: 'C', instrument: 'bass', name: 'Do Mayor en Bajo (C)', shortLabel: 'C',
+    rootPc: 0, pcs: [0, 4, 7],
+    frets: [0, 2, 3, -1], fingers: [0, 1, 2, 0],
+    tip: 'Tríada abierta de Do: Do2 en 3ª traste 3, Mi2 en 2ª traste 2 y Sol2 al aire.',
+  },
+  {
+    id: 'G', instrument: 'bass', name: 'Sol Mayor en Bajo (G)', shortLabel: 'G',
+    rootPc: 7, pcs: [7, 11, 2],
+    frets: [0, 0, 2, 3], fingers: [0, 0, 1, 2],
+    tip: 'Postura grave en primera posición aprovechando Re2 y Sol2 al aire.',
+  },
+  {
+    id: 'Am', instrument: 'bass', name: 'La menor en Bajo (Am)', shortLabel: 'Am',
+    rootPc: 9, pcs: [9, 0, 4],
+    frets: [5, 2, 0, -1], fingers: [4, 1, 0, 0],
+    tip: 'La1 al aire, 5ª (Mi2) en traste 2 de la 2ª y 3ª menor (Do3) en traste 5 de la 1ª.',
+  },
+  {
+    id: 'F', instrument: 'bass', name: 'Fa Mayor en Bajo (F)', shortLabel: 'F',
+    rootPc: 5, pcs: [5, 9, 0],
+    frets: [5, 3, 0, 1], fingers: [4, 3, 0, 1],
+    tip: 'Fa1 grave con el índice en traste 1 de la 4ª, La1 al aire y octava en traste 3.',
+  },
+  {
+    id: 'Em', instrument: 'bass', name: 'Mi menor en Bajo (Em)', shortLabel: 'Em',
+    rootPc: 4, pcs: [4, 7, 11],
+    frets: [0, 2, 2, 0], fingers: [0, 2, 1, 0],
+    tip: 'Mi1 grave al aire junto a Si1 (5ª), Mi2 (octava) y Sol2 (3ª menor al aire).',
+  },
 
   // ---------- Ukelele (4 cuerdas: A4, E4, C4, G4) ----------
   {
@@ -231,6 +311,42 @@ export const CHORD_SHAPES: readonly ChordShape[] = [
     frets: [1, 0, 0, 0], fingers: [1, 0, 0, 0],
     tip: 'Solo el índice en traste 1 de la 1ª cuerda (Sib).',
   },
+  {
+    id: 'A', instrument: 'ukulele', name: 'La Mayor (A)', shortLabel: 'A',
+    rootPc: 9, pcs: [9, 1, 4],
+    frets: [0, 0, 1, 2], fingers: [0, 0, 1, 2],
+    tip: 'Añade el índice en traste 1 de la 3ª cuerda (Do#) sobre La menor.',
+  },
+  {
+    id: 'E', instrument: 'ukulele', name: 'Mi Mayor (E)', shortLabel: 'E',
+    rootPc: 4, pcs: [4, 8, 11],
+    frets: [2, 4, 4, 4], fingers: [1, 4, 3, 2],
+    tip: 'Índice en traste 2 de la 1ª cuerda y tres dedos en línea en el traste 4.',
+  },
+  {
+    id: 'A7', instrument: 'ukulele', name: 'La Séptima (A7)', shortLabel: 'A7',
+    rootPc: 9, pcs: [9, 1, 4, 7],
+    frets: [0, 0, 1, 0], fingers: [0, 0, 1, 0],
+    tip: 'Un solo dedo (índice) en el traste 1 de la 3ª cuerda.',
+  },
+  {
+    id: 'D7', instrument: 'ukulele', name: 'Re Séptima (D7)', shortLabel: 'D7',
+    rootPc: 2, pcs: [2, 6, 9, 0],
+    frets: [3, 2, 2, 2], fingers: [4, 3, 2, 1],
+    tip: 'Cejilla o tres dedos en traste 2 con el meñique en el traste 3 de la 1ª cuerda (Do5).',
+  },
+  {
+    id: 'E7', instrument: 'ukulele', name: 'Mi Séptima (E7)', shortLabel: 'E7',
+    rootPc: 4, pcs: [4, 8, 11, 2],
+    frets: [2, 0, 2, 1], fingers: [3, 0, 2, 1],
+    tip: 'Deja la 2ª cuerda al aire (Mi4) y forma un triángulo cómodo en trastes 1 y 2.',
+  },
+  {
+    id: 'Bm', instrument: 'ukulele', name: 'Si menor (Bm)', shortLabel: 'Bm',
+    rootPc: 11, pcs: [11, 2, 6],
+    frets: [2, 2, 2, 4], fingers: [1, 1, 1, 3],
+    tip: 'Media cejilla en traste 2 de las tres primeras cuerdas y anular en traste 4 de la 4ª.',
+  },
 ];
 
 /** Genera diagrama didáctico de Bajo eléctrico (Tónica + 5ª justa + Octava) para cualquier raíz (0..11). */
@@ -260,7 +376,9 @@ export function bassShapeFor(rootPc: number): ChordShape {
 
 export function getChordsForInstrument(instrument: StringInstrumentId): ChordShape[] {
   if (instrument === 'bass') {
-    return [0, 2, 4, 5, 7, 9, 11].map((pc) => bassShapeFor(pc));
+    const named = CHORD_SHAPES.filter((c) => c.instrument === 'bass');
+    const octaves = [0, 2, 4, 5, 7, 9, 11].map((pc) => bassShapeFor(pc));
+    return [...named, ...octaves];
   }
   return CHORD_SHAPES.filter((c) => c.instrument === instrument);
 }
@@ -388,8 +506,148 @@ export const STRING_SONGS: readonly StringSong[] = [
       'guitar'
     ),
   },
+  {
+    id: 'gtr_andalusian',
+    instrument: 'guitar',
+    kind: 'chords',
+    title: 'Cadencia Andaluza (Am - G - F - E7)',
+    genre: 'Flamenco / Latina',
+    bpm: 94,
+    description: 'Desciende por los acordes españoles clásicos alternando rasgueos firmes.',
+    chordPalette: ['Am', 'G', 'F', 'E7'],
+    events: chordEvents([
+      ['Am', 2], ['Am', 2], ['G', 2], ['G', 2],
+      ['F', 2], ['F', 2], ['E7', 2], ['E7', 2],
+      ['Am', 2], ['G', 2], ['F', 2], ['E7', 2],
+    ]),
+  },
+  {
+    id: 'gtr_bossa',
+    instrument: 'guitar',
+    kind: 'chords',
+    title: 'Bossa Suave (Cmaj7 - Dm7 - Em7 - Am7)',
+    genre: 'Bossa Nova',
+    bpm: 102,
+    description: 'Acordes abiertos con séptima sin cejilla pesada, ideales para comping suave.',
+    chordPalette: ['Cmaj7', 'Dm7', 'Em7', 'Am7'],
+    events: chordEvents([
+      ['Cmaj7', 2], ['Cmaj7', 2], ['Dm7', 2], ['Dm7', 2],
+      ['Em7', 2], ['Em7', 2], ['Am7', 2], ['Am7', 2],
+    ]),
+  },
+  {
+    id: 'gtr_waltz',
+    instrument: 'guitar',
+    kind: 'chords',
+    title: 'Vals en Re Mayor (D - G - A7 - Bm)',
+    genre: 'Vals',
+    bpm: 108,
+    description: 'Acompañamiento en 3/4 recorriendo tónica, subdominante, dominante y relativo menor.',
+    chordPalette: ['D', 'G', 'A7', 'Bm'],
+    events: chordEvents([
+      ['D', 3], ['G', 3], ['A7', 3], ['D', 3],
+      ['Bm', 3], ['G', 3], ['A7', 3], ['D', 3],
+    ]),
+  },
+  {
+    id: 'gtr_ballad_em',
+    instrument: 'guitar',
+    kind: 'chords',
+    title: 'Balada Moderna (Em - C - G - D)',
+    genre: 'Balada / Rock',
+    bpm: 84,
+    description: 'Los cuatro acordes esenciales en tonalidad de Mi menor con cambios amplios.',
+    chordPalette: ['Em', 'C', 'G', 'D'],
+    events: chordEvents([
+      ['Em', 2], ['Em', 2], ['C', 2], ['C', 2],
+      ['G', 2], ['G', 2], ['D', 2], ['D', 2],
+    ]),
+  },
+  {
+    id: 'gtr_jazz_turn',
+    instrument: 'guitar',
+    kind: 'chords',
+    title: 'Jazz II-V-I-VI (Dm7 - G7 - Cmaj7 - Am7)',
+    genre: 'Jazz',
+    bpm: 100,
+    description: 'Turnaround armónico clásico para entrenar cambios limpios entre séptimas.',
+    chordPalette: ['Dm7', 'G7', 'Cmaj7', 'Am7'],
+    events: chordEvents([
+      ['Dm7', 2], ['G7', 2], ['Cmaj7', 2], ['Cmaj7', 2],
+      ['Am7', 2], ['Dm7', 2], ['G7', 2], ['Cmaj7', 2],
+    ]),
+  },
+  {
+    id: 'gtr_spanish_arp',
+    instrument: 'guitar',
+    kind: 'riff',
+    title: 'Arpegio Español en Mi menor',
+    genre: 'Clásica / Flamenco',
+    bpm: 92,
+    description: 'Alternancia rápida de pulgar en la 6ª cuerda al aire con notas agudas en 1ª y 2ª.',
+    events: riffEvents(
+      [
+        [5, 0, 0.5], [2, 1, 0.5], [1, 0, 0.5], [0, 0, 0.5],
+        [5, 1, 0.5], [2, 2, 0.5], [1, 1, 0.5], [0, 1, 0.5],
+        [5, 3, 0.5], [2, 4, 0.5], [1, 3, 0.5], [0, 3, 0.5],
+        [5, 1, 0.5], [2, 2, 0.5], [1, 0, 0.5], [0, 0, 0.5],
+      ],
+      'guitar'
+    ),
+  },
+  {
+    id: 'gtr_surf_riff',
+    instrument: 'guitar',
+    kind: 'riff',
+    title: 'Riff Surf Retro en Mi',
+    genre: 'Surf Rock',
+    bpm: 124,
+    description: 'Línea melódica grave en la 6ª y 5ª cuerda con saltos clásicos de surf.',
+    events: riffEvents(
+      [
+        [5, 0, 0.5], [5, 0, 0.5], [5, 3, 0.5], [5, 4, 0.5],
+        [4, 2, 0.5], [4, 2, 0.5], [4, 5, 0.5], [4, 2, 0.5],
+        [5, 3, 0.5], [5, 2, 0.5], [5, 0, 1.0],
+      ],
+      'guitar'
+    ),
+  },
+  {
+    id: 'gtr_country_pick',
+    instrument: 'guitar',
+    kind: 'riff',
+    title: 'Fingerpicking en Sol Mayor',
+    genre: 'Country / Folk',
+    bpm: 104,
+    description: 'Alternancia de bajos en cuerdas 6ª y 4ª mientras la melodía canta en la 1ª y 2ª.',
+    events: riffEvents(
+      [
+        [5, 3, 0.5], [1, 0, 0.5], [3, 0, 0.5], [0, 3, 0.5],
+        [5, 3, 0.5], [1, 1, 0.5], [3, 0, 0.5], [0, 2, 0.5],
+        [4, 3, 0.5], [1, 1, 0.5], [3, 2, 0.5], [0, 0, 1.0],
+      ],
+      'guitar'
+    ),
+  },
+  {
+    id: 'gtr_blues_lick',
+    instrument: 'guitar',
+    kind: 'riff',
+    title: 'Lick Blues en La (Caja 5-8)',
+    genre: 'Blues',
+    bpm: 94,
+    description: 'Frase expresiva con nota blue (traste 6 de 3ª cuerda) resolviendo a la tónica La.',
+    events: riffEvents(
+      [
+        [2, 5, 0.5], [2, 7, 0.5], [1, 5, 0.5], [1, 8, 1.0],
+        [0, 5, 0.5], [0, 8, 0.5], [0, 5, 0.5], [1, 8, 0.5],
+        [2, 8, 0.5], [2, 7, 0.5], [2, 5, 0.5], [3, 7, 1.5],
+      ],
+      'guitar'
+    ),
+  },
 
-  // ---------- Bajo Eléctrico (5) ----------
+  // ---------- Bajo Eléctrico (11) ----------
   {
     id: 'bass_walk',
     instrument: 'bass',
@@ -479,8 +737,108 @@ export const STRING_SONGS: readonly StringSong[] = [
       'bass'
     ),
   },
+  {
+    id: 'bass_bossa',
+    instrument: 'bass',
+    kind: 'riff',
+    title: 'Bajo Bossa Nova (Do - Fa - Sol)',
+    genre: 'Bossa Nova',
+    bpm: 106,
+    description: 'Pulso de blanca con puntillo + corchea conectando tónica y quinta en primera posición.',
+    events: riffEvents(
+      [
+        [2, 3, 1.5], [3, 3, 0.5], [2, 3, 1.5], [3, 3, 0.5],
+        [3, 1, 1.5], [2, 3, 0.5], [3, 3, 1.5], [2, 5, 0.5],
+        [2, 3, 2.0],
+      ],
+      'bass'
+    ),
+  },
+  {
+    id: 'bass_salsa_tumbao',
+    instrument: 'bass',
+    kind: 'riff',
+    title: 'Tumbao Latino en La menor',
+    genre: 'Salsa / Latino',
+    bpm: 114,
+    description: 'Anticipa el cambio armónico en el contratiempo del pulso 2 y en el pulso 4.',
+    events: riffEvents(
+      [
+        [2, 0, 1.5], [1, 2, 0.5], [1, 2, 1.0], [2, 5, 1.0],
+        [2, 5, 1.5], [1, 0, 0.5], [3, 3, 1.0], [2, 2, 1.0],
+        [2, 3, 1.5], [1, 5, 0.5], [2, 0, 2.0],
+      ],
+      'bass'
+    ),
+  },
+  {
+    id: 'bass_blues12_walk',
+    instrument: 'bass',
+    kind: 'riff',
+    title: 'Blues Caminante en Mi',
+    genre: 'Blues',
+    bpm: 98,
+    description: 'Arpegio clásico de boogie-blues (1 - 3 - 5 - 6 - b7) sobre Mi, La y Si.',
+    events: riffEvents(
+      [
+        [3, 0, 1], [3, 4, 1], [2, 2, 1], [2, 4, 1],
+        [2, 5, 1], [2, 4, 1], [2, 2, 1], [3, 4, 1],
+        [2, 0, 1], [2, 4, 1], [1, 2, 1], [1, 4, 1],
+      ],
+      'bass'
+    ),
+  },
+  {
+    id: 'bass_motown',
+    instrument: 'bass',
+    kind: 'riff',
+    title: 'Línea Motown Soul (Do - Lam - Fa - Sol)',
+    genre: 'Soul',
+    bpm: 108,
+    description: 'Melodía cantabile en el bajo con síncopa suave antes de cada cambio de acorde.',
+    events: riffEvents(
+      [
+        [2, 3, 1.5], [1, 2, 0.5], [1, 5, 1.5], [2, 0, 0.5],
+        [2, 0, 1.5], [1, 2, 0.5], [1, 0, 1.5], [3, 1, 0.5],
+        [3, 1, 1.5], [2, 3, 0.5], [3, 3, 2.0],
+      ],
+      'bass'
+    ),
+  },
+  {
+    id: 'bass_disco_oct',
+    instrument: 'bass',
+    kind: 'riff',
+    title: 'Disco Octavas en Mi menor',
+    genre: 'Disco',
+    bpm: 120,
+    description: 'Salto continuo de octava en semicorcheas que empuja la pista de baile.',
+    events: riffEvents(
+      [
+        [3, 0, 0.5], [1, 2, 0.5], [3, 0, 0.5], [1, 2, 0.5],
+        [3, 3, 0.5], [1, 5, 0.5], [3, 3, 0.5], [1, 5, 0.5],
+        [2, 0, 0.5], [0, 2, 0.5], [2, 0, 0.5], [0, 2, 0.5],
+        [2, 2, 0.5], [0, 4, 0.5], [2, 2, 0.5], [0, 4, 0.5],
+      ],
+      'bass'
+    ),
+  },
+  {
+    id: 'bass_chords_pop',
+    instrument: 'bass',
+    kind: 'chords',
+    title: 'Tríadas de Bajo (C - G - Am - F)',
+    genre: 'Pop / Estudio',
+    bpm: 92,
+    description: 'Practica las 4 posturas completas de tríada/quinta en el mástil del bajo (1-4 y Espacio).',
+    chordPalette: ['C', 'G', 'Am', 'F'],
+    events: chordEvents([
+      ['C', 2], ['C', 2], ['G', 2], ['G', 2],
+      ['Am', 2], ['Am', 2], ['F', 2], ['F', 2],
+    ]),
+  },
 
-  // ---------- Ukelele (2) ----------
+  // ---------- Ukelele (7) ----------
   {
     id: 'uke_island',
     instrument: 'ukulele',
@@ -510,14 +868,229 @@ export const STRING_SONGS: readonly StringSong[] = [
       ['Am', 3], ['F', 3], ['G7', 3], ['C', 3],
     ]),
   },
+  {
+    id: 'uke_blues',
+    instrument: 'ukulele',
+    kind: 'chords',
+    title: 'Blues Ukelele en Sol (G7 - C7 - D7)',
+    genre: 'Blues',
+    bpm: 96,
+    description: 'Rueda blues de 12 tiempos con séptimas abiertas muy cómodas en el ukelele.',
+    chordPalette: ['G7', 'C7', 'D7'],
+    events: chordEvents([
+      ['G7', 4], ['G7', 4], ['C7', 4], ['G7', 4],
+      ['D7', 4], ['C7', 4], ['G7', 4], ['D7', 4],
+    ]),
+  },
+  {
+    id: 'uke_folk_d',
+    instrument: 'ukulele',
+    kind: 'chords',
+    title: 'Folk Brillante en Re (D - A - Bm - G)',
+    genre: 'Folk',
+    bpm: 104,
+    description: 'Progresión luminosa en Re Mayor con cejilla media en Si menor.',
+    chordPalette: ['D', 'A', 'Bm', 'G'],
+    events: chordEvents([
+      ['D', 2], ['D', 2], ['A', 2], ['A', 2],
+      ['Bm', 2], ['Bm', 2], ['G', 2], ['G', 2],
+    ]),
+  },
+  {
+    id: 'uke_minor_mood',
+    instrument: 'ukulele',
+    kind: 'chords',
+    title: 'Bolero Suave (Am - Dm - E7 - C)',
+    genre: 'Bolero',
+    bpm: 86,
+    description: 'Cadencia melancólica en La menor con dominante E7 brillante.',
+    chordPalette: ['Am', 'Dm', 'E7', 'C'],
+    events: chordEvents([
+      ['Am', 2], ['Dm', 2], ['E7', 2], ['Am', 2],
+      ['C', 2], ['Dm', 2], ['E7', 2], ['Am', 2],
+    ]),
+  },
+  {
+    id: 'uke_hawaii_mel',
+    instrument: 'ukulele',
+    kind: 'riff',
+    title: 'Melodía Hawaiana en Do',
+    genre: 'Tradicional',
+    bpm: 98,
+    description: 'Punteo alegre por las cuerdas 1ª, 2ª y 3ª usando afinación reentrante.',
+    events: riffEvents(
+      [
+        [2, 0, 1], [1, 0, 1], [0, 0, 1], [0, 3, 1],
+        [0, 5, 1], [0, 3, 1], [0, 0, 1], [1, 1, 1],
+        [1, 0, 1], [2, 2, 1], [1, 3, 1], [0, 3, 2],
+      ],
+      'ukulele'
+    ),
+  },
+  {
+    id: 'uke_arp_sunny',
+    instrument: 'ukulele',
+    kind: 'riff',
+    title: 'Arpegio Campanella (Do - Fa - Sol)',
+    genre: 'Acústico',
+    bpm: 94,
+    description: 'Deja resonar las notas al aire de la 4ª cuerda Sol4 entre cada punteo.',
+    events: riffEvents(
+      [
+        [3, 0, 0.5], [2, 0, 0.5], [1, 0, 0.5], [0, 3, 0.5],
+        [3, 2, 0.5], [2, 0, 0.5], [1, 1, 0.5], [0, 0, 0.5],
+        [3, 0, 0.5], [2, 2, 0.5], [1, 3, 0.5], [0, 2, 0.5],
+      ],
+      'ukulele'
+    ),
+  },
 ];
 
-export type ScaleType = 'minorPentatonic' | 'major';
+export type ScaleType =
+  | 'minorPentatonic'
+  | 'majorPentatonic'
+  | 'blues'
+  | 'major'
+  | 'naturalMinor'
+  | 'dorian'
+  | 'mixolydian'
+  | 'harmonicMinor';
+
+export const SCALE_LABELS: Record<ScaleType, string> = {
+  minorPentatonic: 'Pentatónica menor',
+  majorPentatonic: 'Pentatónica Mayor',
+  blues: 'Escala Blues',
+  major: 'Escala Mayor',
+  naturalMinor: 'Menor Natural',
+  dorian: 'Modo Dórico',
+  mixolydian: 'Modo Mixolidio',
+  harmonicMinor: 'Menor Armónica',
+};
 
 const SCALE_INTERVALS: Record<ScaleType, readonly number[]> = {
   minorPentatonic: [0, 3, 5, 7, 10],
+  majorPentatonic: [0, 2, 4, 7, 9],
+  blues: [0, 3, 5, 6, 7, 10],
   major: [0, 2, 4, 5, 7, 9, 11],
+  naturalMinor: [0, 2, 3, 5, 7, 8, 10],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
 };
+
+export interface StringScaleBox {
+  id: string;
+  title: string;
+  scale: ScaleType;
+  rootPc: number;
+  rootName: string;
+  minFret: number;
+  maxFret: number;
+  tip: string;
+}
+
+export const STRING_SCALE_BOXES: readonly StringScaleBox[] = [
+  {
+    id: 'pent_am_5',
+    title: '1. Pentatónica menor de La (Caja 5–8)',
+    scale: 'minorPentatonic',
+    rootPc: 9,
+    rootName: 'La',
+    minFret: 5,
+    maxFret: 8,
+    tip: 'La caja más famosa para improvisar rock y blues: índice fijo en traste 5.',
+  },
+  {
+    id: 'pent_em_0',
+    title: '2. Pentatónica menor de Mi (Abierta 0–3)',
+    scale: 'minorPentatonic',
+    rootPc: 4,
+    rootName: 'Mi',
+    minFret: 0,
+    maxFret: 3,
+    tip: 'Aprovecha todas las cuerdas al aire (traste 0) como parte natural de la escala.',
+  },
+  {
+    id: 'pent_cmaj_5',
+    title: '3. Pentatónica Mayor de Do (5–8)',
+    scale: 'majorPentatonic',
+    rootPc: 0,
+    rootName: 'Do',
+    minFret: 5,
+    maxFret: 8,
+    tip: 'Mismas notas que La menor pentatónica, pero resolviendo sobre las tónicas doradas en Do.',
+  },
+  {
+    id: 'blues_am_5',
+    title: '4. Escala Blues de La (+b5 · 5–8)',
+    scale: 'blues',
+    rootPc: 9,
+    rootName: 'La',
+    minFret: 5,
+    maxFret: 8,
+    tip: 'Añade la nota blue (Re#, 4ª aumentada) de paso entre la 4ª y la 5ª justa.',
+  },
+  {
+    id: 'blues_em_0',
+    title: '5. Escala Blues de Mi (Abierta 0–3)',
+    scale: 'blues',
+    rootPc: 4,
+    rootName: 'Mi',
+    minFret: 0,
+    maxFret: 3,
+    tip: 'Riffs de blues acústico usando las cuerdas al aire y el traste 1 de la 5ª cuerda (Sib).',
+  },
+  {
+    id: 'major_c_0',
+    title: '6. Escala Mayor de Do (Posición 0–3)',
+    scale: 'major',
+    rootPc: 0,
+    rootName: 'Do',
+    minFret: 0,
+    maxFret: 3,
+    tip: 'Todas las notas naturales sin alteraciones entre los trastes 0 y 3.',
+  },
+  {
+    id: 'major_g_2',
+    title: '7. Escala Mayor de Sol (Posición 2–5)',
+    scale: 'major',
+    rootPc: 7,
+    rootName: 'Sol',
+    minFret: 2,
+    maxFret: 5,
+    tip: 'Patrón sin cuerdas al aire donde cada dedo cubre un traste del 2 al 5.',
+  },
+  {
+    id: 'natmin_am_5',
+    title: '8. Menor Natural de La (5–9)',
+    scale: 'naturalMinor',
+    rootPc: 9,
+    rootName: 'La',
+    minFret: 5,
+    maxFret: 9,
+    tip: 'Modo eólico completo: añade 2ª mayor y 6ª menor sobre la pentatónica menor.',
+  },
+  {
+    id: 'dorian_dm_5',
+    title: '9. Modo Dórico de Re (5–8)',
+    scale: 'dorian',
+    rootPc: 2,
+    rootName: 'Re',
+    minFret: 5,
+    maxFret: 8,
+    tip: 'Sonido funk y fusión gracias a la 6ª mayor (Si) sobre acorde menor.',
+  },
+  {
+    id: 'mixo_g_3',
+    title: '10. Modo Mixolidio de Sol (3–7)',
+    scale: 'mixolydian',
+    rootPc: 7,
+    rootName: 'Sol',
+    minFret: 3,
+    maxFret: 7,
+    tip: 'Escala ideal para acordes dominantes (G7) por su 7ª menor (Fa).',
+  },
+];
 
 export interface ScalePosition {
   string: number;

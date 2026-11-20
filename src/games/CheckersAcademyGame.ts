@@ -4,8 +4,10 @@ import { Icons } from '../icons';
 import { ControlHint, GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderExplanationBox,
   renderLessonStepper,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   applyCheckersStep,
@@ -57,6 +59,7 @@ export class CheckersAcademyGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private stepperEl!: HTMLDivElement;
   private sideContentEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
@@ -111,11 +114,12 @@ export class CheckersAcademyGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.stepperEl = document.createElement('div');
     this.sideContentEl = document.createElement('div');
     this.sideContentEl.className = 'oa-academy-card';
     this.explainEl = document.createElement('div');
-    this.sideEl.append(this.stepperEl, this.sideContentEl, this.explainEl);
+    this.sideEl.append(this.tutorialSlotEl, this.stepperEl, this.sideContentEl, this.explainEl);
 
     this.ctx.setHud({
       dimension: '2D',
@@ -149,8 +153,49 @@ export class CheckersAcademyGame implements MiniGame {
     }
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'lesson') {
+      const lesson = this.getCurrentLesson();
+      info = {
+        id: `checkers:lesson:${lesson.id}`,
+        sectionName: `Lección: ${lesson.title}`,
+        steps: [
+          'Lee la instrucción táctica del paso y observa si alguna pieza brilla en dorado (captura obligatoria).',
+          'Haz clic en la pieza de origen y luego en el destino marcado (en saltos múltiples, encadena salto por salto).',
+          'Si tienes dudas, pulsa Pista (P) para ver la ruta exacta numerada sobre el tablero.',
+        ],
+        tip: `Tienes ${CHECKERS_LESSONS.length} lecciones guiadas: desde Golpe 2×1 y Tenaza hasta Sacrificio puente, Acceso a dama y Oposición final.`,
+      };
+    } else if (this.phase === 'duel') {
+      info = {
+        id: 'checkers:duel',
+        sectionName: 'Duelo de Damas 8×8 vs Bot',
+        steps: [
+          'Avanza por diagonales oscuras protegiendo tu última fila para impedir que el rival corone rápido.',
+          'Recuerda que los peones capturan hacia adelante y hacia atrás, y la captura es obligatoria.',
+          'Al llegar a la fila 8 al final de una jugada coronas en dama voladora con alcance por toda la diagonal.',
+        ],
+        tip: 'No entregues un peón sin verificar si abres una cadena doble rival; usa Pista (P) para detectar trampas.',
+      };
+    } else {
+      info = {
+        id: 'checkers:prep',
+        sectionName: 'Preparar Damas Tácticas',
+        steps: [
+          `Elige Lecciones tácticas (${CHECKERS_LESSONS.length}) en Práctica Guiada para entrenar golpes, sacrificios y coronación.`,
+          'Elige Duelo vs Bot y nivel (Novato, Club o Maestro) para disputar una partida completa.',
+          'En modo Duelo siempre juegas con Blancas desde la parte inferior del tablero.',
+        ],
+        tip: 'Sin ley de mayoría: cuando existan varias rutas de captura puedes elegir libremente la más conveniente.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.stepperEl.innerHTML = '';
     this.sideContentEl.innerHTML = '';
 
@@ -167,7 +212,7 @@ export class CheckersAcademyGame implements MiniGame {
       <div class="oa-board-field">
         <span class="oa-board-field-label">Actividad</span>
         <div class="oa-board-seg">
-          <button type="button" class="oa-board-seg-btn" data-act="lesson" aria-pressed="${this.prepActivity === 'lesson'}">Lecciones tácticas (3)</button>
+          <button type="button" class="oa-board-seg-btn" data-act="lesson" aria-pressed="${this.prepActivity === 'lesson'}">Lecciones tácticas (${CHECKERS_LESSONS.length})</button>
           <button type="button" class="oa-board-seg-btn" data-act="duel" aria-pressed="${this.prepActivity === 'duel'}">Duelo vs Bot</button>
         </div>
       </div>
@@ -268,8 +313,10 @@ export class CheckersAcademyGame implements MiniGame {
     };
 
     this.ctx.setHud({
-      subStat: `LECCIÓN ${this.activeLessonIndex + 1}/3 · PASO ${this.activeStepIndex + 1}/${lesson.steps.length}`,
+      subStat: `LECCIÓN ${this.activeLessonIndex + 1}/${CHECKERS_LESSONS.length} · PASO ${this.activeStepIndex + 1}/${lesson.steps.length}`,
     });
+
+    this.updateSectionTutorial();
 
     renderLessonStepper(
       this.stepperEl,
@@ -350,6 +397,8 @@ export class CheckersAcademyGame implements MiniGame {
     this.ctx.setHud({
       subStat: `DUELO · NIVEL ${lvlLabel.toUpperCase()}`,
     });
+
+    this.updateSectionTutorial();
 
     renderExplanationBox(
       this.explainEl,

@@ -4,8 +4,10 @@ import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderDifficultyBadge,
   renderExplanationBox,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   generateNonogramPuzzle,
@@ -32,6 +34,7 @@ export class NonogramLogic2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
 
@@ -86,10 +89,11 @@ export class NonogramLogic2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('pointerup', this.onPointerUp);
@@ -129,8 +133,48 @@ export class NonogramLogic2DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'nonogram:prep',
+        sectionName: 'Preparar Nonograma Deductivo',
+        steps: [
+          'Selecciona tamaño de cuadrícula: 5×5 (rápido), 8×8 (intermedio) o 10×10 (experto).',
+          'Las pistas numéricas indican cuántos bloques consecutivos van pintados en esa fila o columna.',
+          'Entre dos bloques de la misma línea siempre debe existir al menos una casilla vacía (X).',
+        ],
+        tip: 'Todos los nonogramas están verificados por solver de líneas: jamás necesitas adivinar.',
+      };
+    } else if (this.activeTool === -1) {
+      info = {
+        id: 'nonogram:tool-x',
+        sectionName: 'Herramienta Marcar X (Descarte)',
+        steps: [
+          'Marca con X todas las casillas que tengas certeza de que deben quedar vacías.',
+          'Al completar todos los bloques de una fila o columna, cierra el resto de esa línea con X para despejar cruces.',
+          'Pulsa X o el botón Pintar para volver a rellenar bloques.',
+        ],
+        tip: 'Marcar las X es tan importante como pintar: acota el espacio disponible de las líneas perpendiculares.',
+      };
+    } else {
+      info = {
+        id: `nonogram:play:${this.puzzle.size}`,
+        sectionName: `Nonograma ${this.puzzle.size}×${this.puzzle.size} · Solapamiento`,
+        steps: [
+          'Empieza por líneas cuya pista sume el ancho total (ej. "5" en 5×5 o "3 1" que suma 3+1+1 = 5).',
+          'Aplica solapamiento: si un bloque mide más de la mitad de la línea, las celdas centrales siempre van pintadas.',
+          'Pulsa Pista Razonada (P) si te atascas para ver qué fila o columna tiene deducción directa.',
+        ],
+        tip: 'Puedes arrastrar el puntero para pintar o marcar X en varias celdas seguidas de un solo trazo.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -257,6 +301,7 @@ export class NonogramLogic2DGame implements MiniGame {
       'info'
     );
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -459,6 +504,7 @@ export class NonogramLogic2DGame implements MiniGame {
   }
 
   private renderBoard(): void {
+    this.updateSectionTutorial();
     this.stageEl.innerHTML = '';
     const size = this.puzzle.size;
 

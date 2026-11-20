@@ -222,6 +222,24 @@ export class GuideOverlay {
         </section>
 
         ${
+          desc.guide.sectionTutorials && desc.guide.sectionTutorials.length > 0
+            ? `<section class="oa-guide-sections" aria-label="Tutorial por secciones y modos">
+                <h3>Tutorial por secciones y modos</h3>
+                <div class="oa-guide-sections-grid">
+                  ${desc.guide.sectionTutorials
+                    .map(
+                      (sec) => `<div class="oa-guide-section-item">
+                        <strong>${sec.name}</strong>
+                        <span>${sec.tip}</span>
+                      </div>`
+                    )
+                    .join('')}
+                </div>
+              </section>`
+            : ''
+        }
+
+        ${
           !isCircuit
             ? `<section class="oa-guide-config" aria-label="Dificultad y modo de sesión">
                 <div class="oa-guide-diff-row">

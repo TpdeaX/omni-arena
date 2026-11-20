@@ -91,6 +91,7 @@ export interface GuideExampleSpec {
 export interface GameGuideSpec {
   objective: string;
   howToPlay: string[];
+  sectionTutorials?: { name: string; tip: string }[];
   controls: ControlHint[];
   example: GuideExampleSpec;
   practice: string;

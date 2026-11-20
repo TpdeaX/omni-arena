@@ -1,7 +1,7 @@
 import { InstrumentTimbre, synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import { createAcademyLayout, createSectionTutorialEl, renderExplanationBox, SectionTutorialInfo } from '../ui/AcademyKit';
 import {
   BASS_NATURAL_MIDIS,
   chordCueAtBeat,
@@ -166,6 +166,7 @@ export class PianoEar2DGame implements MiniGame {
   private modeToolbarEl: HTMLDivElement | null = null;
   private displayPanelEl: HTMLDivElement | null = null;
   private keyButtons = new Map<number, HTMLButtonElement>();
+  private tutorialHostEl: HTMLDivElement | null = null;
   private explainHostEl: HTMLDivElement | null = null;
   private statsCardEl: HTMLDivElement | null = null;
   private tempoFillEl: HTMLDivElement | null = null;
@@ -225,7 +226,7 @@ export class PianoEar2DGame implements MiniGame {
             : 'PIANO MAESTRO · RETO',
       accent: '#9333EA',
       timeLeftSec: null,
-      subStat: '18 piezas · Do3–Do5',
+      subStat: `${GUIDED_MELODIES.length} piezas · Do3–Do5`,
     });
 
     window.addEventListener('keydown', this.onKeyDown);
@@ -273,8 +274,8 @@ export class PianoEar2DGame implements MiniGame {
     const configHost = prep.querySelector('#oa-piano-prep-config')!;
 
     const kinds: { id: ChallengeKind; label: string }[] = [
-      { id: 'piece', label: '1. Elegir Pieza (18)' },
-      { id: 'progression', label: '2. Progresiones (5)' },
+      { id: 'piece', label: `1. Elegir Pieza (${GUIDED_MELODIES.length})` },
+      { id: 'progression', label: `2. Progresiones (${PIANO_PROGRESSIONS.length})` },
       { id: 'exam', label: '3. Examen Completo' },
     ];
 
@@ -412,7 +413,22 @@ export class PianoEar2DGame implements MiniGame {
       'info'
     );
     card.appendChild(ex);
-    this.sideEl.appendChild(card);
+
+    const tutWrap = document.createElement('div');
+    tutWrap.className = 'oa-piano-dyn-card';
+    tutWrap.appendChild(
+      createSectionTutorialEl({
+        id: 'piano:prep',
+        sectionName: 'Tutorial: Reto de Piano',
+        steps: [
+          `Elige entre ${GUIDED_MELODIES.length} melodías guiadas, ${PIANO_PROGRESSIONS.length} progresiones de acordes o el Examen Completo de 3 etapas.`,
+          'Ajusta la escala de tempo (0.65x a 1.2x) antes de arrancar si deseas estudiar una pieza compleja más lento.',
+          'Pulsa Empezar Reto Musical: los fallos rompen el combo pero nunca cortan tu canción.',
+        ],
+        tip: 'Puedes practicar primero cualquier canción en Práctica Guiada con Espera tu nota.',
+      })
+    );
+    this.sideEl.append(tutWrap, card);
 
     this.syncControlsBar();
   }
@@ -507,6 +523,10 @@ export class PianoEar2DGame implements MiniGame {
     stageCard.append(topToolbar, modeToolbar, displayPanel, pianoScroll);
     this.stageEl.appendChild(stageCard);
 
+    const tutorialHost = document.createElement('div');
+    tutorialHost.className = 'oa-piano-dyn-card';
+    this.tutorialHostEl = tutorialHost;
+
     const explainCard = document.createElement('div');
     explainCard.className = 'oa-academy-card oa-piano-dyn-card';
     const explainHost = document.createElement('div');
@@ -517,7 +537,7 @@ export class PianoEar2DGame implements MiniGame {
     statsCard.className = 'oa-academy-card oa-piano-dyn-card';
     this.statsCardEl = statsCard;
 
-    this.sideEl.append(explainCard, statsCard);
+    this.sideEl.append(tutorialHost, explainCard, statsCard);
 
     this.renderTabs();
     this.refreshKeyLabels();
@@ -615,8 +635,8 @@ export class PianoEar2DGame implements MiniGame {
 
     const tabs: { id: PianoModeTab; label: string }[] = [
       { id: 'free', label: '1. Piano Libre' },
-      { id: 'melody', label: '2. 18 Canciones' },
-      { id: 'progressions', label: '3. Progresiones' },
+      { id: 'melody', label: `2. ${GUIDED_MELODIES.length} Canciones` },
+      { id: 'progressions', label: `3. ${PIANO_PROGRESSIONS.length} Progresiones` },
       { id: 'ear', label: '4. Oído Musical' },
       { id: 'staff', label: '5. Pentagrama' },
     ];
@@ -697,7 +717,66 @@ export class PianoEar2DGame implements MiniGame {
     } else {
       this.renderStaffUI();
     }
+    this.renderSectionTutorial();
     this.refreshPianoHighlights();
+  }
+
+  private renderSectionTutorial(): void {
+    if (!this.tutorialHostEl) return;
+    const map: Record<PianoModeTab, SectionTutorialInfo> = {
+      free: {
+        id: 'piano:free',
+        sectionName: 'Tutorial: Piano Libre y Acordes',
+        steps: [
+          'Toca libremente con teclas PC (Z–M para Do3–Si3 y Q–I para Do4–Do5) o haciendo clic en el teclado.',
+          'Alterna entre Nota suelta (polifónico) y Modo Acordes para escuchar tríadas Mayor, menor o Séptima.',
+          'Cambia el Timbre (Piano, Órgano, Suave, Campana) o activa el Metrónomo arriba cuando desees pulso fijo.',
+        ],
+        tip: 'En Modo Acordes, pulsa una tecla raíz (ej. Q = Do4) para iluminar y sonar el acorde completo.',
+      },
+      melody: {
+        id: 'piano:melodies',
+        sectionName: `Tutorial: ${GUIDED_MELODIES.length} Canciones Guiadas`,
+        steps: [
+          'Filtra por nivel (Inicial, Intermedio, Avanzado) y elige una obra del selector.',
+          'Pulsa Escuchar ejemplo para oír la melodía completa junto con el acompañamiento armónico.',
+          'Sigue la tecla dorada iluminada en Modo Espera tu nota o A tempo ajustando la escala (0.65x–1.2x).',
+        ],
+        tip: 'Empieza a 0.65x o 0.85x con Espera tu nota para memorizar digitaciones antes de ir a 1.0x.',
+      },
+      progressions: {
+        id: 'piano:progressions',
+        sectionName: `Tutorial: ${PIANO_PROGRESSIONS.length} Progresiones Armónicas`,
+        steps: [
+          'Selecciona una rueda real (Pop, Blues 12 compases, Bossa Nova, Cadencia Andaluza, Jazz).',
+          'Pulsa Espacio o haz clic en la tarjeta del acorde actual para disparar el acorde completo.',
+          'También puedes construir cada acorde pulsando una a una todas las teclas doradas iluminadas.',
+        ],
+        tip: 'Activa Practicar a tempo para entrenar cambios armónicos fluidos al compás.',
+      },
+      ear: {
+        id: 'piano:ear',
+        sectionName: 'Tutorial: Oído Musical',
+        steps: [
+          'Escucha el intervalo o la nota suelta que suena automáticamente al empezar cada pregunta.',
+          'Pulsa Repetir (tecla R) u Oír juntas para comparar las dos alturas antes de decidir.',
+          'Elige el intervalo correcto en la parrilla o pulsa la tecla exacta en el piano.',
+        ],
+        tip: 'Asocia cada intervalo a una melodía conocida: 4ª justa = marcha nupcial; 5ª justa = fanfarria.',
+      },
+      staff: {
+        id: 'piano:staff',
+        sectionName: 'Tutorial: Lectura en Pentagrama',
+        steps: [
+          'Alterna entre Clave de Sol (Do4–Do5) y Clave de Fa (Do3–Si3) en la barra superior.',
+          'Identifica la línea o espacio de la nota azul y pulsa la tecla correspondiente en el piano.',
+          'En práctica guiada, tras 3 segundos aparece una pista con el nombre y tecla de la nota.',
+        ],
+        tip: 'Usa dos notas ancla: 2ª línea en Clave de Sol = Sol4; 4ª línea en Clave de Fa = Fa3.',
+      },
+    };
+    this.tutorialHostEl.innerHTML = '';
+    this.tutorialHostEl.appendChild(createSectionTutorialEl(map[this.activeTab]));
   }
 
   // ==================== 1. PIANO LIBRE & ACORDES ====================
@@ -775,7 +854,7 @@ export class PianoEar2DGame implements MiniGame {
     }
   }
 
-  // ==================== 2. 18 CANCIONES GUIADAS ====================
+  // ==================== 2. CANCIONES GUIADAS ====================
   private startMelody(autoTempo: boolean): void {
     this.stopPlayback();
     this.melodyStep = 0;
@@ -818,7 +897,7 @@ export class PianoEar2DGame implements MiniGame {
       levels.forEach((lvl) => {
         levelWrap.appendChild(
           createActionButton({
-            label: lvl === 'Todas' ? 'Todas (18)' : lvl,
+            label: lvl === 'Todas' ? `Todas (${GUIDED_MELODIES.length})` : lvl,
             pressed: this.levelFilter === lvl,
             onClick: () => {
               synthAudio.uiClick();
@@ -1683,7 +1762,7 @@ export class PianoEar2DGame implements MiniGame {
         renderExplanationBox(
           this.explainHostEl,
           `${mel.title} completada`,
-          'Excelente lectura y pulso. Puedes elegir otra de las 18 piezas arriba.',
+          `Excelente lectura y pulso. Puedes elegir otra de las ${GUIDED_MELODIES.length} piezas arriba.`,
           'good'
         );
       }

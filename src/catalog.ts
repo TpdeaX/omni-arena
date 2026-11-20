@@ -167,6 +167,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Mantén el combo vivo para multiplicar puntos entre fases 2D y 3D.',
         'Cada cambio exitoso conserva tu racha y aumenta la intensidad.',
       ],
+      sectionTutorials: [
+        { name: 'Tramos 2D de Destreza', tip: 'Incluye Ritmo, Anillo Sónico, Duelo de Reflejo, Lluvia y Roce, Matriz Mental, Schulte, N-Back, Bloques, Arena 2D, Rastreo, Memoria, Serpiente y Cazador.' },
+        { name: 'Tramos 3D de Acción', tip: 'Incluye Puntería Táctica 3D, Túnel Hiper 3D, Rompeórbita 3D, Salto Celeste 3D y Vuelo de Portales 3D.' },
+        { name: 'Transición sin estrés', tip: 'El cartel de cambio muestra los controles de la siguiente disciplina y espera hasta que pulses Listo (Espacio) o pasen 8 s.' },
+      ],
       controls: [
         { keys: ['Espacio', 'Enter'], touch: 'Toca Listo', action: 'Comenzar siguiente fase', tone: 'primary' },
         { keys: ['Esc'], touch: 'Pausa', action: 'Pausar circuito' },
@@ -210,6 +215,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Durante el cartel de transición el reloj clasificatorio se detiene.',
         'Al finalizar obtienes tu calificación por eje y rango oficial.',
       ],
+      sectionTutorials: [
+        { name: 'Evaluación en 5 Ejes', tip: 'Pondera tu desempeño en Puntería, Ritmo, Lógica, Reflejos y Agilidad 3D para asignar tu rango oficial.' },
+        { name: 'Ritmo de Prueba', tip: 'Cada bloque dura 15 s y el reloj general se pausa en los carteles de transición para leer controles.' },
+      ],
       controls: [
         { keys: ['Espacio', 'Enter'], touch: 'Toca Listo', action: 'Iniciar cada prueba', tone: 'primary' },
         { keys: ['Esc'], touch: 'Pausa', action: 'Pausar sesión' },
@@ -237,7 +246,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   chess2d: {
     id: 'chess2d',
     title: 'AJEDREZ ACADEMIA',
-    subtitle: 'Lecciones jugables y Duelo vs Bot',
+    subtitle: '10 lecciones guiadas y Duelo vs Bot',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'strategy',
@@ -248,14 +257,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Clic en pieza y destino · P Pista · U Deshacer',
     controlsTouch: 'Toca la pieza y luego la casilla',
     description:
-      'Aprende movimientos, jaques, enroque, promoción y mates básicos con pistas razonadas, o reta al bot de 3 niveles.',
-    keywords: ['ajedrez', 'chess', 'jaque', 'mate', 'tablero'],
+      'Aprende movimientos, jaques, mates, clavada, tenedor doble, enfilada y jaque a la descubierta en 10 lecciones guiadas, o reta al bot de 3 niveles.',
+    keywords: ['ajedrez', 'chess', 'jaque', 'mate', 'tablero', 'clavada', 'tenedor', 'enfilada'],
     guide: {
-      objective: 'Da jaque mate al rey rival o completa las 4 lecciones guiadas entendiendo cada jugada.',
+      objective: 'Da jaque mate al rey rival o completa las 10 lecciones guiadas de fundamentos y táctica.',
       howToPlay: [
         'Selecciona una pieza propia para ver sus destinos legales en verde y capturas en rojo.',
-        'En Lecciones aprende movimiento, salidas de jaque, enroque/coronación y mates básicos.',
-        'Usa Pista para ver la mejor jugada explicada con su motivo táctico.',
+        'En Lecciones (10) practica piezas, salidas de jaque, enroque, mates y tácticas (clavada, tenedor, enfilada, descubierta y pasillo).',
+        'Usa Pista (P) para ver la mejor jugada explicada con su motivo táctico.',
+      ],
+      sectionTutorials: [
+        { name: '4 Lecciones Base', tip: 'Movimiento de las 6 piezas, 3 formas de salir de jaque, jugadas especiales (enroque, al paso, coronación) y mates básicos.' },
+        { name: '6 Lecciones Tácticas', tip: 'Tenedor doble, Clavada absoluta, Enfilada en rayos X, Jaque a la descubierta, Mate del pasillo y Desviación del defensor.' },
+        { name: 'Duelo vs Bot (3 niveles)', tip: 'En Práctica tienes aviso de errores graves y deshacer (U); en Reto juegas partida FIDE oficial.' },
       ],
       controls: [
         { keys: ['Clic'], touch: 'Toca pieza y casilla', action: 'Mover o capturar', tone: 'primary' },
@@ -277,7 +291,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
           ),
         ],
       },
-      practice: '4 lecciones jugables, pistas ilimitadas, deshacer y aviso ante errores.',
+      practice: '10 lecciones jugables, pistas ilimitadas, deshacer y aviso ante errores.',
       challenge: 'Duelo oficial contra el bot (Novato, Club o Maestro) sin deshacer.',
     },
   },
@@ -285,7 +299,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   checkers2d: {
     id: 'checkers2d',
     title: 'DAMAS TÁCTICAS',
-    subtitle: 'Capturas en cadena y coronación',
+    subtitle: '8 lecciones, capturas en cadena y coronación',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'strategy',
@@ -296,14 +310,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Clic en pieza y destino · P Pista',
     controlsTouch: 'Toca la pieza y luego la casilla',
     description:
-      'Damas 8×8 con captura obligatoria, saltos múltiples encadenados, dama voladora y retos tácticos 2×1.',
-    keywords: ['damas', 'checkers', 'captura', 'tactica'],
+      'Damas 8×8 con 8 lecciones tácticas guiadas, captura obligatoria, saltos múltiples encadenados y dama voladora.',
+    keywords: ['damas', 'checkers', 'captura', 'tactica', 'dama voladora'],
     guide: {
-      objective: 'Captura todas las piezas rivales o bloquéalas dominando las diagonales y coronando damas.',
+      objective: 'Domina las 8 lecciones tácticas o derrota al bot capturando todas sus piezas y controlando las diagonales.',
       howToPlay: [
         'Las piezas con pulso dorado tienen captura obligatoria (hacia adelante o atrás).',
         'Completa las capturas en cadena siguiendo los saltos marcados en el tablero.',
-        'Al terminar tu jugada en la última fila, el peón corona en dama voladora.',
+        'En Lecciones (8) practica golpe 2×1, tenaza, sacrificio puente, acceso a dama y oposición final.',
+      ],
+      sectionTutorials: [
+        { name: '8 Lecciones Tácticas', tip: 'Golpe 2×1, Tenaza, Coronar a tiempo, Doble golpe diagonal, Sacrificio puente, Acceso a dama, Oposición final y Gran diagonal.' },
+        { name: 'Reglas de Dama Voladora', tip: 'Los peones capturan hacia adelante y atrás; al terminar en la fila 8 coronan en dama de largo alcance sin ley de mayoría.' },
+        { name: 'Duelo vs Bot', tip: 'El pulso dorado señala tus piezas obligadas a saltar y Pista (P) advierte trampas múltiples rivales.' },
       ],
       controls: [
         { keys: ['Clic'], touch: 'Toca pieza y destino', action: 'Mover o encadenar captura', tone: 'primary' },
@@ -324,7 +343,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
           ),
         ],
       },
-      practice: 'Lecciones tácticas (Golpe 2×1, Tenaza, Coronación) con pistas y deshacer.',
+      practice: '8 lecciones tácticas guiadas con pistas y deshacer ilimitado.',
       challenge: 'Partida completa contra el bot puntuando por margen de piezas.',
     },
   },
@@ -351,6 +370,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Consulta en el panel lateral las 10 manos de póker con tu jugada actual resaltada.',
         'En cada ronda elige Pasar, Igualar, Subir o Retirarse según la fuerza de tu mano.',
         'En práctica consulta tu probabilidad aproximada y el consejo explicado del entrenador.',
+      ],
+      sectionTutorials: [
+        { name: 'Pre-Flop (2 cartas)', tip: 'Valora parejas iniciales, cartas altas conectadas o del mismo palo antes de pagar subidas.' },
+        { name: 'Flop, Turn y River', tip: 'Usa la regla del 2 y 4 sobre tus outs para comparar tu equity frente a las pot odds del bote.' },
+        { name: 'Guía de 10 Manos (G)', tip: 'Destaca en vivo tu jugada actual desde Carta Alta hasta Escalera Real.' },
       ],
       controls: [
         { keys: ['Clic'], touch: 'Toca acción', action: 'Pasar / Igualar / Subir', tone: 'primary' },
@@ -398,6 +422,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Usa los botones U, D, L, R, F, B (y el interruptor antihorario) para girar capas.',
         'Sigue la barra de 5 fases o pulsa Ver ejemplo para ver cada algoritmo animado.',
       ],
+      sectionTutorials: [
+        { name: 'Inspección de 15 s (Reto)', tip: 'Orbita el cubo antes de tu primer giro para ubicar el centro blanco y las 4 aristas iniciales.' },
+        { name: 'Método Principiante (5 fases)', tip: '1) Cruz blanca · 2) Esquinas blancas · 3) Capa media · 4) Cruz amarilla · 5) Orientar y permutar última capa.' },
+        { name: 'Ejemplos Animados', tip: 'En Práctica puedes pausar y reproducir paso a paso el algoritmo de cada fase sobre el cubo 3D.' },
+      ],
       controls: [
         { keys: ['U', 'D', 'L', 'R', 'F', 'B'], touch: 'Botones de cara', action: 'Girar capa (Shift = inverso)', tone: 'primary' },
         { keys: ['Arrastrar'], touch: 'Arrastrar fondo', action: 'Orbitar cámara 3D' },
@@ -425,7 +454,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   piano2d: {
     id: 'piano2d',
     title: 'PIANO MAESTRO',
-    subtitle: '18 piezas, progresiones, oído y pentagrama',
+    subtitle: '42 piezas, 20 progresiones, oído y pentagrama',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'music',
@@ -436,14 +465,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Teclas Z–M y Q–I (ver teclas pintadas)',
     controlsTouch: 'Toca las teclas del piano',
     description:
-      'Teclado de 2 octavas (Do3–Do5) con 18 canciones reales, progresiones de acordes, acompañamiento, oído musical y pentagrama.',
+      'Teclado de 2 octavas (Do3–Do5) con 42 piezas reales, 20 progresiones de acordes, acompañamiento, oído musical y pentagrama.',
     keywords: ['piano', 'musica', 'oido', 'acordes', 'pentagrama', 'canciones'],
     guide: {
-      objective: 'Domina 18 canciones reales, progresiones de acordes, intervalos de oído y lectura en clave de Sol y Fa.',
+      objective: 'Domina 42 piezas reales, 20 progresiones de acordes, intervalos de oído y lectura en clave de Sol y Fa.',
       howToPlay: [
         'Toca las 2 octavas (Do3–Do5) con clic, toque o con las teclas Z–M y Q–I pintadas.',
-        'Elige entre Piano Libre, 18 Melodías reales, Progresiones de Acordes, Oído y Pentagrama.',
+        'Elige entre Piano Libre, 42 piezas reales, 20 progresiones de acordes, Oído y Pentagrama.',
         'En Reto elige cualquier pieza/progresión a tempo o el Examen Completo de 3 etapas.',
+      ],
+      sectionTutorials: [
+        { name: 'Piano Libre y Acordes', tip: 'Alterna entre notas sueltas o postura de acorde automático (Mayor, Menor, Séptima) y cambia el timbre.' },
+        { name: '42 Piezas (Inicial/Int./Avanz.)', tip: '14 piezas por nivel con acompañamiento armónico en tiempo real y modo Espera en Práctica.' },
+        { name: '20 Progresiones, Oído y Pentagrama', tip: 'Entrena enlaces I-V-vi-IV, Blues 12 compases, reconocimiento de intervalos y lectura en claves de Sol y Fa.' },
       ],
       controls: [
         { keys: ['Z..M', 'Q..I'], touch: 'Toca teclas', action: 'Tocar notas Do3 a Do5', tone: 'primary' },
@@ -459,11 +493,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
           makeFrame(
             '#9333EA',
             '<g stroke="var(--ink-secondary)" stroke-width="1.5"><line x1="56" y1="54" x2="264" y2="54"/><line x1="56" y1="68" x2="264" y2="68"/><line x1="56" y1="82" x2="264" y2="82"/><line x1="56" y1="96" x2="264" y2="96"/><line x1="56" y1="110" x2="264" y2="110"/></g><ellipse cx="160" cy="82" rx="10" ry="7" fill="#9333EA"/><text x="160" y="142" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Lee la nota en el pentagrama y tócala en el teclado</text>',
-            'Incluye 18 piezas reales, progresiones de acordes y pentagrama.'
+            'Incluye 42 piezas reales, 20 progresiones de acordes y pentagrama.'
           ),
         ],
       },
-      practice: 'Las melodías esperan tu nota sin prisa; metrónomo y velocidad regulable.',
+      practice: 'Las 42 melodías esperan tu nota sin prisa; metrónomo y velocidad regulable.',
       challenge: 'Toca la pieza o progresión elegida a tempo o completa el Examen Completo.',
     },
   },
@@ -471,7 +505,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   drums2d: {
     id: 'drums2d',
     title: 'BATERÍA ACADEMIA',
-    subtitle: 'Kit de 8 piezas y 12 ritmos por género',
+    subtitle: 'Kit de 8 piezas, 28 ritmos y 12 retos de independencia',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'music',
@@ -482,14 +516,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Espacio Bombo · F Caja · J/K Hi-Hat · D/S Toms · R/U Platos',
     controlsTouch: 'Toca directamente cada pieza de la batería',
     description:
-      'Batería interactiva de 8 piezas con 12 ritmos reales (Rock, Pop, Funk, Bossa Nova, Cumbia, Reggaetón, Jazz, Blues, Metal) e independencia.',
+      'Batería interactiva de 8 piezas con 28 ritmos reales (Rock, Pop, Funk, Bossa, Cumbia, Festejo, Jazz, Samba, Metal) y 12 ejercicios de independencia.',
     keywords: ['bateria', 'drums', 'percusion', 'ritmo', 'compas', 'cumbia', 'rock', 'jazz'],
     guide: {
-      objective: 'Domina los 12 ritmos esenciales por género y coordina bombo, caja y platos con precisión rítmica.',
+      objective: 'Domina los 28 ritmos por género y los 12 ejercicios de independencia coordinando bombo, caja y platos.',
       howToPlay: [
         'Toca cada una de las 8 piezas con clic/toque o con las teclas indicadas en cada tambor y plato.',
-        'En Ritmos por Género sigue la parrilla de 16 pasos mientras la barra móvil marca el pulso.',
-        'En Tocar Guiado y Coordinación puedes activar Esperar golpe en práctica o tocar a tempo en Reto.',
+        'En Ritmos por Género explora los 28 patrones en parrilla de 12 o 16 pasos mientras la barra marca el pulso.',
+        'En Tocar Guiado y los 12 retos de Independencia activa Esperar golpe en práctica o toca a tempo en Reto.',
+      ],
+      sectionTutorials: [
+        { name: 'Kit Libre y Grabador de Loop', tip: 'Graba tu propio bucle de 2 compases con metrónomo visual y edita la parrilla de pasos.' },
+        { name: '28 Ritmos por Género', tip: 'Incluye Rock, Pop, Funk, Bossa, Cumbia, Festejo Afroperuano, Samba, Bebop, Trap, Vals 3/4 y Metal.' },
+        { name: '12 Independencia y Guiado', tip: 'Disocia pie derecho (bombo), mano izquierda (caja) y mano derecha (charles/ride) con conteo preciso.' },
       ],
       controls: [
         { keys: ['Espacio', 'F'], touch: 'Pads Bombo / Caja', action: 'Golpear Bombo y Caja', tone: 'primary' },
@@ -511,14 +550,14 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         ],
       },
       practice: 'Modo espera paso a paso, metrónomo visual y velocidad desde 0.6×.',
-      challenge: 'Elige cualquiera de los 12 ritmos o Resistencia Infinita y puntúa por precisión.',
+      challenge: 'Elige cualquiera de los 28 ritmos, 12 independencia o Resistencia Infinita.',
     },
   },
 
   strings2d: {
     id: 'strings2d',
     title: 'GUITARRA, BAJO Y UKELELE',
-    subtitle: 'Mástil interactivo, 16 acordes y 12 canciones/riffs',
+    subtitle: 'Mástil interactivo, 40+ acordes y 32 canciones/riffs',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'music',
@@ -529,14 +568,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: '1–4 Postura de acorde · Espacio Rasguear · Clic en trastes',
     controlsTouch: 'Toca acordes o trastes · Botón Rasguear',
     description:
-      'Cambia al instante entre Guitarra (6 cuerdas), Bajo (4 cuerdas) y Ukelele (4 cuerdas) con 16 acordes, 12 canciones/riffs y escalas.',
+      'Cambia al instante entre Guitarra (6 cuerdas), Bajo (4 cuerdas) y Ukelele (4 cuerdas) con 40 acordes esenciales (44 formas), 32 canciones/riffs y 10 cajas de escala.',
     keywords: ['guitarra', 'bajo', 'ukelele', 'cuerdas', 'acordes', 'riffs', 'mastil'],
     guide: {
-      objective: 'Aprende posiciones de acordes reales, cambios a tempo, líneas de bajo y riffs clásicos en el mástil.',
+      objective: 'Domina 40+ acordes reales, cambios a tempo, líneas de bajo, 10 escalas de mástil y 32 canciones/riffs.',
       howToPlay: [
         'Elige arriba tu instrumento activo: Guitarra (6 cuerdas), Bajo Eléctrico (4) o Ukelele (4).',
         'En Canciones de acordes y Cambios, pulsa 1–4 para colocar la postura y Espacio para rasguear a tempo.',
-        'En Riffs, Bajo y Mástil Libre toca directamente cualquier cuerda y traste del 0 al 12.',
+        'En Riffs, Bajo, Escalas (10 cajas) y Mástil Libre toca directamente cualquier cuerda y traste del 0 al 12.',
+      ],
+      sectionTutorials: [
+        { name: 'Acordes y Mástil Libre (40+ formas)', tip: 'Inspecciona digitación 1–4, cejillas y notas reales en Guitarra, Ukelele o Bajo.' },
+        { name: '32 Canciones y Riffs (14/11/7)', tip: '14 piezas de Guitarra, 11 líneas de Bajo y 7 temas de Ukelele sin cortar la canción por un error.' },
+        { name: 'Cambios y 10 Cajas de Escala', tip: 'Entrena cambios de acorde con metrónomo y recorre 10 patrones de escala (pentatónica, blues, dórico, mayor).' },
       ],
       controls: [
         { keys: ['1..4'], touch: 'Barra de acordes', action: 'Colocar postura de acorde', tone: 'primary' },
@@ -552,20 +596,20 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
           ),
           makeFrame(
             '#D97706',
-            '<rect x="38" y="42" width="244" height="96" rx="8" fill="var(--bg-panel)" stroke="#22C55E" stroke-width="2"/><text x="160" y="72" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">GUITARRA · BAJO · UKELELE</text><text x="160" y="98" text-anchor="middle" fill="var(--ink-primary)" font-size="11">16 acordes esenciales y 12 piezas reales</text><text x="160" y="118" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">(Romance, Pop, Blues, Walking Bass, Funk, Cumbia)</text>',
+            '<rect x="38" y="42" width="244" height="96" rx="8" fill="var(--bg-panel)" stroke="#22C55E" stroke-width="2"/><text x="160" y="72" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">GUITARRA · BAJO · UKELELE</text><text x="160" y="98" text-anchor="middle" fill="var(--ink-primary)" font-size="11">40+ acordes esenciales y 32 piezas reales</text><text x="160" y="118" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">(Romance, Pop, Blues, Walking Bass, Funk, Cumbia)</text>',
             'Practica cambios de acorde con metrónomo o toca riffs nota por nota.'
           ),
         ],
       },
       practice: 'Espera tu acorde o nota en el mástil y muestra diagramas de dedos.',
-      challenge: 'Toca cualquiera de las 12 canciones/riffs a tempo sin cortar por un fallo.',
+      challenge: 'Toca cualquiera de las 32 canciones/riffs a tempo sin cortar por un fallo.',
     },
   },
 
   band2d: {
     id: 'band2d',
     title: 'ENSAMBLE Y XILÓFONO',
-    subtitle: 'Xilófono, Melódica, Piano, Batería y Bajo en Banda',
+    subtitle: 'Xilófono, Melódica, Piano, Batería y Bajo · 18 bases',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'music',
@@ -576,14 +620,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Teclas Z–M / 1–8 según instrumento · Mutea pistas con 1 clic',
     controlsTouch: 'Toca láminas o pads · Silencia la pista que quieras cubrir',
     description:
-      'Elige Xilófono/Marimba, Melódica/Flauta, Piano, Mini-Batería o Bajo y toca encima de 8 bandas completas silenciando cualquier pista.',
+      'Elige Xilófono/Marimba, Melódica/Flauta, Piano, Mini-Batería o Bajo y toca encima de 18 bases completas silenciando cualquier pista.',
     keywords: ['ensamble', 'banda', 'xilofono', 'marimba', 'melodica', 'flauta', 'jam'],
     guide: {
-      objective: 'Toca tu instrumento favorito acompañado por una banda completa de 4 pistas sincronizadas.',
+      objective: 'Toca tu instrumento favorito acompañado por una banda completa de 4 pistas sincronizadas en 18 bases.',
       howToPlay: [
         'Selecciona arriba qué instrumento quieres tocar: Xilófono/Marimba, Melódica/Flauta, Piano, Batería o Bajo.',
-        'Elige una de las 8 bases multipista y silencia con un clic el canal que tú vas a interpretar.',
+        'Elige una de las 18 bases multipista y silencia con un clic el canal que tú vas a interpretar.',
         'Sigue las notas iluminadas junto al resto del grupo o improvisa en Jam Infinito.',
+      ],
+      sectionTutorials: [
+        { name: '5 Instrumentos Activos', tip: 'Cambia al instante entre Xilófono/Marimba, Melódica/Flauta, Piano, Mini-Batería y Bajo.' },
+        { name: 'Mezclador de 4 Pistas y 18 Bases', tip: 'Silencia la pista que vas a cubrir (Batería, Bajo, Acordes o Melodía) y deja que la banda te acompañe.' },
+        { name: 'Jam Infinito', tip: 'Enlaza vueltas de las 18 bases acelerando suavemente el tempo para entrenar tu oído e improvisación.' },
       ],
       controls: [
         { keys: ['Z..M', '1..8'], touch: 'Toca láminas / teclas', action: 'Interpretar instrumento activo', tone: 'primary' },
@@ -631,6 +680,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Analiza cada atributo por separado: forma, cantidad, tamaño, relleno y rotación.',
         'Elige la opción correcta (1–8); tras responder verás la explicación exacta de las reglas.',
       ],
+      sectionTutorials: [
+        { name: 'Niveles 1–3 (Reglas Aditivas)', tip: 'Aísla un atributo cada vez (cantidad, rotación, tamaño o relleno) primero por fila y luego por columna.' },
+        { name: 'Nivel 4 (Superposición XOR)', tip: 'Superpone celda 1 y celda 2 de cada fila: los elementos repetidos se cancelan y los únicos permanecen en la tercera.' },
+      ],
       controls: [
         { keys: ['1..8', 'Clic'], touch: 'Toca opción', action: 'Elegir respuesta', tone: 'primary' },
         { keys: ['P'], touch: 'Botón Pista', action: 'Ver regla en práctica' },
@@ -676,6 +729,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Elige tamaño 4×4, 6×6 o 9×9 y selecciona una celda vacía.',
         'Activa Candidatos (N) para anotar posibles números antes de decidir.',
         'Si te atascas en práctica, pulsa Pista (P) para ver qué técnica lógica deduce la celda.',
+      ],
+      sectionTutorials: [
+        { name: 'Modo Candidatos (N)', tip: 'Anota posibilidades pequeñas en cada celda para detectar Pares Desnudos e intersecciones sin adivinar.' },
+        { name: 'Pista Razonada (P)', tip: 'Explica la deducción exacta (Single Desnudo, Single Oculto o Par Desnudo) resaltando fila, columna y caja.' },
+        { name: 'Modo Infinito', tip: 'Encadena tableros de solución única escalando automáticamente 4×4 → 6×6 → 9×9.' },
       ],
       controls: [
         { keys: ['1..9'], touch: 'Teclado numérico', action: 'Colocar número o candidato', tone: 'primary' },
@@ -725,6 +783,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Los destinos legales se marcan en verde; los ilegales indican por qué no caben.',
         'Explora el Ejemplo Recursivo para ver cómo hanoi(n) se divide en subproblemas.',
       ],
+      sectionTutorials: [
+        { name: 'Resolución Directa (3 a 6 discos)', tip: 'Mueve el disco menor en cada turno impar hacia C (si N es impar) o hacia B (si N es par).' },
+        { name: 'Inspector de Pila Recursiva', tip: 'En Práctica reproduce paso a paso la pila de llamadas hanoi(n, A→C) para entender el algoritmo óptimo.' },
+      ],
       controls: [
         { keys: ['1', '2', '3'], touch: 'Toca torre A, B o C', action: 'Seleccionar origen / destino', tone: 'primary' },
         { keys: ['P'], touch: 'Paso óptimo', action: 'Sugerir movimiento óptimo' },
@@ -772,6 +834,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Mentalmente rota la estructura y compárala con las 4 opciones candidatas.',
         'En práctica puedes orbitar la figura y ver la explicación de por qué las demás son espejo.',
       ],
+      sectionTutorials: [
+        { name: 'Deducción de Quiralidad (6 a 13 cubos)', tip: 'Traza la columna vertebral más larga y verifica el giro de la mano derecha en cada codo.' },
+        { name: 'Inspector 3D en Práctica', tip: 'Tras responder, alinea la figura candidata con el modelo o superpón el fantasma para verificar reflejos.' },
+      ],
       controls: [
         { keys: ['1..4', 'Clic'], touch: 'Toca candidata', action: 'Seleccionar figura rotada', tone: 'primary' },
         { keys: ['P'], touch: 'Botón Pista', action: 'Ver orientación de los brazos' },
@@ -813,6 +879,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Marca con una X las celdas que deduzcas que deben ir vacías para acotar el resto.',
         'Usa Pista Razonada para aprender técnicas de solapamiento central y bordes.',
       ],
+      sectionTutorials: [
+        { name: 'Herramienta Pintar vs Marcar X', tip: 'Usa X (clic derecho o tecla X) para descartar casillas imposibles y acotar los bloques de líneas cruzadas.' },
+        { name: 'Solapamiento y Modo Infinito', tip: 'Empieza por sumas exactas y bloques mayores que la mitad de la línea; encadena tableros 5×5 → 8×8 → 10×10.' },
+      ],
       controls: [
         { keys: ['Clic'], touch: 'Toca celda (Modo Pintar)', action: 'Pintar bloque', tone: 'primary' },
         { keys: ['X', 'Clic Der'], touch: 'Modo Marcar X', action: 'Marcar casilla vacía segura' },
@@ -835,7 +905,7 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
   logicseq2d: {
     id: 'logicseq2d',
     title: 'SERIES Y SILOGISMOS',
-    subtitle: 'Sucesiones, analogías, lógica formal y sesgos',
+    subtitle: '150+ retos: sucesiones, analogías, lógica formal y sesgos',
     dimension: '2D',
     category: 'academy',
     academyGroup: 'iq',
@@ -846,14 +916,19 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
     controlsPC: 'Teclas 1–4 o clic en opción · P Pista',
     controlsTouch: 'Toca la respuesta deducida',
     description:
-      'Entrena inteligencia verbal-numérica y pensamiento crítico: series de 2º orden, analogías, silogismos con diagramas de Venn y falacias.',
+      '150+ retos de inteligencia verbal-numérica y pensamiento crítico: series de 2º orden, 72+ analogías, silogismos con Venn y 48+ sesgos.',
     keywords: ['series', 'sucesiones', 'analogias', 'silogismos', 'sesgos', 'iq', 'razonamiento'],
     guide: {
-      objective: 'Deduce la regla matemática, relación verbal, conclusión lógica o sesgo cognitivo de cada problema.',
+      objective: 'Supera 150+ retos curados deduciendo la regla matemática, analogía verbal, silogismo formal o sesgo cognitivo.',
       howToPlay: [
-        'Alterna o filtra entre 4 áreas: Sucesiones Numéricas, Analogías, Silogismos y Pensamiento Crítico.',
+        'Alterna o filtra entre 4 áreas: Sucesiones Numéricas, Analogías (72+), Silogismos (24+ dominios) y Sesgos (48+).',
         'Analiza diferencias entre términos o dibuja mentalmente los conjuntos del silogismo.',
         'Tras cada respuesta revisa la explicación formal y el diagrama de conjuntos en SVG.',
+      ],
+      sectionTutorials: [
+        { name: 'Sucesiones Numéricas', tip: 'Comprueba diferencias de 1er y 2º orden, potencias n²+k o dos subseries intercaladas.' },
+        { name: 'Analogías Estructurales (72+)', tip: 'Formula la relación exacta entre A y B en su mismo orden y aplícala a C.' },
+        { name: 'Silogismos y Sesgos (48+)', tip: 'En silogismos apóyate en el diagrama de Venn; en sesgos detecta tasas base, muestreo o falacias.' },
       ],
       controls: [
         { keys: ['1..4', 'Clic'], touch: 'Toca opción A–D', action: 'Confirmar deducción', tone: 'primary' },
@@ -863,13 +938,13 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         frames: [
           makeFrame(
             '#7C3AED',
-            '<circle cx="132" cy="86" r="36" fill="rgba(124,58,237,0.18)" stroke="#7C3AED" stroke-width="2"/><circle cx="184" cy="86" r="36" fill="rgba(0,229,255,0.18)" stroke="#00E5FF" stroke-width="2"/><text x="114" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A</text><text x="158" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A∩B</text><text x="202" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">B</text><text x="160" y="152" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">Diagramas de Venn y operadores de 2º orden explicados</text>',
+            '<circle cx="132" cy="86" r="36" fill="rgba(124,58,237,0.18)" stroke="#7C3AED" stroke-width="2"/><circle cx="184" cy="86" r="36" fill="rgba(0,229,255,0.18)" stroke="#00E5FF" stroke-width="2"/><text x="114" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A</text><text x="158" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">A∩B</text><text x="202" y="90" text-anchor="middle" fill="var(--ink-primary)" font-size="11" font-weight="700">B</text><text x="160" y="152" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">150+ retos con diagramas de Venn y reglas explicadas</text>',
             'Cada problema explica la regla exacta o el diagrama de conjuntos.'
           ),
         ],
       },
-      practice: 'Filtra por tipo de reto y consulta pistas sin límite de tiempo.',
-      challenge: 'Serie oficial evaluada o Modo Infinito con reglas cada vez más profundas.',
+      practice: 'Filtra por cualquiera de las 4 áreas y consulta pistas sin límite de tiempo.',
+      challenge: 'Serie oficial evaluada o Modo Infinito sobre 150+ retos y reglas crecientes.',
     },
   },
 
@@ -895,6 +970,11 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Fase 1 (Codificar): asocia cada icono y palabra clave con su sala del tablero y pulsa Ya lo memoricé.',
         'Fase 2 (Interferencia): resuelve una pregunta breve para limpiar la memoria ecoica.',
         'Fase 3 (Evocar): coloca cada símbolo en su ubicación u orden exacto.',
+      ],
+      sectionTutorials: [
+        { name: 'Fase 1 · Codificación Loci', tip: 'Une cada símbolo con un rasgo visual exagerado de su habitación formando una ruta.' },
+        { name: 'Fase 2 · Interferencia Activa', tip: 'El cálculo rápido o reto Stroop limpia la memoria inmediata antes de evocar.' },
+        { name: 'Fase 3 · Evocación y Revisión', tip: 'Coloca cada icono en su estancia exacta; en Práctica consulta la historia Loci sugerida.' },
       ],
       controls: [
         { keys: ['Espacio'], touch: 'Botón Ya lo memoricé', action: 'Pasar a evocación', tone: 'primary' },
@@ -1339,6 +1419,10 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
         'Lee el enunciado superior antes de pulsar: alterna entre Stroop, Simon, Chimp y Cálculo.',
         'En Chimp memoriza la posición de todos los números antes de pulsar el 1.',
         'Responde con clic/toque o con las teclas 1–4 en retos de opción múltiple.',
+      ],
+      sectionTutorials: [
+        { name: 'Modo Stroop y Cálculo', tip: 'En Stroop responde al color de la tinta (no a la palabra); en cálculo estima primero las unidades.' },
+        { name: 'Modo Chimp y Simon', tip: 'Memoriza el recorrido visual completo antes de pulsar el número 1 porque el resto se ocultará.' },
       ],
       controls: [
         { keys: ['Clic', '1..4'], touch: 'Toca ficha / opción', action: 'Responder micro-reto', tone: 'primary' },

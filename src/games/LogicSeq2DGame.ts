@@ -4,8 +4,10 @@ import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderDifficultyBadge,
   renderExplanationBox,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   generateLogicRound,
@@ -32,6 +34,7 @@ export class LogicSeq2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
 
@@ -88,10 +91,11 @@ export class LogicSeq2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -133,8 +137,70 @@ export class LogicSeq2DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'logicseq:prep',
+        sectionName: 'Preparar Series y Silogismos',
+        steps: [
+          'En Práctica puedes filtrar una sola área (Sucesiones, Analogías, Silogismos o Sesgos) o jugar en Mixto.',
+          'Elige el nivel de profundidad (1 a 4) o Progresivo para subir automáticamente la dificultad.',
+          'Responde con clic o las teclas 1–4; cada respuesta muestra la explicación formal completa.',
+        ],
+        tip: 'El banco incluye más de 150 ítems curados entre analogías, sesgos cognitivos y plantillas de silogismos con diagrama de Venn.',
+      };
+    } else if (this.question.category === 'sequence') {
+      info = {
+        id: 'logicseq:sequence',
+        sectionName: 'Modo Sucesiones Numéricas',
+        steps: [
+          'Calcula primero las diferencias entre cada término consecutivo (1er orden).',
+          'Si la diferencia no es constante, revisa diferencias de 2º orden, multiplicadores o dos pistas intercaladas.',
+          'Confirma tu número con clic o teclas 1–4 y revisa la regla exacta al responder.',
+        ],
+        tip: 'En niveles 3 y 4 separa mentalmente las posiciones impares (1ª, 3ª, 5ª) de las pares (2ª, 4ª, 6ª) o compara con cuadrados n².',
+      };
+    } else if (this.question.category === 'analogy') {
+      info = {
+        id: 'logicseq:analogy',
+        sectionName: 'Modo Analogías Estructurales',
+        steps: [
+          'Formula una frase breve que conecte el primer par (A → B) en el orden exacto en que aparece.',
+          'Aplica esa misma relación al tercer concepto (C) y descarta distractores del mismo tema pero distinta función.',
+          'Usa Pista (P) en Práctica si necesitas ver la categoría de relación estructural.',
+        ],
+        tip: 'No elijas una palabra solo porque suene asociada a C: verifica que la dirección lógica sea idéntica a A → B.',
+      };
+    } else if (this.question.category === 'syllogism') {
+      info = {
+        id: 'logicseq:syllogism',
+        sectionName: 'Modo Silogismos y Conjuntos',
+        steps: [
+          'Acepta únicamente las dos premisas como verdades absolutas sin añadir suposiciones externas.',
+          'Imagina los conjuntos como círculos (inclusión total, exclusión total o solapamiento parcial).',
+          'Comprueba el diagrama de Venn que aparece al responder o pedir pista para consolidar la forma válida.',
+        ],
+        tip: 'Que dos grupos estén dentro de un tercero no obliga a que se toquen (falacia del término medio no distribuido).',
+      };
+    } else {
+      info = {
+        id: 'logicseq:bias',
+        sectionName: 'Modo Sesgos y Pensamiento Crítico',
+        steps: [
+          'Identifica qué evidencia se está omitiendo o qué salto injustificado hace el argumento.',
+          'Distingue entre errores estadísticos (tasa base, muestreo, regresión) y falacias retóricas (ad hominem, falsa dicotomía).',
+          'Lee la explicación tras responder para reconocer estos atajos en noticias y decisiones reales.',
+        ],
+        tip: 'Pregúntate siempre: "¿qué datos faltan en el denominador o en el grupo que no se observa?".',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -298,6 +364,7 @@ export class LogicSeq2DGame implements MiniGame {
     this.hintShown = false;
     this.roundTimeLeft = this.roundTimeLimit;
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -547,6 +614,7 @@ export class LogicSeq2DGame implements MiniGame {
       }
     }
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -575,6 +643,7 @@ export class LogicSeq2DGame implements MiniGame {
       return;
     }
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();

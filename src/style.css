@@ -2993,3 +2993,251 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ==================== SECTION TUTORIAL, GUIDE SECTIONS & HUB TUTORIAL ==================== */
+
+.oa-sec-tutorial {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent-cyan);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oa-sec-tutorial.is-open {
+  border-color: var(--border-strong);
+  border-left-color: var(--accent-cyan);
+  background: var(--bg-elevated);
+}
+
+.oa-sec-tutorial-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.oa-sec-tutorial-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-sec-tutorial-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.oa-sec-tutorial-toggle {
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-void);
+  color: var(--accent-cyan);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.oa-sec-tutorial-toggle:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.oa-sec-tutorial-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.oa-sec-tutorial-body[hidden] {
+  display: none;
+}
+
+.oa-sec-tutorial-steps {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink-primary);
+}
+
+.oa-sec-tutorial-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 0.8rem;
+  line-height: 1.38;
+  color: var(--ink-primary);
+}
+
+.oa-sec-tutorial-tip-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* GuideOverlay: Tutorial por secciones y modos */
+.oa-guide-sections {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oa-guide-sections h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.oa-guide-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.oa-guide-section-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.oa-guide-section-item strong {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--accent-cyan);
+}
+
+.oa-guide-section-item span {
+  font-size: 0.8rem;
+  line-height: 1.36;
+  color: var(--ink-secondary);
+}
+
+/* Hub Tutorial Modal */
+.oa-hub-tutorial-modal {
+  width: min(760px, calc(100vw - 24px));
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+}
+
+.oa-hub-tutorial-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+.oa-hub-tutorial-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.oa-hub-tutorial-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oa-hub-tutorial-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.oa-hub-tutorial-card-head .oa-icon {
+  color: var(--accent-cyan);
+}
+
+.oa-hub-tutorial-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.42;
+  color: var(--ink-secondary);
+}
+
+.oa-hub-tutorial-section {
+  background: var(--bg-void);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oa-hub-tutorial-section h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-cyan);
+}
+
+.oa-hub-tutorial-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.83rem;
+  line-height: 1.4;
+  color: var(--ink-secondary);
+}
+
+.oa-hub-tutorial-list strong {
+  color: var(--ink-primary);
+}
+
+@media (max-width: 640px) {
+  .oa-hub-tutorial-grid {
+    grid-template-columns: 1fr;
+  }
+}

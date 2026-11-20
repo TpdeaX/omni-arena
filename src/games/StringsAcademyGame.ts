@@ -1,7 +1,7 @@
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import { createAcademyLayout, createSectionTutorialEl, renderExplanationBox, SectionTutorialInfo } from '../ui/AcademyKit';
 import {
   bassShapeFor,
   CHORD_SHAPES,
@@ -10,10 +10,12 @@ import {
   formatStringNoteEs,
   fretMidi,
   getChordsForInstrument,
+  SCALE_LABELS,
   scaleBoxPositions,
   ScaleType,
   songTotalBeats,
   STRING_INSTRUMENTS,
+  STRING_SCALE_BOXES,
   STRING_SONGS,
   StringInstrumentId,
 } from './music/stringsBank';
@@ -86,6 +88,8 @@ export class StringsAcademyGame implements MiniGame {
   // Scale box state
   private scaleRootPc = 9; // La
   private scaleType: ScaleType = 'minorPentatonic';
+  private scaleBoxIdx: number | null = 0;
+  private scaleOnlyBox = true;
 
   // Scoring
   private hits = 0;
@@ -111,6 +115,7 @@ export class StringsAcademyGame implements MiniGame {
   private modeToolbarEl: HTMLDivElement | null = null;
   private actionPanelEl: HTMLDivElement | null = null;
   private fretboardHostEl: HTMLDivElement | null = null;
+  private tutorialHostEl: HTMLDivElement | null = null;
   private explainHostEl: HTMLDivElement | null = null;
   private statsCardEl: HTMLDivElement | null = null;
 
@@ -145,7 +150,7 @@ export class StringsAcademyGame implements MiniGame {
           : 'CUERDAS · RETO',
       accent: '#D97706',
       timeLeftSec: null,
-      subStat: STRING_INSTRUMENTS[this.instrument].name,
+      subStat: `${STRING_INSTRUMENTS[this.instrument].name} · ${STRING_SONGS.length} temas`,
     });
 
     this.resetChangePalette();
@@ -248,7 +253,22 @@ export class StringsAcademyGame implements MiniGame {
       'info'
     );
     card.appendChild(ex);
-    this.sideEl.appendChild(card);
+
+    const tutWrap = document.createElement('div');
+    tutWrap.className = 'oa-strings-dyn-card';
+    tutWrap.appendChild(
+      createSectionTutorialEl({
+        id: 'strings:prep',
+        sectionName: 'Tutorial: Reto de Cuerdas',
+        steps: [
+          `Elige entre ${STRING_SONGS.length} canciones y riffs para Guitarra (6c), Bajo (4c) o Ukelele (4c).`,
+          'En canciones de acordes, usa 1–4 para preparar la postura y Espacio para rasguear.',
+          'En riffs y líneas de bajo, pulsa directamente los trastes iluminados en dorado.',
+        ],
+        tip: 'Ajusta el BPM abajo antes de empezar si quieres dominar primero los cambios de acorde.',
+      })
+    );
+    this.sideEl.append(tutWrap, card);
 
     this.syncControlsBar();
   }
@@ -344,6 +364,10 @@ export class StringsAcademyGame implements MiniGame {
     stageCard.append(topRow, tabsHost, modeToolbar, actionPanel, fretboardHost);
     this.stageEl.appendChild(stageCard);
 
+    const tutorialHost = document.createElement('div');
+    tutorialHost.className = 'oa-strings-dyn-card';
+    this.tutorialHostEl = tutorialHost;
+
     const explainCard = document.createElement('div');
     explainCard.className = 'oa-academy-card oa-strings-dyn-card';
     const explainHost = document.createElement('div');
@@ -354,7 +378,7 @@ export class StringsAcademyGame implements MiniGame {
     statsCard.className = 'oa-academy-card oa-strings-dyn-card';
     this.statsCardEl = statsCard;
 
-    this.sideEl.append(explainCard, statsCard);
+    this.sideEl.append(tutorialHost, explainCard, statsCard);
     this.updateStatsCard();
   }
 
@@ -400,9 +424,9 @@ export class StringsAcademyGame implements MiniGame {
 
     const tabs: { id: StringsTab; label: string }[] = [
       { id: 'chords', label: '1. Mástil y Acordes' },
-      { id: 'songs', label: '2. 12 Canciones y Riffs' },
+      { id: 'songs', label: `2. ${STRING_SONGS.length} Canciones y Riffs` },
       { id: 'changes', label: '3. Cambios de Acorde' },
-      { id: 'scales', label: '4. Escalas en Mástil' },
+      { id: 'scales', label: `4. ${STRING_SCALE_BOXES.length} Escalas en Mástil` },
     ];
 
     tabs.forEach((t) => {
@@ -457,6 +481,55 @@ export class StringsAcademyGame implements MiniGame {
     } else {
       this.renderScalesTab();
     }
+    this.renderSectionTutorial();
+  }
+
+  private renderSectionTutorial(): void {
+    if (!this.tutorialHostEl) return;
+    const map: Record<StringsTab, SectionTutorialInfo> = {
+      chords: {
+        id: 'strings:chords',
+        sectionName: 'Tutorial: Mástil y Acordes',
+        steps: [
+          'Elige instrumento arriba: Guitarra (6c), Bajo Eléctrico (4c) o Ukelele (4c).',
+          `Explora los ${getChordsForInstrument(this.instrument).length} diagramas para ver dedos (1–4), cuerdas al aire (0) y muteadas (X).`,
+          'Pulsa Espacio o Rasguear acorde para escucharlo, o haz clic directo en cualquier traste.',
+        ],
+        tip: 'Los puntos dorados muestran la tónica (nota fundamental) dentro de cada postura.',
+      },
+      songs: {
+        id: 'strings:songs',
+        sectionName: `Tutorial: ${STRING_SONGS.length} Canciones y Riffs`,
+        steps: [
+          'Selecciona una canción de acordes o un riff/línea de bajo en el selector superior.',
+          'En canciones de acordes, usa 1–4 para elegir la postura y Espacio para rasguear.',
+          'En riffs y líneas de bajo, pulsa el traste dorado iluminado en el mástil.',
+        ],
+        tip: 'Pulsa Escuchar ejemplo antes de tocar para oír la cadencia exacta.',
+      },
+      changes: {
+        id: 'strings:changes',
+        sectionName: 'Tutorial: Cambios de Acorde',
+        steps: [
+          'Mira el acorde objetivo y anticipa la siguiente postura anunciada al lado.',
+          'Cambia con teclas 1–4 y rasguea con Espacio antes de que avance el compás.',
+          'Activa Iniciar entrenador a tempo para ganar fluidez al ritmo del metrónomo.',
+        ],
+        tip: 'Mueve primero el dedo que cae en las cuerdas más graves para marcar la armonía a tiempo.',
+      },
+      scales: {
+        id: 'strings:scales',
+        sectionName: `Tutorial: ${STRING_SCALE_BOXES.length} Cajas y Escalas`,
+        steps: [
+          `Elige una de las ${STRING_SCALE_BOXES.length} cajas curadas o combina tónica y tipo de escala libremente.`,
+          'Los círculos dorados señalan la Tónica y los cian completan la escala sobre el mástil.',
+          'Alterna Solo caja / Todo el mástil y pulsa las notas iluminadas para improvisar.',
+        ],
+        tip: 'Aprende primero una caja cerrada de 4 trastes antes de conectar todo el diapasón.',
+      },
+    };
+    this.tutorialHostEl.innerHTML = '';
+    this.tutorialHostEl.appendChild(createSectionTutorialEl(map[this.activeTab]));
   }
 
   private renderChordsTab(): void {
@@ -724,6 +797,68 @@ export class StringsAcademyGame implements MiniGame {
     const grp = document.createElement('div');
     grp.className = 'oa-mus-toolbar-group';
 
+    const boxSel = document.createElement('select');
+    boxSel.className = 'oa-mus-select';
+    boxSel.setAttribute('aria-label', 'Elegir caja de escala');
+    STRING_SCALE_BOXES.forEach((box, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = box.title;
+      if (this.scaleBoxIdx === idx) opt.selected = true;
+      boxSel.appendChild(opt);
+    });
+    if (this.scaleBoxIdx === null) {
+      const customOpt = document.createElement('option');
+      customOpt.value = 'custom';
+      customOpt.textContent = 'Personalizada (mástil completo)';
+      customOpt.selected = true;
+      boxSel.appendChild(customOpt);
+    }
+    boxSel.addEventListener('change', () => {
+      if (boxSel.value === 'custom') return;
+      const idx = Number(boxSel.value);
+      const box = STRING_SCALE_BOXES[idx];
+      if (!box) return;
+      this.scaleBoxIdx = idx;
+      this.scaleRootPc = box.rootPc;
+      this.scaleType = box.scale;
+      this.scaleOnlyBox = true;
+      this.renderModeContent();
+      this.renderFretboard();
+    });
+
+    const boxToggleBtn = createActionButton({
+      label: this.scaleOnlyBox && this.scaleBoxIdx !== null ? 'Solo caja' : 'Mástil 0–12',
+      pressed: this.scaleOnlyBox && this.scaleBoxIdx !== null,
+      disabled: this.scaleBoxIdx === null,
+      onClick: () => {
+        synthAudio.uiClick();
+        this.scaleOnlyBox = !this.scaleOnlyBox;
+        this.renderModeContent();
+        this.renderFretboard();
+      },
+    });
+
+    const scaleSel = document.createElement('select');
+    scaleSel.className = 'oa-mus-select';
+    scaleSel.setAttribute('aria-label', 'Tipo de escala');
+    (Object.keys(SCALE_LABELS) as ScaleType[]).forEach((st) => {
+      const opt = document.createElement('option');
+      opt.value = st;
+      opt.textContent = SCALE_LABELS[st];
+      if (this.scaleType === st) opt.selected = true;
+      scaleSel.appendChild(opt);
+    });
+    scaleSel.addEventListener('change', () => {
+      this.scaleBoxIdx = null;
+      this.scaleOnlyBox = false;
+      this.scaleType = scaleSel.value as ScaleType;
+      this.renderModeContent();
+      this.renderFretboard();
+    });
+
+    grp.append(boxSel, boxToggleBtn, scaleSel);
+
     SCALE_ROOTS.forEach((r) => {
       grp.appendChild(
         createActionButton({
@@ -731,6 +866,8 @@ export class StringsAcademyGame implements MiniGame {
           pressed: this.scaleRootPc === r.pc,
           onClick: () => {
             synthAudio.uiClick();
+            this.scaleBoxIdx = null;
+            this.scaleOnlyBox = false;
             this.scaleRootPc = r.pc;
             this.renderModeContent();
             this.renderFretboard();
@@ -739,35 +876,14 @@ export class StringsAcademyGame implements MiniGame {
       );
     });
 
-    grp.append(
-      createActionButton({
-        label: 'Pentatónica menor',
-        pressed: this.scaleType === 'minorPentatonic',
-        onClick: () => {
-          synthAudio.uiClick();
-          this.scaleType = 'minorPentatonic';
-          this.renderModeContent();
-          this.renderFretboard();
-        },
-      }),
-      createActionButton({
-        label: 'Escala Mayor',
-        pressed: this.scaleType === 'major',
-        onClick: () => {
-          synthAudio.uiClick();
-          this.scaleType = 'major';
-          this.renderModeContent();
-          this.renderFretboard();
-        },
-      })
-    );
-
     this.modeToolbarEl!.appendChild(grp);
 
-    const rootName = SCALE_ROOTS.find((r) => r.pc === this.scaleRootPc)?.name ?? 'La';
+    const activeBox = this.scaleBoxIdx !== null ? STRING_SCALE_BOXES[this.scaleBoxIdx] : undefined;
+    const rootName = SCALE_ROOTS.find((r) => r.pc === this.scaleRootPc)?.name ?? activeBox?.rootName ?? 'La';
+    const scaleLabel = SCALE_LABELS[this.scaleType] ?? 'Escala';
     const head = document.createElement('div');
     head.className = 'oa-explain-heading';
-    head.textContent = `${this.scaleType === 'minorPentatonic' ? 'Escala Pentatónica menor' : 'Escala Mayor'} de ${rootName}`;
+    head.textContent = activeBox ? activeBox.title : `${scaleLabel} de ${rootName}`;
     const desc = document.createElement('p');
     desc.className = 'oa-explain-body';
     desc.textContent = 'Los círculos dorados son la Tónica (nota base) y los cian completan la escala. Toca cualquier traste iluminado.';
@@ -776,8 +892,8 @@ export class StringsAcademyGame implements MiniGame {
     if (this.explainHostEl) {
       renderExplanationBox(
         this.explainHostEl,
-        `Caja de escala en ${rootName}`,
-        'Improvisa tocando de nota dorada a nota dorada en distintas cuerdas.',
+        activeBox ? activeBox.title : `Escala en ${rootName}`,
+        activeBox ? activeBox.tip : 'Improvisa tocando de nota dorada a nota dorada en distintas cuerdas.',
         'info'
       );
     }
@@ -812,10 +928,13 @@ export class StringsAcademyGame implements MiniGame {
     const activeChord = this.getSelectedChord();
     const song = STRING_SONGS[this.songIdx];
     const currentEv = this.activeTab === 'songs' ? song.events[this.songStep] : undefined;
+    const activeBox = this.scaleBoxIdx !== null ? STRING_SCALE_BOXES[this.scaleBoxIdx] : undefined;
+    const scaleMinFret = this.scaleOnlyBox && activeBox ? activeBox.minFret : 0;
+    const scaleMaxFret = this.scaleOnlyBox && activeBox ? activeBox.maxFret : 12;
     const scaleSet =
       this.activeTab === 'scales'
         ? new Map(
-            scaleBoxPositions(this.instrument, this.scaleRootPc, this.scaleType, 0, 12).map((p) => [
+            scaleBoxPositions(this.instrument, this.scaleRootPc, this.scaleType, scaleMinFret, scaleMaxFret).map((p) => [
               `${p.string}:${p.fret}`,
               p,
             ])
@@ -1021,7 +1140,7 @@ export class StringsAcademyGame implements MiniGame {
         renderExplanationBox(
           this.explainHostEl,
           `${song.title} completada`,
-          'Puedes cambiar de instrumento o elegir cualquiera de las 12 canciones/riffs.',
+          `Puedes cambiar de instrumento o elegir cualquiera de las ${STRING_SONGS.length} canciones/riffs.`,
           'good'
         );
       }

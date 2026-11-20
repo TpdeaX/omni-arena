@@ -2,7 +2,12 @@ import '../styles/academy-board.css';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { ControlHint, GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import {
+  createAcademyLayout,
+  createSectionTutorialEl,
+  renderExplanationBox,
+  SectionTutorialInfo,
+} from '../ui/AcademyKit';
 import {
   applyPokerAction,
   calculateOuts,
@@ -70,6 +75,7 @@ export class PokerAcademyGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private sideContentEl!: HTMLDivElement;
   private guideCardEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
@@ -115,13 +121,14 @@ export class PokerAcademyGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.sideContentEl = document.createElement('div');
     this.sideContentEl.className = 'oa-academy-card';
     this.guideCardEl = document.createElement('div');
     this.guideCardEl.className = 'oa-academy-card';
 
-    this.sideEl.append(this.explainEl, this.sideContentEl, this.guideCardEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.sideContentEl, this.guideCardEl);
 
     this.ctx.setHud({
       dimension: '2D',
@@ -153,8 +160,71 @@ export class PokerAcademyGame implements MiniGame {
     }
   }
 
+  private lastTutorialKey = '';
+
+  private updateSectionTutorial(): void {
+    const key = this.phase === 'prep' ? 'prep' : `street:${this.handState?.street ?? 'preflop'}`;
+    if (key === this.lastTutorialKey) return;
+    this.lastTutorialKey = key;
+
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'poker:prep',
+        sectionName: 'Preparar Mesa Texas Hold\'em',
+        steps: [
+          'Elige el nivel de exigencia de los 3 bots (Lucía prudente, Mateo equilibrado y Sofía agresiva).',
+          'Cada asiento comienza con 1000 fichas de práctica y ciegas 10/20 (sin dinero real).',
+          'Usa la guía de las 10 manos (G) en la columna derecha para consultar el ranking en cualquier momento.',
+        ],
+        tip: 'En Práctica Guiada verás tu probabilidad estimada (equity), tus outs y recomendación por pot odds.',
+      };
+    } else if (this.handState.street === 'preflop') {
+      info = {
+        id: 'poker:preflop',
+        sectionName: 'Ronda Pre-Flop (2 cartas)',
+        steps: [
+          'Evalúa tus 2 cartas privadas: parejas altas, ases fuertes o cartas conectadas del mismo palo tienen mayor equity.',
+          'Pulsa 1 para Pasar/Igualar, 2 para Subir apuesta o 3 para Retirarte sin malgastar fichas.',
+          'Observa la posición del botón Repartidor (D): actuar después te da información de los rivales.',
+        ],
+        tip: 'Retirarse con manos débiles fuera de posición es una decisión ganadora a largo plazo.',
+      };
+    } else if (this.handState.street === 'showdown') {
+      info = {
+        id: 'poker:showdown',
+        sectionName: 'Showdown (Resolución de mano)',
+        steps: [
+          'Se comparan las mejores combinaciones de 5 cartas usando tus 2 privadas y las 5 comunitarias.',
+          'Revisa la caja de explicación para analizar por qué ganó la mano vencedora y sus kickers.',
+          'Pulsa Siguiente mano para repartir una nueva ronda y rotar el botón de repartidor.',
+        ],
+        tip: 'Fíjate en el patrón de apuestas de cada bot para ajustar tu estrategia en las manos siguientes.',
+      };
+    } else {
+      const streetTitle =
+        this.handState.street === 'flop'
+          ? 'Flop (3 comunitarias)'
+          : this.handState.street === 'turn'
+            ? 'Turn (4ª carta)'
+            : 'River (5ª carta)';
+      info = {
+        id: `poker:${this.handState.street}`,
+        sectionName: `Ronda ${streetTitle}`,
+        steps: [
+          'Combina tus 2 cartas privadas con las comunitarias del centro para evaluar tu jugada actual y proyectos.',
+          'Aplica la regla del 2 y 4: multiplica tus outs por 4 en el Flop (o por 2 en el Turn) para estimar tu % de completar.',
+          'Compara tu equity contra las probabilidades del bote antes de igualar una subida rival.',
+        ],
+        tip: 'En el River ya no quedan cartas por salir: valora solo la fuerza hecha de tu mano frente al rango rival.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     const isPractice = Boolean(this.ctx.practiceMode);
     const levelNames = ['Amistoso', 'Estándar', 'Exigente'];
 
@@ -371,6 +441,7 @@ export class PokerAcademyGame implements MiniGame {
   // ==================== RENDERING ====================
 
   private renderTable(): void {
+    this.updateSectionTutorial();
     const st = this.handState;
     const hero = st.players[0];
     const isShowdown = st.street === 'showdown';

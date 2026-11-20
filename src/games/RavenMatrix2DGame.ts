@@ -2,7 +2,12 @@ import '../styles/academy-intel.css';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import {
+  createAcademyLayout,
+  createSectionTutorialEl,
+  renderExplanationBox,
+  SectionTutorialInfo,
+} from '../ui/AcademyKit';
 import {
   generateRavenPuzzle,
   renderRavenCellSvg,
@@ -28,6 +33,7 @@ export class RavenMatrix2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
 
@@ -81,10 +87,11 @@ export class RavenMatrix2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -123,8 +130,48 @@ export class RavenMatrix2DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'raven:prep',
+        sectionName: 'Preparar Matrices Lógicas',
+        steps: [
+          'Selecciona un nivel fijo (1 a 4) o Progresivo para ir desbloqueando reglas más complejas.',
+          'Cada matriz 3×3 tiene exactamente una opción válida entre 6 u 8 candidatas.',
+          'Responde con clic o las teclas numéricas y analiza la explicación regla por regla.',
+        ],
+        tip: 'El Nivel 4 introduce superposición XOR: las figuras presentes en dos celdas de la fila se cancelan en la tercera.',
+      };
+    } else if (this.puzzle.level === 4) {
+      info = {
+        id: 'raven:xor',
+        sectionName: 'Modo Matriz Nivel 4 (XOR)',
+        steps: [
+          'Superpone visualmente la celda 1 y la celda 2 de cada fila como si fueran transparencias.',
+          'Los trazos o puntos que aparecen en ambas celdas se anulan; los que aparecen solo en una sobreviven en la celda 3.',
+          'Confirma tu deducción revisando también las columnas de arriba abajo.',
+        ],
+        tip: 'Aplica la regla XOR elemento por elemento (por ejemplo esquina por esquina) en vez de intentar verlo todo a la vez.',
+      };
+    } else {
+      info = {
+        id: `raven:lvl${this.puzzle.level}`,
+        sectionName: `Modo Matriz Nivel ${this.puzzle.level}`,
+        steps: [
+          'Descompón la figura en atributos independientes: forma, cantidad, rotación, tamaño y relleno.',
+          'Comprueba primero la progresión horizontal en filas 1 y 2; luego verifica que coincida en columnas.',
+          'Descarta las opciones que incumplan incluso un solo atributo para llegar con certeza a la solución.',
+        ],
+        tip: 'En niveles 2 y 3 se combinan dos o tres reglas simultáneas: resuelve un atributo a la vez.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -240,6 +287,7 @@ export class RavenMatrix2DGame implements MiniGame {
     this.matrixTimeLeft = this.matrixTimeLimit;
     this.roundElapsedSec = 0;
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -491,6 +539,7 @@ export class RavenMatrix2DGame implements MiniGame {
       }
     }
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -513,6 +562,7 @@ export class RavenMatrix2DGame implements MiniGame {
       'warn'
     );
     const left = this.ctx.damage(1);
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();

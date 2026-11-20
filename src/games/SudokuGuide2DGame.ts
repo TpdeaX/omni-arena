@@ -2,7 +2,12 @@ import '../styles/academy-intel.css';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import {
+  createAcademyLayout,
+  createSectionTutorialEl,
+  renderExplanationBox,
+  SectionTutorialInfo,
+} from '../ui/AcademyKit';
 import {
   findConflicts,
   generateSudokuPuzzle,
@@ -36,6 +41,7 @@ export class SudokuGuide2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
 
@@ -93,10 +99,11 @@ export class SudokuGuide2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -133,8 +140,48 @@ export class SudokuGuide2DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'sudoku:prep',
+        sectionName: 'Preparar Sudoku Razonado',
+        steps: [
+          'Elige el tamaño (4×4 para calentar, 6×6 intermedio o 9×9 clásico) y la profundidad lógica.',
+          'Cada tablero se genera con solución única garantizada para que nunca tengas que adivinar.',
+          'En Modo Infinito los tableros encadenan escalado automático 4×4 → 6×6 → 9×9.',
+        ],
+        tip: 'Empieza en Fácil para dominar Singles Desnudos y Ocultos antes de pasar a Pares Desnudos.',
+      };
+    } else if (this.notesMode) {
+      info = {
+        id: 'sudoku:notes',
+        sectionName: 'Modo Candidatos (Notas)',
+        steps: [
+          'Con Candidatos activo (N), cada número que pulses anota o quita un candidato pequeño en la celda.',
+          'Anota los posibles valores en celdas reducidas para descubrir Pares Desnudos e intersecciones de caja.',
+          'Vuelve a pulsar N (o el botón Candidatos) para colocar valores definitivos.',
+        ],
+        tip: 'Si dos celdas de una misma fila solo permiten los mismos 2 candidatos, puedes eliminar esos números del resto de la fila.',
+      };
+    } else {
+      info = {
+        id: `sudoku:play:${this.puzzle.size}`,
+        sectionName: `Sudoku ${this.puzzle.size}×${this.puzzle.size} · Deducción`,
+        steps: [
+          `Completa filas, columnas y cajas sin repetir dígitos del 1 al ${this.puzzle.size}.`,
+          'Toca una casilla (o navega con flechas) y pulsa el número, o activa Candidatos (N) para marcar opciones.',
+          'Pulsa Pista Razonada (P) para ver la técnica exacta (Single Desnudo, Single Oculto o Par Desnudo) resaltada en el tablero.',
+        ],
+        tip: 'Busca primero la fila, columna o caja con más pistas ya colocadas: allí suelen aparecer los primeros singles.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -278,6 +325,7 @@ export class SudokuGuide2DGame implements MiniGame {
       'info'
     );
 
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.renderBoard();
     this.updateHud();
@@ -584,6 +632,7 @@ export class SudokuGuide2DGame implements MiniGame {
   }
 
   private renderBoard(): void {
+    this.updateSectionTutorial();
     this.stageEl.innerHTML = '';
     const size = this.puzzle.size;
     const { boxRows, boxCols } = this.puzzle;

@@ -1,7 +1,7 @@
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { DrumPieceId, GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import { createAcademyLayout, createSectionTutorialEl, renderExplanationBox } from '../ui/AcademyKit';
 import {
   BAND_INSTRUMENTS,
   BAND_SONGS,
@@ -151,6 +151,7 @@ export class BandEnsembleGame implements MiniGame {
   private timelineEl: HTMLDivElement | null = null;
   private chordBannerEl: HTMLDivElement | null = null;
   private instrumentHostEl: HTMLDivElement | null = null;
+  private tutorialHostEl: HTMLDivElement | null = null;
   private explainHostEl: HTMLDivElement | null = null;
   private statsCardEl: HTMLDivElement | null = null;
   private noteBtnMap = new Map<number, HTMLElement>();
@@ -193,7 +194,7 @@ export class BandEnsembleGame implements MiniGame {
           : 'ENSAMBLE · RETO',
       accent: '#0D9488',
       timeLeftSec: null,
-      subStat: '5 instrumentos · 8 bases',
+      subStat: `${BAND_INSTRUMENTS.length} instrumentos · ${BAND_SONGS.length} bases`,
     });
 
     window.addEventListener('keydown', this.onKeyDown);
@@ -287,7 +288,22 @@ export class BandEnsembleGame implements MiniGame {
       'info'
     );
     card.appendChild(ex);
-    this.sideEl.appendChild(card);
+
+    const tutWrap = document.createElement('div');
+    tutWrap.className = 'oa-band-dyn-card';
+    tutWrap.appendChild(
+      createSectionTutorialEl({
+        id: 'band:prep',
+        sectionName: 'Tutorial: Reto de Ensamble',
+        steps: [
+          `Elige uno de los ${BAND_INSTRUMENTS.length} instrumentos (Xilófono, Melódica, Piano, Mini-Batería o Bajo).`,
+          `Selecciona una de las ${BAND_SONGS.length} bases multipista con su género y tempo.`,
+          'La banda silenciará tu pista elegida para que cubras su lugar siguiendo las notas o pads dorados.',
+        ],
+        tip: 'Para empezar cómodo, prueba Xilófono sobre Pop Solar o Cumbia Andina.',
+      })
+    );
+    this.sideEl.append(tutWrap, card);
 
     this.syncControlsBar();
   }
@@ -336,6 +352,10 @@ export class BandEnsembleGame implements MiniGame {
     stageCard.append(instBar, songBar, mixer, banner, timeline, instHost);
     this.stageEl.appendChild(stageCard);
 
+    const tutorialHost = document.createElement('div');
+    tutorialHost.className = 'oa-band-dyn-card';
+    this.tutorialHostEl = tutorialHost;
+
     const explainCard = document.createElement('div');
     explainCard.className = 'oa-academy-card oa-band-dyn-card';
     const explainHost = document.createElement('div');
@@ -346,7 +366,7 @@ export class BandEnsembleGame implements MiniGame {
     statsCard.className = 'oa-academy-card oa-band-dyn-card';
     this.statsCardEl = statsCard;
 
-    this.sideEl.append(explainCard, statsCard);
+    this.sideEl.append(tutorialHost, explainCard, statsCard);
     this.updateStatsCard();
   }
 
@@ -356,7 +376,37 @@ export class BandEnsembleGame implements MiniGame {
     this.renderMixer();
     this.renderBannerAndTimeline();
     this.renderPlayableInstrument();
+    this.renderSectionTutorial();
     this.updateTargetHighlight();
+  }
+
+  private renderSectionTutorial(): void {
+    if (!this.tutorialHostEl) return;
+    const instDef = BAND_INSTRUMENTS.find((i) => i.id === this.activeInstrument)!;
+    const isPracticeByTrack = this.isPractice || this.mutedTracks.size > 0;
+    const info = isPracticeByTrack
+      ? {
+          id: 'band:practice',
+          sectionName: `Tutorial: Práctica por Pista (${instDef.shortName})`,
+          steps: [
+            `Cambia entre ${BAND_INSTRUMENTS.length} instrumentos arriba o elige cualquiera de las ${BAND_SONGS.length} bases.`,
+            'Usa el mezclador de 4 canales para silenciar la pista que quieres tocar (o déjalas todas activas para Jam libre).',
+            'Pulsa Reproducir banda y toca las teclas/láminas/pads iluminados en dorado al ritmo del compás.',
+          ],
+          tip: 'Baja los BPM con -5 para ensayar una línea de bajo o melodía rápida antes de subir la velocidad.',
+        }
+      : {
+          id: 'band:jam',
+          sectionName: `Tutorial: Jam en Banda (${instDef.shortName})`,
+          steps: [
+            `La banda completa suena sobre ${BAND_SONGS.length} bases multipista en tiempo real.`,
+            'Sigue el acorde actual en el banner y las guías doradas en tu instrumento.',
+            'Silencia cualquier canal del mezclador en cualquier momento si quieres tomar el protagonismo de esa pista.',
+          ],
+          tip: 'En Jam Infinito la banda sube +4 BPM y rota de canción automáticamente cada 8 compases.',
+        };
+    this.tutorialHostEl.innerHTML = '';
+    this.tutorialHostEl.appendChild(createSectionTutorialEl(info));
   }
 
   private renderInstrumentSelector(): void {
@@ -476,6 +526,7 @@ export class BandEnsembleGame implements MiniGame {
           this.mutedTracks.add(trackId);
         }
         this.renderMixer();
+        this.renderSectionTutorial();
       });
       this.mixerEl!.appendChild(btn);
     });

@@ -96,7 +96,7 @@ function matchesTab(
 export class HubView {
   private root: HTMLElement;
   private onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void;
-  private activeModal: 'none' | 'settings' | 'cloud' = 'none';
+  private activeModal: 'none' | 'settings' | 'cloud' | 'tutorial' = 'none';
   private activeGuide: GuideOverlay | null = null;
   private searchQuery = '';
   private cloudFeedback = '';
@@ -235,6 +235,9 @@ export class HubView {
             <span class="oa-brand-tag">${countAll} DISCIPLINAS · 2D + 3D</span>
           </div>
           <div class="oa-topbar-right">
+            <button type="button" class="oa-top-btn" id="oa-hub-tutorial" title="Tutorial del Hub, zonas, dificultades y modo infinito">
+              ${Icons.bookOpen(16)}<span>Tutorial del Hub</span>
+            </button>
             <button type="button" class="oa-top-btn ${cloudReady ? 'is-live' : ''}" id="oa-hub-cloud" title="Sincronización Supabase y respaldos">
               ${Icons.cloud(16)}<span>${cloudReady ? `Nube · ${cloudCfg.spaceCode}` : 'Nube'}</span>
             </button>
@@ -435,6 +438,56 @@ export class HubView {
                   <input type="file" id="oa-import-json" accept=".json,application/json" style="display:none" />
                 </label>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="oa-overlay ${this.activeModal === 'tutorial' ? '' : 'is-hidden'}" id="oa-tutorial-overlay">
+          <div class="oa-modal oa-hub-tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="oa-hub-tutorial-title">
+            <div class="oa-settings-head">
+              <h2 id="oa-hub-tutorial-title">TUTORIAL DEL HUB · OMNI ARENA</h2>
+              <button type="button" class="oa-btn oa-btn-ghost oa-btn-sm" id="oa-close-tutorial" aria-label="Cerrar tutorial">${Icons.closeX(16)}<span>Cerrar</span></button>
+            </div>
+            <p class="oa-hub-tutorial-lead">
+              Domina las 4 zonas de entrenamiento, elige entre las 5 dificultades dinámicas y alterna entre Práctica Guiada, Reto Oficial y Modo Infinito.
+            </p>
+
+            <div class="oa-hub-tutorial-grid">
+              <div class="oa-hub-tutorial-card">
+                <div class="oa-hub-tutorial-card-head">${Icons.trophy(18)}<span>1. Circuito Diario y Clasificatoria</span></div>
+                <p>El Circuito Total y la Prueba Clasificatoria rotan cada 15 s entre 18 pruebas rápidas 2D/3D. Completa las 3 disciplinas del Circuito Diario para mantener tu racha.</p>
+              </div>
+              <div class="oa-hub-tutorial-card">
+                <div class="oa-hub-tutorial-card-head">${Icons.graduation(18)}<span>2. 15 Academias Guiadas</span></div>
+                <p>Aprende paso a paso en Música (Piano, Batería, Cuerdas, Ensamble), Estrategia/3D (Ajedrez, Damas, Póker, Rubik) e IQ/Lógica (Raven, Sudoku, Hanói, Rotación 3D, Nonogramas, Series y Palacio Mental).</p>
+              </div>
+              <div class="oa-hub-tutorial-card">
+                <div class="oa-hub-tutorial-card-head">${Icons.bolt(18)}<span>3. Destreza 2D y Acción 3D</span></div>
+                <p>18 modos arcade directos al grano para entrenar puntería en primera persona, reflejos al milisegundo, lectura periférica, N-Back y agilidad espacial.</p>
+              </div>
+              <div class="oa-hub-tutorial-card">
+                <div class="oa-hub-tutorial-card-head">${Icons.omni(18)}<span>4. Radar de 5 Ejes y Ecosistema</span></div>
+                <p>Cada partida calibra tu índice (0–1000) en Puntería, Ritmo, Lógica, Reflejos y Agilidad 3D, sincronizado con Atelier Diario, UNUmbral y el Directorio.</p>
+              </div>
+            </div>
+
+            <div class="oa-hub-tutorial-section">
+              <h3>Las 5 Dificultades de Entrenamiento</h3>
+              <ul class="oa-hub-tutorial-list">
+                <li><strong>Cadete (Chill · 0.78×):</strong> velocidad contenida y margen amplio para asimilar mecánicas y patrones.</li>
+                <li><strong>Estándar (1.00×):</strong> ritmo oficial equilibrado para todas las disciplinas del catálogo.</li>
+                <li><strong>Élite (Hiper · 1.34×):</strong> máxima velocidad y exigencia con +35% de multiplicador de puntuación.</li>
+                <li><strong>Dinámica IA (Adaptativa):</strong> se calibra con tu radar y sube o suaviza la intensidad en vivo según tu racha.</li>
+                <li><strong>Progresiva (↑ Escala):</strong> arranca en 0.85× y escala continuamente cada ronda o cada 12 s sin bajar al fallar.</li>
+              </ul>
+            </div>
+
+            <div class="oa-hub-tutorial-section">
+              <h3>Práctica Guiada vs Reto Oficial vs Modo Infinito</h3>
+              <ul class="oa-hub-tutorial-list">
+                <li><strong>Práctica Guiada:</strong> sin perder vidas, con pistas razonadas, deshacer y botón "Tutorial sección" dentro de cada pestaña.</li>
+                <li><strong>Modo Infinito (INF):</strong> actívalo en la Guía de cualquier disciplina compatible para jugar sin reloj global hasta agotar escudos o pulsar "Finalizar y puntuar", registrando tu récord INF propio.</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -784,6 +837,7 @@ export class HubView {
 
     const settingsModal = this.root.querySelector('#oa-settings-overlay')!;
     const cloudModal = this.root.querySelector('#oa-cloud-overlay')!;
+    const tutorialModal = this.root.querySelector('#oa-tutorial-overlay')!;
     this.root.querySelector('#oa-hub-settings')?.addEventListener('click', () => {
       synthAudio.uiClick();
       this.activeModal = 'settings';
@@ -794,20 +848,30 @@ export class HubView {
       this.activeModal = 'cloud';
       cloudModal.classList.remove('is-hidden');
     });
+    this.root.querySelector('#oa-hub-tutorial')?.addEventListener('click', () => {
+      synthAudio.uiClick();
+      this.activeModal = 'tutorial';
+      tutorialModal.classList.remove('is-hidden');
+    });
 
     const closeModals = () => {
       this.activeModal = 'none';
       settingsModal.classList.add('is-hidden');
       cloudModal.classList.add('is-hidden');
+      tutorialModal.classList.add('is-hidden');
       this.render();
     };
     this.root.querySelector('#oa-close-settings')?.addEventListener('click', closeModals);
     this.root.querySelector('#oa-close-cloud')?.addEventListener('click', closeModals);
+    this.root.querySelector('#oa-close-tutorial')?.addEventListener('click', closeModals);
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) closeModals();
     });
     cloudModal.addEventListener('click', (e) => {
       if (e.target === cloudModal) closeModals();
+    });
+    tutorialModal.addEventListener('click', (e) => {
+      if (e.target === tutorialModal) closeModals();
     });
 
     this.root.querySelector<HTMLInputElement>('#oa-set-vol')?.addEventListener('input', (e) => {

@@ -237,7 +237,7 @@ function generateSequenceQuestion(level: LogicLevel, seed: number): LogicQuestio
 
 // ==================== 2. ANALOGIAS ESTRUCTURALES ====================
 
-interface AnalogyTemplate {
+export interface AnalogyTemplate {
   level: LogicLevel;
   a: string;
   b: string;
@@ -248,7 +248,8 @@ interface AnalogyTemplate {
   explanation: string;
 }
 
-const ANALOGY_BANK: readonly AnalogyTemplate[] = [
+export const ANALOGY_BANK: readonly AnalogyTemplate[] = [
+  // ---- NIVEL 1 (19) ----
   {
     level: 1,
     a: 'Bisturí',
@@ -300,6 +301,148 @@ const ANALOGY_BANK: readonly AnalogyTemplate[] = [
     explanation: 'El alimento satisface el hambre en la misma relación directa que el agua satisface la sed.',
   },
   {
+    level: 1,
+    a: 'Martillo',
+    b: 'Carpintero',
+    c: 'Estetoscopio',
+    correct: 'Médico',
+    distractors: ['Hospital', 'Receta', 'Farmacia'],
+    relation: 'herramienta → profesional que la emplea',
+    explanation: 'El carpintero trabaja con el martillo y el médico diagnostica con el estetoscopio.',
+  },
+  {
+    level: 1,
+    a: 'Estrofa',
+    b: 'Poema',
+    c: 'Compás',
+    correct: 'Partitura',
+    distractors: ['Silencio', 'Batuta', 'Escenario'],
+    relation: 'unidad estructural → composición completa',
+    explanation: 'Un poema se organiza en estrofas y una partitura musical se organiza en compases.',
+  },
+  {
+    level: 1,
+    a: 'Llave',
+    b: 'Cerradura',
+    c: 'Contraseña',
+    correct: 'Cuenta digital',
+    distractors: ['Monitor', 'Teclado', 'Cable'],
+    relation: 'elemento de acceso → sistema protegido',
+    explanation: 'La llave abre una cerradura física del mismo modo que la contraseña da acceso a una cuenta digital.',
+  },
+  {
+    level: 1,
+    a: 'Aleta',
+    b: 'Pez',
+    c: 'Ala',
+    correct: 'Ave',
+    distractors: ['Nido', 'Pluma', 'Pico'],
+    relation: 'órgano de desplazamiento → animal',
+    explanation: 'El pez se desplaza en el agua con aletas y el ave se desplaza en el aire con alas.',
+  },
+  {
+    level: 1,
+    a: 'Balanza',
+    b: 'Masa',
+    c: 'Cronómetro',
+    correct: 'Tiempo',
+    distractors: ['Carrera', 'Aguja', 'Distancia'],
+    relation: 'instrumento de medición → magnitud física',
+    explanation: 'La balanza mide masa y el cronómetro mide intervalos de tiempo.',
+  },
+  {
+    level: 1,
+    a: 'Raíz',
+    b: 'Planta',
+    c: 'Base',
+    correct: 'Columna',
+    distractors: ['Techo', 'Ventana', 'Pared'],
+    relation: 'soporte inferior → estructura sostenida',
+    explanation: 'La raíz sostiene y fija la planta al suelo igual que la base sostiene la columna.',
+  },
+  {
+    level: 1,
+    a: 'Guante',
+    b: 'Mano',
+    c: 'Casco',
+    correct: 'Cabeza',
+    distractors: ['Moto', 'Espalda', 'Hombro'],
+    relation: 'prenda protectora → parte del cuerpo',
+    explanation: 'El guante protege la mano del mismo modo que el casco protege la cabeza.',
+  },
+  {
+    level: 1,
+    a: 'Nube',
+    b: 'Lluvia',
+    c: 'Volcán',
+    correct: 'Lava',
+    distractors: ['Cráter', 'Montaña', 'Ceniza fría'],
+    relation: 'fuente natural → emisión característica',
+    explanation: 'De la nube cae la lluvia y del volcán en erupción brota la lava.',
+  },
+  {
+    level: 1,
+    a: 'Telescopio',
+    b: 'Astrónomo',
+    c: 'Microscopio',
+    correct: 'Biólogo',
+    distractors: ['Bacteria', 'Vidrio', 'Muestra'],
+    relation: 'instrumento óptico → especialista',
+    explanation: 'El astrónomo observa astros con el telescopio y el biólogo observa células con el microscopio.',
+  },
+  {
+    level: 1,
+    a: 'Frío',
+    b: 'Abrigo',
+    c: 'Oscuridad',
+    correct: 'Linterna',
+    distractors: ['Noche', 'Sombra', 'Ventana'],
+    relation: 'condición adversa → objeto que la remedia',
+    explanation: 'El abrigo contrarresta el frío, igual que la linterna resuelve la oscuridad.',
+  },
+  {
+    level: 1,
+    a: 'Pétalo',
+    b: 'Flor',
+    c: 'Tecla',
+    correct: 'Piano',
+    distractors: ['Melodía', 'Pedal', 'Banqueta'],
+    relation: 'componente repetido → objeto completo',
+    explanation: 'Los pétalos componen la flor y las teclas componen el teclado del piano.',
+  },
+  {
+    level: 1,
+    a: 'Panadero',
+    b: 'Harina',
+    c: 'Alfarero',
+    correct: 'Arcilla',
+    distractors: ['Horno', 'Jarrón', 'Torno'],
+    relation: 'oficio → materia prima principal',
+    explanation: 'El panadero transforma la harina en pan; el alfarero moldea la arcilla en cerámica.',
+  },
+  {
+    level: 1,
+    a: 'Remo',
+    b: 'Bote',
+    c: 'Pedal',
+    correct: 'Bicicleta',
+    distractors: ['Casco', 'Asfalto', 'Timbre'],
+    relation: 'mecanismo de impulso manual → vehículo',
+    explanation: 'El remo impulsa el bote en el agua y el pedal impulsa la bicicleta en tierra.',
+  },
+  {
+    level: 1,
+    a: 'Índice',
+    b: 'Libro',
+    c: 'Menú',
+    correct: 'Restaurante',
+    distractors: ['Mesero', 'Plato', 'Mantel'],
+    relation: 'guía de contenidos → conjunto ofrecido',
+    explanation: 'El índice resume qué contiene un libro y el menú detalla qué ofrece un restaurante.',
+  },
+
+  // ---- NIVEL 2 (19) ----
+  {
     level: 2,
     a: 'Partitura',
     b: 'Músico',
@@ -350,6 +493,148 @@ const ANALOGY_BANK: readonly AnalogyTemplate[] = [
     explanation: 'El ancla detiene o fija al barco, igual que el freno detiene al vehículo.',
   },
   {
+    level: 2,
+    a: 'Timón',
+    b: 'Rumbo',
+    c: 'Volante',
+    correct: 'Dirección',
+    distractors: ['Motor', 'Velocímetro', 'Rueda'],
+    relation: 'control físico → parámetro dirigido',
+    explanation: 'El timón controla el rumbo de una nave igual que el volante controla la dirección de un automóvil.',
+  },
+  {
+    level: 2,
+    a: 'Receta',
+    b: 'Cocinero',
+    c: 'Algoritmo',
+    correct: 'Programador',
+    distractors: ['Servidor', 'Pantalla', 'Teclado'],
+    relation: 'secuencia de instrucciones → ejecutor/autor',
+    explanation: 'La receta guía paso a paso al cocinero, como el algoritmo guía la solución que implementa el programador.',
+  },
+  {
+    level: 2,
+    a: 'Faro',
+    b: 'Navegante',
+    c: 'Semáforo',
+    correct: 'Conductor',
+    distractors: ['Avenida', 'Peatón distraído', 'Motor'],
+    relation: 'señal luminosa de seguridad → usuario guiado',
+    explanation: 'El faro advierte y guía al navegante en el mar, igual que el semáforo ordena el paso del conductor.',
+  },
+  {
+    level: 2,
+    a: 'Erosión',
+    b: 'Roca',
+    c: 'Oxidación',
+    correct: 'Hierro',
+    distractors: ['Pintura', 'Imán', 'Mina'],
+    relation: 'proceso de desgaste → material afectado',
+    explanation: 'La erosión desgasta progresivamente la roca y la oxidación degrada el hierro.',
+  },
+  {
+    level: 2,
+    a: 'Sinónimo',
+    b: 'Equivalencia',
+    c: 'Antónimo',
+    correct: 'Oposición',
+    distractors: ['Pronunciación', 'Rima', 'Silaba'],
+    relation: 'categoría léxica → relación semántica',
+    explanation: 'Los sinónimos expresan equivalencia de significado y los antónimos expresan oposición.',
+  },
+  {
+    level: 2,
+    a: 'Vacuna',
+    b: 'Prevención',
+    c: 'Antibiótico',
+    correct: 'Tratamiento',
+    distractors: ['Contagio', 'Síntoma', 'Análisis'],
+    relation: 'intervención médica → propósito principal',
+    explanation: 'La vacuna busca prevenir una infección antes de que ocurra; el antibiótico trata una infección ya activa.',
+  },
+  {
+    level: 2,
+    a: 'Péndulo',
+    b: 'Oscilación',
+    c: 'Hélice',
+    correct: 'Rotación',
+    distractors: ['Gravedad', 'Viento', 'Fricción'],
+    relation: 'mecanismo → tipo de movimiento característico',
+    explanation: 'El péndulo realiza un movimiento de oscilación y la hélice realiza un movimiento de rotación.',
+  },
+  {
+    level: 2,
+    a: 'Borrador',
+    b: 'Manuscrito',
+    c: 'Prototipo',
+    correct: 'Producto final',
+    distractors: ['Fábrica', 'Cliente', 'Patente'],
+    relation: 'versión preliminar → versión definitiva',
+    explanation: 'El borrador precede y refina al manuscrito final, como el prototipo precede al producto final.',
+  },
+  {
+    level: 2,
+    a: 'Arteria',
+    b: 'Sangre',
+    c: 'Acueducto',
+    correct: 'Agua',
+    distractors: ['Puente', 'Piedra', 'Valle'],
+    relation: 'conducto de distribución → fluido transportado',
+    explanation: 'Las arterias conducen sangre por el cuerpo igual que un acueducto transporta agua hacia la ciudad.',
+  },
+  {
+    level: 2,
+    a: 'Célula',
+    b: 'Tejido',
+    c: 'Ladrillo',
+    correct: 'Muro',
+    distractors: ['Cemento', 'Plano', 'Martillo'],
+    relation: 'unidad repetida → estructura resultante',
+    explanation: 'Las células agrupadas forman tejidos, de la misma forma en que los ladrillos unidos forman un muro.',
+  },
+  {
+    level: 2,
+    a: 'Dique',
+    b: 'Inundación',
+    c: 'Pararrayos',
+    correct: 'Descarga eléctrica',
+    distractors: ['Trueno', 'Nube', 'Llovizna'],
+    relation: 'defensa de ingeniería → peligro mitigado',
+    explanation: 'El dique protege frente a inundaciones y el pararrayos desvía de forma segura las descargas eléctricas.',
+  },
+  {
+    level: 2,
+    a: 'Diccionario',
+    b: 'Definición',
+    c: 'Atlas',
+    correct: 'Mapa',
+    distractors: ['Brújula', 'Frontera', 'Relieve'],
+    relation: 'obra de consulta → unidad de información',
+    explanation: 'Un diccionario compila definiciones y un atlas compila mapas.',
+  },
+  {
+    level: 2,
+    a: 'Sismógrafo',
+    b: 'Terremoto',
+    c: 'Barómetro',
+    correct: 'Presión atmosférica',
+    distractors: ['Relámpago', 'Altitud fija', 'Nube'],
+    relation: 'sensor científico → fenómeno registrado',
+    explanation: 'El sismógrafo registra terremotos y el barómetro registra cambios de presión atmosférica.',
+  },
+  {
+    level: 2,
+    a: 'Embudo',
+    b: 'Filtrar y concentrar',
+    c: 'Prisma',
+    correct: 'Descomponer luz',
+    distractors: ['Reflejar eco', 'Aumentar peso', 'Bloquear aire'],
+    relation: 'dispositivo geométrico → transformación que produce',
+    explanation: 'El embudo concentra un flujo hacia una salida estrecha; el prisma descompone un haz de luz en su espectro.',
+  },
+
+  // ---- NIVEL 3 (19) ----
+  {
     level: 3,
     a: 'Hipótesis',
     b: 'Experimento',
@@ -390,6 +675,158 @@ const ANALOGY_BANK: readonly AnalogyTemplate[] = [
     explanation: 'Un edificio se sostiene sobre sus cimientos; una teoría formal se sostiene sobre sus axiomas.',
   },
   {
+    level: 3,
+    a: 'Síntoma',
+    b: 'Enfermedad',
+    c: 'Humo',
+    correct: 'Combustión',
+    distractors: ['Oxígeno', 'Ceniza húmeda', 'Viento'],
+    relation: 'indicio observable → proceso subyacente',
+    explanation: 'El síntoma manifiesta una enfermedad subyacente, como el humo delata una combustión activa.',
+  },
+  {
+    level: 3,
+    a: 'Compilador',
+    b: 'Código fuente',
+    c: 'Traductor',
+    correct: 'Texto original',
+    distractors: ['Diccionario', 'Imprenta', 'Autor'],
+    relation: 'agente transformador de lenguaje → entrada',
+    explanation: 'El compilador traduce código fuente a lenguaje máquina, análogo a como el traductor vierte un texto original a otro idioma.',
+  },
+  {
+    level: 3,
+    a: 'Amortiguador',
+    b: 'Impacto',
+    c: 'Reserva financiera',
+    correct: 'Crisis de liquidez',
+    distractors: ['Impuesto', 'Factura', 'Ganancia'],
+    relation: 'colchón de absorción → choque imprevisto',
+    explanation: 'El amortiguador absorbe golpes mecánicos y una reserva financiera absorbe caídas bruscas de ingresos.',
+  },
+  {
+    level: 3,
+    a: 'Veto',
+    b: 'Aprobación',
+    c: 'Embargo',
+    correct: 'Comercio',
+    distractors: ['Aduana', 'Contrato', 'Precio'],
+    relation: 'acción bloqueadora → proceso detenido',
+    explanation: 'El veto detiene la aprobación de una norma, de modo análogo a como un embargo bloquea el comercio.',
+  },
+  {
+    level: 3,
+    a: 'Calibración',
+    b: 'Precisión',
+    c: 'Ensayo',
+    correct: 'Fluidez escénica',
+    distractors: ['Escenografía', 'Taquilla', 'Público'],
+    relation: 'ajuste previo → cualidad optimizada',
+    explanation: 'Calibrar un instrumento eleva su precisión y ensayar una obra eleva la fluidez de su ejecución.',
+  },
+  {
+    level: 3,
+    a: 'Cuarentena',
+    b: 'Contagio',
+    c: 'Cortafuegos',
+    correct: 'Intrusión en red',
+    distractors: ['Velocidad Wi-Fi', 'Pantalla', 'Memoria RAM'],
+    relation: 'barrera de contención → propagación no deseada',
+    explanation: 'La cuarentena aísla para frenar contagios y el cortafuegos filtra tráfico para frenar intrusiones.',
+  },
+  {
+    level: 3,
+    a: 'Muestra',
+    b: 'Población',
+    c: 'Biopsia',
+    correct: 'Órgano',
+    distractors: ['Quirófano', 'Diagnóstico', 'Cicatriz'],
+    relation: 'porción extraída para análisis → totalidad estudiada',
+    explanation: 'En estadística se analiza una muestra para inferir propiedades de la población, como la biopsia analiza un fragmento del órgano.',
+  },
+  {
+    level: 3,
+    a: 'Jurisprudencia',
+    b: 'Juez',
+    c: 'Protocolo clínico',
+    correct: 'Médico',
+    distractors: ['Paciente', 'Quirófano', 'Ambulancia'],
+    relation: 'marco de referencia acumulado → decisor profesional',
+    explanation: 'El juez consulta la jurisprudencia para decidir casos y el médico consulta protocolos clínicos para actuar.',
+  },
+  {
+    level: 3,
+    a: 'Cuello de botella',
+    b: 'Flujo',
+    c: 'Sesgo cognitivo',
+    correct: 'Juicio racional',
+    distractors: ['Memoria rápida', 'Vocabulario', 'Lectura'],
+    relation: 'restricción o distorsión → capacidad limitada',
+    explanation: 'Un cuello de botella limita el caudal de un flujo; un sesgo cognitivo distorsiona el juicio racional.',
+  },
+  {
+    level: 3,
+    a: 'Censura',
+    b: 'Información',
+    c: 'Arancel',
+    correct: 'Importación',
+    distractors: ['Moneda', 'Puerto', 'Barco'],
+    relation: 'barrera restrictiva → flujo restringido',
+    explanation: 'La censura restringe la circulación de información y el arancel restringe o encarece la importación de bienes.',
+  },
+  {
+    level: 3,
+    a: 'Metrónomo',
+    b: 'Pulso musical',
+    c: 'Reloj de CPU',
+    correct: 'Ciclo de instrucciones',
+    distractors: ['Teclado', 'Disco duro', 'Monitor'],
+    relation: 'marcapasos temporal → eventos sincronizados',
+    explanation: 'El metrónomo sincroniza el pulso musical y el reloj de la CPU sincroniza los ciclos de procesamiento.',
+  },
+  {
+    level: 3,
+    a: 'Sinopsis',
+    b: 'Película',
+    c: 'Resumen ejecutivo',
+    correct: 'Informe técnico',
+    distractors: ['Gráfico', 'Portada', 'Bibliografía'],
+    relation: 'síntesis breve → obra extensa',
+    explanation: 'La sinopsis condensa la trama de una película y el resumen ejecutivo condensa las conclusiones de un informe.',
+  },
+  {
+    level: 3,
+    a: 'Cifrado',
+    b: 'Confidencialidad',
+    c: 'Firma digital',
+    correct: 'Autenticidad',
+    distractors: ['Compresión', 'Velocidad', 'Almacenamiento'],
+    relation: 'técnica criptográfica → propiedad garantizada',
+    explanation: 'El cifrado protege la confidencialidad del mensaje; la firma digital certifica la autenticidad e integridad del emisor.',
+  },
+  {
+    level: 3,
+    a: 'Contrapeso',
+    b: 'Equilibrio',
+    c: 'Auditoría',
+    correct: 'Transparencia',
+    distractors: ['Publicidad', 'Monopolio', 'Factura'],
+    relation: 'mecanismo corrector → estado preservado',
+    explanation: 'El contrapeso mantiene el equilibrio mecánico y la auditoría sostiene la transparencia de una organización.',
+  },
+  {
+    level: 3,
+    a: 'Fósil',
+    b: 'Paleontólogo',
+    c: 'Papiro',
+    correct: 'Historiador',
+    distractors: ['Imprenta', 'Físico', 'Astrónomo'],
+    relation: 'vestigio material → investigador que lo interpreta',
+    explanation: 'El paleontólogo reconstruye el pasado biológico mediante fósiles y el historiador reconstruye el pasado humano mediante documentos antiguos.',
+  },
+
+  // ---- NIVEL 4 (19) ----
+  {
     level: 4,
     a: 'Catalizador',
     b: 'Reacción',
@@ -429,6 +866,156 @@ const ANALOGY_BANK: readonly AnalogyTemplate[] = [
     relation: 'antecedente lógico → consecuente necesario',
     explanation: 'De las premisas se sigue la conclusión en lógica, análogo a como de la causa se sigue el efecto en física.',
   },
+  {
+    level: 4,
+    a: 'Homeostasis',
+    b: 'Organismo',
+    c: 'Termostato',
+    correct: 'Sistema térmico',
+    distractors: ['Combustible', 'Aislante pasivo', 'Ventilación abierta'],
+    relation: 'autorregulación por retroalimentación → sistema regulado',
+    explanation: 'La homeostasis estabiliza variables internas del organismo igual que un termostato estabiliza la temperatura de un sistema.',
+  },
+  {
+    level: 4,
+    a: 'Teorema',
+    b: 'Demostración',
+    c: 'Ley empírica',
+    correct: 'Replicación experimental',
+    distractors: ['Opinión consensuada', 'Analogía poética', 'Adivinanza'],
+    relation: 'enunciado válido → criterio de validación en su disciplina',
+    explanation: 'Un teorema matemático se valida por demostración deductiva; una ley empírica se consolida por replicación experimental.',
+  },
+  {
+    level: 4,
+    a: 'Redundancia',
+    b: 'Tolerancia a fallos',
+    c: 'Diversificación',
+    correct: 'Reducción de riesgo',
+    distractors: ['Aumento de deuda', 'Concentración', 'Especulación'],
+    relation: 'principio de diseño → resiliencia obtenida',
+    explanation: 'Duplicar componentes críticos otorga tolerancia a fallos en ingeniería; diversificar activos reduce el riesgo en finanzas.',
+  },
+  {
+    level: 4,
+    a: 'Falsabilidad',
+    b: 'Ciencia empírica',
+    c: 'Consistencia interna',
+    correct: 'Sistema axiomático',
+    distractors: ['Retórica', 'Encuesta', 'Tradición'],
+    relation: 'criterio fundamental de rigor → dominio del conocimiento',
+    explanation: 'Popper señaló la falsabilidad como criterio de la ciencia empírica; la consistencia interna es el requisito esencial de un sistema axiomático.',
+  },
+  {
+    level: 4,
+    a: 'Ruido',
+    b: 'Señal',
+    c: 'Variable confusora',
+    correct: 'Relación causal',
+    distractors: ['Promedio', 'Gráfico', 'Cuestionario'],
+    relation: 'interferencia → información genuina ocultada',
+    explanation: 'El ruido enmascara la señal en comunicaciones, igual que una variable confusora enmascara la verdadera relación causal.',
+  },
+  {
+    level: 4,
+    a: 'Contraejemplo',
+    b: 'Conjetura universal',
+    c: 'Anomalía reproducible',
+    correct: 'Paradigma vigente',
+    distractors: ['Laboratorio', 'Manual escolar', 'Instrumento'],
+    relation: 'evidencia mínima refutadora → afirmación o marco cuestionado',
+    explanation: 'Un solo contraejemplo refuta una afirmación universal en matemáticas; una anomalía reproducible pone en crisis un paradigma científico.',
+  },
+  {
+    level: 4,
+    a: 'Isomorfismo',
+    b: 'Estructura equivalente',
+    c: 'Sinergia',
+    correct: 'Efecto superior a las partes',
+    distractors: ['Suma lineal', 'Aislamiento', 'Duplicado exacto'],
+    relation: 'concepto sistémico → propiedad definitoria',
+    explanation: 'Un isomorfismo establece equivalencia estructural entre dos sistemas; la sinergia produce un efecto conjunto mayor que la suma aislada.',
+  },
+  {
+    level: 4,
+    a: 'Heurística',
+    b: 'Atajo cognitivo',
+    c: 'Algoritmo exacto',
+    correct: 'Solución garantizada',
+    distractors: ['Intuición rápida', 'Azar puro', 'Aproximación vaga'],
+    relation: 'estrategia de resolución → naturaleza de su resultado',
+    explanation: 'Una heurística prioriza rapidez mediante un atajo aproximado; un algoritmo exacto garantiza encontrar la solución correcta.',
+  },
+  {
+    level: 4,
+    a: 'Histéresis',
+    b: 'Dependencia del historial',
+    c: 'Markovianidad',
+    correct: 'Dependencia solo del estado actual',
+    distractors: ['Memoria infinita', 'Oscilación periódica', 'Caos total'],
+    relation: 'propiedad dinámica → relación con el pasado',
+    explanation: 'La histéresis implica que el sistema depende de su trayectoria previa; un proceso de Markov solo depende de su estado presente.',
+  },
+  {
+    level: 4,
+    a: 'Latencia',
+    b: 'Tiempo de respuesta',
+    c: 'Ancho de banda',
+    correct: 'Capacidad de caudal',
+    distractors: ['Distancia fija', 'Voltaje', 'Temperatura'],
+    relation: 'métrica de red → dimensión física medida',
+    explanation: 'La latencia mide cuánto tarda en llegar el primer dato y el ancho de banda mide cuántos datos fluyen por segundo.',
+  },
+  {
+    level: 4,
+    a: 'Sobreajuste',
+    b: 'Memorizar ruido de entrenamiento',
+    c: 'Subajuste',
+    correct: 'Ignorar el patrón real',
+    distractors: ['Duplicar datos', 'Acelerar cómputo', 'Validar en prueba'],
+    relation: 'fallo de modelado → error estructural cometido',
+    explanation: 'El sobreajuste aprende el ruido particular de la muestra; el subajuste es demasiado rígido y ni siquiera captura la tendencia real.',
+  },
+  {
+    level: 4,
+    a: 'Condición necesaria',
+    b: 'Sin ella no ocurre',
+    c: 'Condición suficiente',
+    correct: 'Con ella basta para ocurrir',
+    distractors: ['Impide el evento', 'Es puramente aleatoria', 'Solo ocurre al final'],
+    relation: 'categoría lógica → regla de implicación',
+    explanation: 'Una condición necesaria debe cumplirse siempre para el resultado; una suficiente garantiza el resultado por sí sola.',
+  },
+  {
+    level: 4,
+    a: 'Externalidad',
+    b: 'Impacto sobre terceros',
+    c: 'Incentivo perverso',
+    correct: 'Efecto opuesto al buscado',
+    distractors: ['Ganancia esperada', 'Regulación neutra', 'Ahorro directo'],
+    relation: 'concepto económico → consecuencia no prevista',
+    explanation: 'Una externalidad traslada costos o beneficios a terceros; un incentivo perverso provoca justamente la conducta contraria a la deseada.',
+  },
+  {
+    level: 4,
+    a: 'Axioma de parsimonia',
+    b: 'Preferir la explicación más simple',
+    c: 'Principio de precaución',
+    correct: 'Actuar ante riesgo grave incierto',
+    distractors: ['Ignorar evidencias', 'Multiplicar supuestos', 'Postergar toda medida'],
+    relation: 'principio metodológico → regla de decisión',
+    explanation: 'La navaja de Ockham favorece la hipótesis más simple compatible con los datos; el principio de precaución previene daños graves ante incertidumbre.',
+  },
+  {
+    level: 4,
+    a: 'Corolario',
+    b: 'Consecuencia inmediata de un teorema',
+    c: 'Lema',
+    correct: 'Resultado auxiliar previo',
+    distractors: ['Hipótesis refutada', 'Definición ambigua', 'Error de cálculo'],
+    relation: 'elemento deductivo → función en la prueba',
+    explanation: 'Un corolario se deduce directamente tras probar un teorema; un lema se demuestra antes como peldaño auxiliar.',
+  },
 ];
 
 function generateAnalogyQuestion(level: LogicLevel, seed: number): LogicQuestion {
@@ -453,21 +1040,34 @@ function generateAnalogyQuestion(level: LogicLevel, seed: number): LogicQuestion
 
 // ==================== 3. SILOGISMOS Y VENN SVG ====================
 
-type SyllogismForm =
+export type SyllogismForm =
   | 'barbara'
   | 'celarent'
   | 'undistributed_middle'
   | 'darii'
   | 'ferio'
-  | 'modus_tollens_set';
+  | 'modus_tollens_set'
+  | 'camestres'
+  | 'disamis';
 
-interface DomainTriple {
+export const SYLLOGISM_FORMS: readonly SyllogismForm[] = [
+  'barbara',
+  'celarent',
+  'undistributed_middle',
+  'darii',
+  'ferio',
+  'modus_tollens_set',
+  'camestres',
+  'disamis',
+];
+
+export interface DomainTriple {
   x: string;
   y: string;
   z: string;
 }
 
-const DOMAIN_TRIPLES: readonly DomainTriple[] = [
+export const DOMAIN_TRIPLES: readonly DomainTriple[] = [
   { x: 'Alfas', y: 'Betas', z: 'Gammas' },
   { x: 'Sensores', y: 'Módulos', z: 'Circuitos' },
   { x: 'Rombos', y: 'Polígonos', z: 'Figuras' },
@@ -476,6 +1076,22 @@ const DOMAIN_TRIPLES: readonly DomainTriple[] = [
   { x: 'Cometas', y: 'Astros', z: 'Cuerpos' },
   { x: 'Cronómetros', y: 'Relojes', z: 'Instrumentos' },
   { x: 'Átomos', y: 'Partículas', z: 'Sistemas' },
+  { x: 'Delfines', y: 'Cetáceos', z: 'Mamíferos' },
+  { x: 'Sonetos', y: 'Poemas', z: 'Textos' },
+  { x: 'Triángulos', y: 'Formas', z: 'Objetos' },
+  { x: 'Satélites', y: 'Sondas', z: 'Vehículos' },
+  { x: 'Cipreses', y: 'Coníferas', z: 'Árboles' },
+  { x: 'Violinistas', y: 'Intérpretes', z: 'Creadores' },
+  { x: 'Servidores', y: 'Nodos', z: 'Equipos' },
+  { x: 'Glaciares', y: 'Reservas', z: 'Masas' },
+  { x: 'Pinceles', y: 'Útiles', z: 'Herramientas' },
+  { x: 'Enzimas', y: 'Proteínas', z: 'Moléculas' },
+  { x: 'Cuarzos', y: 'Cristales', z: 'Minerales' },
+  { x: 'Ajedrecistas', y: 'Estrategas', z: 'Jugadores' },
+  { x: 'Puentes', y: 'Estructuras', z: 'Obras' },
+  { x: 'Volcanes', y: 'Relieves', z: 'Formaciones' },
+  { x: 'Baterías', y: 'Celdas', z: 'Componentes' },
+  { x: 'Algoritmos', y: 'Métodos', z: 'Procesos' },
 ];
 
 export function renderSyllogismVennSvg(
@@ -499,11 +1115,11 @@ export function renderSyllogismVennSvg(
       <ellipse cx="112" cy="75" rx="38" ry="22" stroke="currentColor" stroke-width="2.2" fill="currentColor" fill-opacity="0.14"/>
       <text x="112" y="79" text-anchor="middle" fill="currentColor" font-size="11" font-weight="bold" font-family="monospace">${xShort}</text>
     `;
-  } else if (form === 'celarent' || form === 'modus_tollens_set') {
-    // X dentro de Y, Z completamente separado de Y (o Z dentro de X y X separado de Y)
-    const inner = form === 'celarent' ? xShort : zShort;
-    const mid = form === 'celarent' ? yShort : xShort;
-    const outer = form === 'celarent' ? zShort : yShort;
+  } else if (form === 'celarent' || form === 'modus_tollens_set' || form === 'camestres') {
+    // Dos conjuntos anidados y un tercero disjunto
+    const inner = form === 'modus_tollens_set' ? zShort : xShort;
+    const mid = form === 'modus_tollens_set' ? xShort : yShort;
+    const outer = form === 'modus_tollens_set' ? yShort : zShort;
     shapes = `
       <circle cx="84" cy="72" r="52" stroke="currentColor" stroke-width="2" fill="none"/>
       <text x="84" y="32" text-anchor="middle" fill="currentColor" font-size="11" font-family="monospace">${mid}</text>
@@ -523,15 +1139,18 @@ export function renderSyllogismVennSvg(
       <text x="174" y="82" text-anchor="middle" fill="currentColor" font-size="11" font-weight="bold" font-family="monospace">${zShort}</text>
       <text x="130" y="82" text-anchor="middle" fill="currentColor" font-size="12" font-weight="bold">?</text>
     `;
-  } else if (form === 'darii') {
-    // Y dentro de Z, X solapa a Y (punto en interseccion X∩Y dentro de Z)
+  } else if (form === 'darii' || form === 'disamis') {
+    // Un conjunto dentro del grande, y el tercero solapa al interior (punto en la interseccion)
+    const outerLbl = form === 'darii' ? zShort : xShort;
+    const innerLbl = yShort;
+    const crossLbl = form === 'darii' ? xShort : zShort;
     shapes = `
       <ellipse cx="164" cy="70" rx="82" ry="52" stroke="currentColor" stroke-width="2" fill="none"/>
-      <text x="218" y="36" fill="currentColor" font-size="11" font-family="monospace">${zShort}</text>
+      <text x="218" y="36" fill="currentColor" font-size="11" font-family="monospace">${outerLbl}</text>
       <circle cx="152" cy="74" r="34" stroke="currentColor" stroke-width="2" fill="none"/>
-      <text x="166" y="54" fill="currentColor" font-size="11" font-family="monospace">${yShort}</text>
+      <text x="166" y="54" fill="currentColor" font-size="11" font-family="monospace">${innerLbl}</text>
       <circle cx="88" cy="74" r="44" stroke="currentColor" stroke-width="2" fill="none"/>
-      <text x="64" y="78" text-anchor="middle" fill="currentColor" font-size="11" font-weight="bold" font-family="monospace">${xShort}</text>
+      <text x="64" y="78" text-anchor="middle" fill="currentColor" font-size="11" font-weight="bold" font-family="monospace">${crossLbl}</text>
       <circle cx="124" cy="74" r="4.5" fill="currentColor"/>
     `;
   } else {
@@ -554,9 +1173,9 @@ function generateSyllogismQuestion(level: LogicLevel, seed: number): LogicQuesti
   const rng = mulberry32(seed);
   const formsByLevel: Record<LogicLevel, SyllogismForm[]> = {
     1: ['barbara', 'celarent'],
-    2: ['barbara', 'celarent', 'darii'],
-    3: ['darii', 'ferio', 'undistributed_middle'],
-    4: ['undistributed_middle', 'ferio', 'modus_tollens_set'],
+    2: ['barbara', 'celarent', 'darii', 'camestres'],
+    3: ['darii', 'ferio', 'disamis', 'undistributed_middle'],
+    4: ['undistributed_middle', 'ferio', 'modus_tollens_set', 'camestres', 'disamis'],
   };
   const available = formsByLevel[level];
   const form = available[Math.floor(rng() * available.length)];
@@ -589,6 +1208,26 @@ function generateSyllogismQuestion(level: LogicLevel, seed: number): LogicQuesti
     ];
     hint = `Si ${x} está totalmente contenido dentro de ${y}, y ${y} no toca a ${z}, ¿pueden tocarse ${x} y ${z}?`;
     explanation = `Como todo ${x} está dentro de ${y} y ${y} es completamente disjunto de ${z}, ningún ${x} puede ser ${z}.`;
+  } else if (form === 'camestres') {
+    prompt = `Asume las premisas:\n1) Todos los ${x} son ${y}.\n2) Ningún ${z} es ${y}.\n¿Qué conclusión se deduce necesariamente?`;
+    correct = `Ningún ${z} es ${x}.`;
+    distractors = [
+      `Todos los ${z} son ${x}.`,
+      `Algunos ${z} son ${x}.`,
+      `Todos los ${y} son ${x}.`,
+    ];
+    hint = `Si ningún ${z} entra en ${y}, y todo ${x} vive dentro de ${y}, ¿puede algún ${z} ser ${x}?`;
+    explanation = `Es un silogismo Camestres: ${x} está contenido en ${y}, pero ${z} está completamente fuera de ${y}. Por tanto, ningún ${z} puede pertenecer a ${x}.`;
+  } else if (form === 'disamis') {
+    prompt = `Asume las premisas:\n1) Algunos ${y} son ${z}.\n2) Todos los ${y} son ${x}.\n¿Qué conclusión es necesariamente verdadera?`;
+    correct = `Algunos ${x} son ${z}.`;
+    distractors = [
+      `Todos los ${x} son ${z}.`,
+      `Ningún ${x} es ${z}.`,
+      `Todos los ${z} son ${y}.`,
+    ];
+    hint = `Toma el elemento de ${y} que sí pertenece a ${z}; como todo ${y} está en ${x}, ¿a qué dos grupos pertenece?`;
+    explanation = `Es un silogismo Disamis: existe al menos un miembro en ${y} ∩ ${z}. Como todo ${y} está dentro de ${x}, ese mismo miembro pertenece a ${x} y a ${z}.`;
   } else if (form === 'undistributed_middle') {
     prompt = `Asume únicamente las premisas:\n1) Todos los ${x} son ${y}.\n2) Todos los ${z} son ${y}.\n¿Qué se deduce necesariamente?`;
     correct = `La relación entre ${x} y ${z} es indeterminada.`;
@@ -648,7 +1287,7 @@ function generateSyllogismQuestion(level: LogicLevel, seed: number): LogicQuesti
 
 // ==================== 4. SESGOS COGNITIVOS Y PENSAMIENTO CRITICO ====================
 
-interface BiasTemplate {
+export interface BiasTemplate {
   level: LogicLevel;
   prompt: string;
   correct: string;
@@ -657,7 +1296,8 @@ interface BiasTemplate {
   explanation: string;
 }
 
-const BIAS_BANK: readonly BiasTemplate[] = [
+export const BIAS_BANK: readonly BiasTemplate[] = [
+  // ---- NIVEL 1 (13) ----
   {
     level: 1,
     prompt: 'Una moneda justa salió cara 6 veces seguidas. Al lanzarla por 7ª vez, alguien afirma: "Seguro sale cruz porque toca compensar". ¿Qué error comete?',
@@ -707,6 +1347,116 @@ const BIAS_BANK: readonly BiasTemplate[] = [
     explanation: 'El sesgo de confirmación consiste en buscar, interpretar y recordar únicamente la información que respalda una creencia previa.',
   },
   {
+    level: 1,
+    prompt: 'Un candidato viste elegante y habla con seguridad, por lo que el jurado asume sin revisar su historial que también es excelente en análisis financiero. ¿Qué sesgo actúa?',
+    correct: 'Efecto halo: generalizar una cualidad positiva a áreas no evaluadas.',
+    distractors: [
+      'Falacia del costo hundido por la entrevista.',
+      'Sesgo de muestreo por elegir solo a un candidato.',
+      'Paradoja de Simpson en la puntuación.',
+    ],
+    hint: 'Un rasgo llamativo está iluminando toda la evaluación restante.',
+    explanation: 'El efecto halo ocurre cuando una impresión favorable en un rasgo (presencia, carisma) sesga el juicio sobre competencias independientes.',
+  },
+  {
+    level: 1,
+    prompt: '"Millones de personas compran este amuleto cada año, así que definitivamente da buena suerte." ¿Qué falacia aparece en el argumento?',
+    correct: 'Apelación a la popularidad (ad populum): que muchos crean algo no lo vuelve verdadero.',
+    distractors: [
+      'Falsa dicotomía sobre amuletos.',
+      'Regresión a la media estadística.',
+      'Sesgo de supervivencia del comprador.',
+    ],
+    hint: 'El argumento sustituye pruebas reales por cantidad de seguidores.',
+    explanation: 'La falacia ad populum asume que una idea es cierta o eficaz únicamente porque muchas personas la aceptan o la compran.',
+  },
+  {
+    level: 1,
+    prompt: 'Un anuncio dice: "Este remedio se usa desde hace 400 años, por lo tanto es mejor que cualquier medicina moderna". ¿Qué falacia comete?',
+    correct: 'Apelación a la tradición (ad antiquitatem): la antigüedad no prueba eficacia.',
+    distractors: [
+      'Falacia del jugador por contar siglos.',
+      'Efecto anclaje en el número 400.',
+      'Sesgo de disponibilidad médica.',
+    ],
+    hint: 'Que algo sea antiguo garantiza historia, no eficacia comprobada.',
+    explanation: 'La apelación a la tradición concluye que una práctica es superior solo por llevar mucho tiempo existiendo, sin compararla con evidencia actual.',
+  },
+  {
+    level: 1,
+    prompt: 'Al comprar un celular, el vendedor pregunta primero: "¿Lo prefieres con seguro de $120 o el seguro básico de $40?" para que olvides la opción de no contratar ninguno. ¿Qué sesgo usa?',
+    correct: 'Efecto encuadre (framing) y falsa limitación de opciones.',
+    distractors: [
+      'Regresión a la media comercial.',
+      'Sesgo de supervivencia de clientes.',
+      'Falacia de composición tecnológica.',
+    ],
+    hint: 'Observa cómo formula la pregunta dando por hecho que comprarás un seguro.',
+    explanation: 'El encuadre condiciona la decisión al presentar solo un subconjunto de alternativas que benefician al emisor.',
+  },
+  {
+    level: 1,
+    prompt: 'Cada vez que llevas tu camiseta azul tu equipo gana tres partidos, así que concluyes que la camiseta causa las victorias. ¿Qué falacia es?',
+    correct: 'Post hoc ergo propter hoc: confundir coincidencia previa con causa.',
+    distractors: [
+      'Falacia ad hominem contra el equipo rival.',
+      'Sesgo de tasa base deportiva.',
+      'Efecto halo sobre el color azul.',
+    ],
+    hint: 'Que A ocurra antes que B no significa que A provoque B.',
+    explanation: 'La falacia post hoc asume causalidad únicamente porque un suceso precedió a otro en el tiempo.',
+  },
+  {
+    level: 1,
+    prompt: 'Una tienda vende el mismo yogur con la etiqueta "90% libre de grasa" en lugar de "Contiene 10% de grasa" y vende el doble. ¿Qué efecto psicológico actúa?',
+    correct: 'Efecto encuadre: dos datos equivalentes generan reacciones distintas según cómo se presenten.',
+    distractors: [
+      'Sesgo de confirmación nutricional.',
+      'Falacia del apostador en compras.',
+      'Error de muestreo del supermercado.',
+    ],
+    hint: 'Compara el contenido real de grasa en ambas etiquetas: es idéntico.',
+    explanation: 'Aunque "90% libre de grasa" y "10% de grasa" expresan el mismo hecho, el encuadre positivo resulta mucho más atractivo.',
+  },
+  {
+    level: 1,
+    prompt: 'Tras un choque en una esquina, alguien que no vio el accidente comenta: "Yo ya sabía que hoy iba a pasar algo ahí, era obvio". ¿Qué sesgo muestra?',
+    correct: 'Sesgo retrospectivo: creer tras conocer el resultado que siempre fue predecible.',
+    distractors: [
+      'Efecto anclaje temporal.',
+      'Falacia de apelación a la autoridad.',
+      'Ley de los números pequeños.',
+    ],
+    hint: 'Piensa si esa persona había advertido el accidente antes de que ocurriera.',
+    explanation: 'El sesgo retrospectivo ("ya lo sabía") hace que, una vez conocido un evento, sobrestimemos lo predecible que era antes de suceder.',
+  },
+  {
+    level: 1,
+    prompt: '"Si un actor famoso recomienda este banco en televisión, debe ser la opción más segura para mis ahorros." ¿Qué error de razonamiento ocurre?',
+    correct: 'Apelación a una autoridad irrelevante: fama artística no implica pericia financiera.',
+    distractors: [
+      'Paradoja de Simpson bancaria.',
+      'Regresión a la media publicitaria.',
+      'Costo hundido televisivo.',
+    ],
+    hint: 'Evalúa si la especialidad del portavoz coincide con el tema del consejo.',
+    explanation: 'Citar a una celebridad fuera de su campo de competencia es una apelación a falsa autoridad.',
+  },
+  {
+    level: 1,
+    prompt: 'Una persona conserva una suscripción que ya no utiliza durante meses simplemente porque cancelar implica llenar un formulario de dos minutos. ¿Qué sesgo predomina?',
+    correct: 'Sesgo de statu quo: preferencia pasiva por mantener la situación actual aunque perjudique.',
+    distractors: [
+      'Sesgo de disponibilidad contractual.',
+      'Falacia del hombre de paja.',
+      'Negligencia de la tasa base.',
+    ],
+    hint: 'La inercia de no cambiar supera a una acción pequeña pero beneficiosa.',
+    explanation: 'El sesgo de statu quo lleva a mantener la opción por defecto incluso cuando cambiar aporta un beneficio claro.',
+  },
+
+  // ---- NIVEL 2 (13) ----
+  {
     level: 2,
     prompt: 'Un examen analiza los aviones que regresaron de combate y ve más agujeros en las alas que en el motor. Alguien propone blindar solo las alas. ¿Por qué es erróneo?',
     correct: 'Sesgo de supervivencia: los aviones con impactos en el motor no volvieron.',
@@ -754,6 +1504,116 @@ const BIAS_BANK: readonly BiasTemplate[] = [
     hint: 'Observa dónde y cómo se recogió la muestra frente a la población total.',
     explanation: 'Una encuesta web excluye automáticamente a quien no tiene conexión, produciendo una muestra no representativa del país.',
   },
+  {
+    level: 2,
+    prompt: 'Te regalan una taza de $10 y de inmediato te niegas a venderla por menos de $20, aunque jamás habrías pagado $20 por comprarla tú mismo. ¿Qué sesgo aparece?',
+    correct: 'Efecto dotación: sobrevalorar un objeto simplemente por ser de nuestra propiedad.',
+    distractors: [
+      'Sesgo de disponibilidad comercial.',
+      'Falacia de composición de precios.',
+      'Negligencia de tasa base.',
+    ],
+    hint: 'Tu valoración saltó en el instante en que la taza pasó a ser tuya.',
+    explanation: 'El efecto dotación describe la tendencia a pedir mucho más por renunciar a algo que ya poseemos de lo que pagaríamos por adquirirlo.',
+  },
+  {
+    level: 2,
+    prompt: 'Alguien dice: "Quiero reducir el tráfico mejorando el transporte público" y otro responde: "O sea que quieres prohibir todos los autos privados y dejarnos incomunicados". ¿Qué falacia usa?',
+    correct: 'Falacia del hombre de paja: distorsiona la postura rival para atacarla con facilidad.',
+    distractors: [
+      'Falacia del costo hundido urbano.',
+      'Sesgo de supervivencia vehicular.',
+      'Regresión a la media vial.',
+    ],
+    hint: 'Compara lo que realmente dijo la primera persona con la caricatura que ataca la segunda.',
+    explanation: 'El hombre de paja sustituye el argumento original por una versión exagerada o falsa que nadie defendió.',
+  },
+  {
+    level: 2,
+    prompt: 'Una cafetería ofrece tamaño Pequeño a $3, Mediano a $5.80 y Grande a $6. Casi nadie compra el Mediano, pero su presencia dispara las ventas del Grande. ¿Qué efecto actúa?',
+    correct: 'Efecto señuelo (dominancia asimétrica): una opción intermedia poco atractiva empuja hacia la cara.',
+    distractors: [
+      'Falacia del jugador en consumo.',
+      'Sesgo retrospectivo del cliente.',
+      'Error fundamental de atribución.',
+    ],
+    hint: 'Fíjate en la diferencia mínima entre Mediano ($5.80) y Grande ($6).',
+    explanation: 'El efecto señuelo introduce una alternativa deliberadamente inferior para hacer que la opción objetivo parezca una oportunidad irresistible.',
+  },
+  {
+    level: 2,
+    prompt: 'Un equipo estima que entregará una app en 2 semanas, ignorando que sus últimos cinco proyectos similares tardaron entre 6 y 8 semanas. ¿Qué sesgo domina?',
+    correct: 'Falacia de la planificación: subestimar plazos mirando solo el escenario ideal.',
+    distractors: [
+      'Sesgo de supervivencia de software.',
+      'Efecto dotación del proyecto.',
+      'Falacia ad populum técnica.',
+    ],
+    hint: 'Contrastan una proyección optimista interna contra el historial real externo.',
+    explanation: 'La falacia de la planificación consiste en calcular tiempos suponiendo que no surgirá ningún imprevisto y descartando estadísticas propias pasadas.',
+  },
+  {
+    level: 2,
+    prompt: 'Un artículo cita solo a tres multimillonarios que abandonaron la universidad para concluir que estudiar una carrera es inútil para el éxito económico. ¿Qué sesgo principal opera?',
+    correct: 'Sesgo de supervivencia y evidencia anecdótica: omite a millones que abandonaron sin éxito.',
+    distractors: [
+      'Efecto anclaje académico.',
+      'Falacia de la pendiente resbaladiza.',
+      'Sesgo de statu quo educativo.',
+    ],
+    hint: '¿Qué pasó con la gran mayoría de casos que no salen en portadas de revistas?',
+    explanation: 'Fijarse solo en los casos extraordinarios visibles ignora el enorme denominador de personas con la misma decisión que no alcanzaron ese resultado.',
+  },
+  {
+    level: 2,
+    prompt: 'Al debatir una norma de seguridad en bicicletas, alguien responde: "¿Por qué discutimos esto si los hospitales todavía tienen listas de espera?". ¿Qué recurso falaz emplea?',
+    correct: 'Falacia de la pista falsa (o privación relativa): desviar el debate hacia otro problema distinto.',
+    distractors: [
+      'Regresión a la media sanitaria.',
+      'Efecto halo hospitalario.',
+      'Ley de los números pequeños.',
+    ],
+    hint: 'Resolver un problema no impide atender otro independiente.',
+    explanation: 'La pista falsa y la falacia de privación relativa desvían la atención señalando otro tema más grave para evitar responder al asunto planteado.',
+  },
+  {
+    level: 2,
+    prompt: 'Quienes recién aprenden los fundamentos de un tema se califican a sí mismos como expertos con 95% de confianza, mientras los verdaderos especialistas son más cautos. ¿Qué fenómeno es?',
+    correct: 'Efecto Dunning-Kruger: falta de dominio que impide reconocer las propias lagunas.',
+    distractors: [
+      'Sesgo de aversión a la pérdida.',
+      'Paradoja de Simpson educativa.',
+      'Falacia del costo hundido.',
+    ],
+    hint: 'Se necesita cierto nivel de conocimiento para percibir cuánto falta por saber.',
+    explanation: 'El efecto Dunning-Kruger muestra que con poca pericia se suele sobreestimar la propia competencia porque faltan criterios para autoevaluarse.',
+  },
+  {
+    level: 2,
+    prompt: 'Un inversionista mantiene acciones que caen sin fundamento porque el dolor de asumir una pérdida segura le pesa el doble que la alegría de una ganancia equivalente. ¿Qué principio actúa?',
+    correct: 'Aversión a la pérdida: las pérdidas psicológicamente pesan más que ganancias equivalentes.',
+    distractors: [
+      'Efecto halo bursátil.',
+      'Falacia ad hominem financiera.',
+      'Sesgo de muestreo temporal.',
+    ],
+    hint: 'Compara el impacto emocional de perder $100 frente a ganar $100.',
+    explanation: 'Según la teoría prospectiva, las personas sienten una pérdida aproximadamente el doble de intensa que una ganancia del mismo monto.',
+  },
+  {
+    level: 2,
+    prompt: 'Un horóscopo dice: "A veces dudas de tus decisiones, pero valoras la honestidad y tienes potencial aún sin explotar", y el lector se asombra de "qué exacto es". ¿Qué efecto ocurre?',
+    correct: 'Efecto Barnum (o Forer): aceptar descripciones vagas y universales como si fueran personales.',
+    distractors: [
+      'Regresión a la media astral.',
+      'Efecto señuelo verbal.',
+      'Falacia de composición psicológica.',
+    ],
+    hint: 'Pregúntate a qué porcentaje de la humanidad le aplicaría exactamente la misma frase.',
+    explanation: 'El efecto Barnum hace que percibamos enunciados genéricos y halagadores como retratos precisos de nuestra personalidad única.',
+  },
+
+  // ---- NIVEL 3 (13) ----
   {
     level: 3,
     prompt: 'Una prueba médica detecta una enfermedad rara (1 de cada 1,000 personas) con 99% de precisión (1% falsos positivos). Si das positivo, ¿por qué tu probabilidad real NO es 99%?',
@@ -803,6 +1663,116 @@ const BIAS_BANK: readonly BiasTemplate[] = [
     explanation: 'En la paradoja de Simpson, una tendencia presente en cada subgrupo se invierte al combinar los datos porque los tamaños de los grupos difieren en dificultad.',
   },
   {
+    level: 3,
+    prompt: 'Al describir a Linda como activista universitaria de filosofía, la gente juzga más probable que sea "cajera de banco Y activista" que simplemente "cajera de banco". ¿Qué falacia cometen?',
+    correct: 'Falacia de la conjunción: P(A y B) nunca puede superar a P(A).',
+    distractors: [
+      'Sesgo de supervivencia laboral.',
+      'Falacia del costo hundido narrativo.',
+      'Regresión a la media biográfica.',
+    ],
+    hint: 'Todo miembro del grupo "cajera y activista" también pertenece al grupo más amplio "cajera".',
+    explanation: 'Por reglas de probabilidad, la intersección de dos condiciones nunca puede ser más probable que cualquiera de ellas por separado.',
+  },
+  {
+    level: 3,
+    prompt: '"Si permitimos que los estudiantes entreguen esta tarea un día tarde, pronto nadie estudiará y colapsará todo el sistema educativo." ¿Qué falacia aparece?',
+    correct: 'Pendiente resbaladiza: encadenar consecuencias extremas sin probar que sean inevitables.',
+    distractors: [
+      'Sesgo de tasa base escolar.',
+      'Efecto dotación académica.',
+      'Apelación a la ignorancia.',
+    ],
+    hint: 'Observa el salto injustificado de un hecho pequeño a una catástrofe total.',
+    explanation: 'La falacia de la pendiente resbaladiza asume que una concesión menor desencadenará inevitablemente una cadena de desastres sin demostrar los vínculos intermedios.',
+  },
+  {
+    level: 3,
+    prompt: '"Nadie ha demostrado de forma definitiva que no exista un cofre enterrado bajo esa colina, por lo tanto el cofre existe." ¿Qué falacia es?',
+    correct: 'Apelación a la ignorancia (ad ignorantiam): la ausencia de refutación no equivale a prueba.',
+    distractors: [
+      'Falacia de composición geográfica.',
+      'Sesgo de disponibilidad histórica.',
+      'Efecto señuelo argumental.',
+    ],
+    hint: '¿A quién corresponde aportar evidencia de una afirmación extraordinaria?',
+    explanation: 'Afirmar que algo es verdadero solo porque no se ha demostrado falso invierte indebidamente la carga de la prueba.',
+  },
+  {
+    level: 3,
+    prompt: 'Una clínica anuncia que "redujo las complicaciones en un 50%", pero omite que pasaron de 2 casos a 1 caso entre 10,000 pacientes. ¿Qué distorsión estadística usa?',
+    correct: 'Riesgo relativo sin riesgo absoluto: magnificar una variación diminuta en porcentaje.',
+    distractors: [
+      'Falacia del jugador hospitalaria.',
+      'Efecto Barnum clínico.',
+      'Sesgo de statu quo médico.',
+    ],
+    hint: 'Compara el cambio relativo (50%) con el cambio absoluto (0.01%).',
+    explanation: 'Presentar reducciones relativas sin mostrar la tasa absoluta hace que diferencias minúsculas parezcan enormes.',
+  },
+  {
+    level: 3,
+    prompt: 'Un investigador mide 20 variables nutricionales en un grupo pequeño y publica únicamente la única que dio p < 0.05 por azar, ocultando las otras 19. ¿Qué fallo metodológico es?',
+    correct: 'Efecto del francotirador de Texas (p-hacking / pesca de significancia).',
+    distractors: [
+      'Falsa dicotomía experimental.',
+      'Efecto halo estadístico.',
+      'Sesgo de statu quo científico.',
+    ],
+    hint: 'Si disparas 20 flechas y luego pintas la diana alrededor de la que acertó, parece puntería.',
+    explanation: 'Al hacer múltiples pruebas sin corrección y reportar solo las significativas, los falsos positivos aparecen como hallazgos reales.',
+  },
+  {
+    level: 3,
+    prompt: 'Una empresa evalúa únicamente el resultado final de una apuesta arriesgadísima: como salió bien por suerte, premia la decisión y repite el mismo riesgo imprudente. ¿Qué sesgo es?',
+    correct: 'Sesgo de resultado (resulting): juzgar la calidad de una decisión solo por su desenlace.',
+    distractors: [
+      'Efecto dotación corporativo.',
+      'Falacia ad populum empresarial.',
+      'Paradoja de Simpson contable.',
+    ],
+    hint: 'Una mala decisión puede salir bien por azar y una buena decisión puede salir mal.',
+    explanation: 'El sesgo de resultado confunde la calidad del proceso decisorio con la fortuna del desenlace obtenido.',
+  },
+  {
+    level: 3,
+    prompt: 'Al debatir sobre un medicamento, alguien dice: "Ningún verdadero médico dudaría de este tratamiento"; cuando le muestran a un médico que sí duda, responde "entonces no es un verdadero médico". ¿Qué falacia es?',
+    correct: 'Falacia del ningún escocés verdadero: redefinir una categoría sobre la marcha para esquivar contraejemplos.',
+    distractors: [
+      'Falacia de la conjunción clínica.',
+      'Sesgo de disponibilidad médica.',
+      'Regresión a la media terapéutica.',
+    ],
+    hint: 'Nota cómo cambia la definición de "verdadero médico" cada vez que aparece una excepción.',
+    explanation: 'Esta falacia protege una generalización universal excluyendo arbitrariamente a cualquier contraejemplo.',
+  },
+  {
+    level: 3,
+    prompt: 'Un gestor exige primero que se pruebe una tecnología en un piloto; al superar el piloto exige 5 años de historial y luego cambia otra vez el requisito para rechazarla. ¿Qué táctica falaz usa?',
+    correct: 'Mover los postes de la portería: cambiar los criterios de prueba cada vez que se cumplen.',
+    distractors: [
+      'Sesgo retrospectivo de gestión.',
+      'Efecto anclaje tecnológico.',
+      'Falacia post hoc empresarial.',
+    ],
+    hint: 'El estándar de aceptación se desplaza cada vez que la evidencia alcanza la meta anterior.',
+    explanation: 'Mover los postes invalida el debate racional porque impide de antemano que cualquier evidencia sea suficiente.',
+  },
+  {
+    level: 3,
+    prompt: 'Cuando un paciente pide dos opiniones distintas, le impresiona más "el 10% de 100 pacientes sufre efectos" que "el 10% de 10", aunque la probabilidad es la misma, o elige "9 de 100" antes que "1 de 10" para evitar riesgo. ¿Qué sesgo actúa?',
+    correct: 'Sesgo de la relación (negligencia del denominador): fijarse en el numerador ignorando la proporción.',
+    distractors: [
+      'Falacia del hombre de paja estadística.',
+      'Efecto Dunning-Kruger médico.',
+      'Sesgo de confirmación numérico.',
+    ],
+    hint: 'Compara 9/100 (9%) frente a 1/10 (10%): el número 9 impresiona más que el 1 aunque la tasa sea menor.',
+    explanation: 'La negligencia del denominador lleva a comparar frecuencias brutas (numeradores) en lugar de proporciones reales.',
+  },
+
+  // ---- NIVEL 4 (13) ----
+  {
     level: 4,
     prompt: 'Al evaluar un estudio científico con n = 6 participantes que da un resultado extremo, un lector concluye que el efecto está demostrado. ¿Qué sesgo estadístico comete?',
     correct: 'Ley de los números pequeños: confiar en muestras diminutas con altísima variabilidad.',
@@ -849,6 +1819,114 @@ const BIAS_BANK: readonly BiasTemplate[] = [
     ],
     hint: 'La coordinación entre piezas puede fallar aunque cada pieza brille por separado.',
     explanation: 'La falacia de composición infiere erróneamente que las propiedades de las partes individuales garantizan la misma propiedad en el sistema completo.',
+  },
+  {
+    level: 4,
+    prompt: 'Un hospital adopta como meta premiar la "rapidez de atención" y los médicos empiezan a dar altas prematuras para bajar el promedio de minutos. ¿Qué principio sistémico describe esto?',
+    correct: 'Ley de Goodhart: cuando una métrica se vuelve objetivo, deja de ser una buena medida.',
+    distractors: [
+      'Paradoja de Simpson hospitalaria.',
+      'Efecto Barnum institucional.',
+      'Falacia de la conjunción clínica.',
+    ],
+    hint: 'Al incentivar el indicador en lugar del valor real, el sistema optimiza el número a costa de la calidad.',
+    explanation: 'La ley de Goodhart advierte que convertir un indicador proxy en meta directa induce comportamientos que distorsionan lo que se quería medir.',
+  },
+  {
+    level: 4,
+    prompt: 'En un estudio de pacientes hospitalizados, se observa que quienes tienen enfermedad A parecen tener menos enfermedad B, pero solo porque tener cualquiera de las dos eleva la probabilidad de ser hospitalizado. ¿Qué sesgo es?',
+    correct: 'Sesgo de colisionador (paradoja de Berkson): condicionar en un efecto común crea correlaciones falsas.',
+    distractors: [
+      'Falacia del costo hundido hospitalario.',
+      'Efecto anclaje diagnóstico.',
+      'Apelación a la tradición médica.',
+    ],
+    hint: 'Ambas variables influyen en entrar al hospital; al mirar solo dentro del hospital aparece una correlación artificial.',
+    explanation: 'La paradoja de Berkson ocurre cuando se filtra la muestra por una variable causada por dos factores independientes, generando una asociación negativa espuria entre ellos.',
+  },
+  {
+    level: 4,
+    prompt: '"La universidad tiene 200 años de historia y prestigio, así que este recién graduado concreto necesariamente es un gran experto." ¿Qué falacia comete?',
+    correct: 'Falacia de división: atribuir a una parte individual una propiedad que pertenece al todo.',
+    distractors: [
+      'Falacia de composición institucional.',
+      'Sesgo de disponibilidad universitaria.',
+      'Regresión a la media académica.',
+    ],
+    hint: 'Es la imagen espejo de la falacia de composición: va del conjunto hacia el individuo.',
+    explanation: 'La falacia de división asume que lo verdadero para una institución completa se cumple automáticamente para cada miembro aislado.',
+  },
+  {
+    level: 4,
+    prompt: 'Se descubre que el promedio de ingresos de un departamento subió, así que concluyen que cada trabajador ahora gana mejor, aunque solo se contrató a un director con salario gigante. ¿Qué error ocurre?',
+    correct: 'Falacia ecológica / distorsión por valores atípicos en la media aritmética.',
+    distractors: [
+      'Falacia del apostador salarial.',
+      'Efecto señuelo económico.',
+      'Apelación a la ignorancia contable.',
+    ],
+    hint: 'Compara cómo reacciona la media frente a la mediana cuando entra un único dato extremo.',
+    explanation: 'La media aritmética es muy sensible a valores extremos; inferir mejoras individuales desde un promedio agregado distorsionado induce a error.',
+  },
+  {
+    level: 4,
+    prompt: 'Un comité aprueba un proyecto solo porque nadie quiere romper la armonía del grupo y los escépticos guardan silencio para no parecer conflictivos. ¿Qué fenómeno colectivo actúa?',
+    correct: 'Pensamiento de grupo (groupthink): la presión por el consenso suprime el análisis crítico.',
+    distractors: [
+      'Sesgo de tasa base grupal.',
+      'Efecto dotación colectivo.',
+      'Falacia de la conjunción organizacional.',
+    ],
+    hint: 'La búsqueda de cohesión reemplaza la verificación independiente de riesgos.',
+    explanation: 'En el pensamiento de grupo, el deseo de conformidad inhibe objeciones válidas y empobrece la calidad de las decisiones.',
+  },
+  {
+    level: 4,
+    prompt: '"Este libro dice la verdad absoluta porque en su primer capítulo declara que cada una de sus palabras es infalible." ¿Qué falacia lógica contiene?',
+    correct: 'Petición de principio (razonamiento circular): usa como prueba la misma conclusión que intenta demostrar.',
+    distractors: [
+      'Falsa dicotomía literaria.',
+      'Pendiente resbaladiza editorial.',
+      'Error fundamental de atribución.',
+    ],
+    hint: 'La premisa ya presupone aquello que se supone que debe justificar.',
+    explanation: 'El razonamiento circular no aporta evidencia externa: da vueltas sobre su propia afirmación inicial.',
+  },
+  {
+    level: 4,
+    prompt: 'Una ciudad ofrece recompensas por cada cobra muerta para reducir la plaga; la gente empieza a criar cobras para cobrar la recompensa y al cancelar el pago las suelta, empeorando el problema. ¿Qué fenómeno es?',
+    correct: 'Efecto cobra (incentivo perverso): una medida mal diseñada agrava el problema que buscaba resolver.',
+    distractors: [
+      'Regresión a la media ecológica.',
+      'Sesgo retrospectivo urbano.',
+      'Falacia ad populum ambiental.',
+    ],
+    hint: 'El premio económico creó un motivo racional para multiplicar el daño original.',
+    explanation: 'El efecto cobra ilustra cómo un incentivo desalineado genera consecuencias no deseadas opuestas al objetivo inicial.',
+  },
+  {
+    level: 4,
+    prompt: 'Un experimento médico mide la mejora solo en pacientes que completaron las 12 semanas y borra de la tabla a quienes abandonaron por efectos secundarios graves. ¿Qué sesgo invalida el resultado?',
+    correct: 'Sesgo de desgaste (atrición diferencial): eliminar abandonos distorsiona la eficacia real.',
+    distractors: [
+      'Efecto anclaje temporal.',
+      'Falacia de composición clínica.',
+      'Heurística de disponibilidad.',
+    ],
+    hint: '¿Por qué abandonaron esos pacientes? Precisamente por no tolerar el tratamiento.',
+    explanation: 'Cuando los abandonos están relacionados con el tratamiento, excluirlos infla artificialmente los beneficios (por eso se usa análisis por intención de tratar).',
+  },
+  {
+    level: 4,
+    prompt: 'Un algoritmo de crédito aprende de historiales humanos pasados y replica sus discriminaciones, pero los directivos confían ciegamente diciendo "la máquina es matemática e imparcial". ¿Qué sesgo exhiben?',
+    correct: 'Sesgo de automatización: atribuir infalibilidad u objetividad absoluta a sistemas automáticos.',
+    distractors: [
+      'Falacia del jugador algorítmica.',
+      'Efecto Barnum tecnológico.',
+      'Aversión a la pérdida digital.',
+    ],
+    hint: 'Un modelo entrenado con datos sesgados hereda y amplifica esos mismos sesgos.',
+    explanation: 'El sesgo de automatización lleva a sobreconfiar en recomendaciones automáticas y omitir auditorías sobre los datos que entrenaron el sistema.',
   },
 ];
 

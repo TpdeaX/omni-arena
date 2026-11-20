@@ -2,7 +2,12 @@ import '../styles/academy-intel.css';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import {
+  createAcademyLayout,
+  createSectionTutorialEl,
+  renderExplanationBox,
+  SectionTutorialInfo,
+} from '../ui/AcademyKit';
 import {
   applyMove,
   buildRecursiveTrace,
@@ -30,6 +35,7 @@ export class HanoiLogic2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
   private traceBoxEl!: HTMLDivElement;
@@ -75,12 +81,13 @@ export class HanoiLogic2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
     this.traceBoxEl = document.createElement('div');
     this.traceBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl, this.traceBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl, this.traceBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -122,10 +129,50 @@ export class HanoiLogic2DGame implements MiniGame {
     this.ctx.setControls(hints);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'hanoi:prep',
+        sectionName: 'Preparar Torres de Hanói',
+        steps: [
+          'Elige entre 3, 4, 5 o 6 discos (el mínimo óptimo siempre es 2^N - 1 movimientos).',
+          'Tu objetivo es trasladar toda la pila desde la Torre A hasta la Torre C usando B como auxiliar.',
+          'En Práctica puedes activar el reproductor de recursión para ver la pila de llamadas hanoi(n, A→C).',
+        ],
+        tip: 'Con N par empieza moviendo el disco 1 a la torre auxiliar B; con N impar empieza moviendo el disco 1 a la torre destino C.',
+      };
+    } else if (this.traceActive) {
+      info = {
+        id: 'hanoi:trace',
+        sectionName: 'Inspector de Pila Recursiva',
+        steps: [
+          'Usa Anterior / Siguiente (o las flechas) para recorrer cada paso óptimo de la solución.',
+          'Observa la pila de llamadas activas hanoi(k, origen→destino) para entender cómo se divide el problema.',
+          'Pulsa Cerrar ejemplo cuando quieras volver a tu tablero exactamente donde lo dejaste.',
+        ],
+        tip: 'Cada llamada hanoi(k) delega primero hanoi(k-1) a la torre libre antes de mover el disco k.',
+      };
+    } else {
+      info = {
+        id: `hanoi:play:${this.numDisks}`,
+        sectionName: `Resolución Hanói (${this.numDisks} discos)`,
+        steps: [
+          'Haz clic (o pulsa 1, 2, 3) en la torre de origen para levantar su disco superior.',
+          'Elige una torre de destino marcada en verde (nunca se puede apoyar un disco grande sobre uno menor).',
+          'En Práctica usa Siguiente paso (P) para ver qué sub-objetivo recursivo toca resolver ahora.',
+        ],
+        tip: 'El disco 1 (el más pequeño) se mueve en todos los turnos impares (1º, 3º, 5º...).',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
     this.traceActive = false;
     this.tracePlaying = false;
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -403,6 +450,7 @@ export class HanoiLogic2DGame implements MiniGame {
   }
 
   private renderBoard(): void {
+    this.updateSectionTutorial();
     this.stageEl.innerHTML = '';
 
     const activeStep =

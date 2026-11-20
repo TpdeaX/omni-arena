@@ -138,7 +138,8 @@ describe('chessEngine', () => {
     assert.equal(getGameStatus(rep).status, 'threefold');
   });
 
-  it('returns legal coaching hints in Spanish and validates all 4 chess lessons', () => {
+  it('returns legal coaching hints in Spanish and validates all 10 chess lessons', () => {
+    const emojiRe = /\p{Extended_Pictographic}/u;
     const start = createInitialChessState();
     const hint = getCoachingHint(start);
     const legalUcis = generateLegalMoves(start).map(moveToUci);
@@ -149,12 +150,20 @@ describe('chessEngine', () => {
     const bot0 = chooseChessBotMove(start, { level: 0, rng: mulberry32(42) });
     assert.equal(legalUcis.includes(moveToUci(bot0.move)), true);
 
+    assert.equal(CHESS_LESSONS.length, 10, `Deben existir 10 lecciones de ajedrez, hay ${CHESS_LESSONS.length}`);
+    const lessonIds = new Set<string>();
     for (const lesson of CHESS_LESSONS) {
+      assert.equal(lessonIds.has(lesson.id), false, `ID de lección duplicado: ${lesson.id}`);
+      lessonIds.add(lesson.id);
+      assert.ok(lesson.steps.length >= 1, `Lección ${lesson.id} debe tener pasos`);
+      assert.equal(emojiRe.test(`${lesson.title} ${lesson.summary}`), false);
       for (const step of lesson.steps) {
         const st = parseFEN(step.fen);
         const legals = generateLegalMoves(st).map(moveToUci);
         assert.ok(legals.length > 0, `Lesson ${lesson.id}/${step.id} must have legal moves`);
+        assert.equal(emojiRe.test(`${step.title} ${step.instruction} ${step.successFeedback} ${step.wrongHint}`), false);
         if (step.acceptedUci) {
+          assert.ok(step.acceptedUci.length >= 1);
           for (const uci of step.acceptedUci) {
             assert.equal(legals.includes(uci), true, `Expected ${uci} legal in ${lesson.id}/${step.id}`);
           }
@@ -240,7 +249,38 @@ describe('checkersEngine', () => {
     assert.equal(kingMoves.includes(algebraicToSq('h2')), true);
   });
 
-  it('verifies tactical 2x1 lesson and all 3 checkers lessons + bot + hints', () => {
+  it('verifies tactical 2x1 lesson and all 8 checkers lessons + bot + hints', () => {
+    const emojiRe = /\p{Extended_Pictographic}/u;
+    assert.equal(CHECKERS_LESSONS.length, 8, `Deben existir 8 lecciones de damas, hay ${CHECKERS_LESSONS.length}`);
+    const seenIds = new Set<string>();
+    for (const lesson of CHECKERS_LESSONS) {
+      assert.equal(seenIds.has(lesson.id), false, `ID duplicado en damas: ${lesson.id}`);
+      seenIds.add(lesson.id);
+      assert.ok(lesson.steps.length >= 1);
+      assert.equal(emojiRe.test(`${lesson.title} ${lesson.summary}`), false);
+      for (const step of lesson.steps) {
+        assert.equal(emojiRe.test(`${step.title} ${step.instruction} ${step.successFeedback} ${step.wrongHint}`), false);
+        const stepState = {
+          board: step.board.map((p) => (p ? { ...p } : null)),
+          turn: step.turn,
+          noProgressMoves: 0,
+          activeChain: null,
+        };
+        const legals = generateLegalCheckersMoves(stepState);
+        assert.ok(legals.length > 0, `Paso ${lesson.id}/${step.id} debe tener jugadas legales`);
+        if (step.expectedMoves) {
+          const legalKeys = new Set(legals.map((m) => `${m.from}-${m.to}`));
+          for (const exp of step.expectedMoves) {
+            assert.equal(
+              legalKeys.has(exp),
+              true,
+              `Movimiento esperado ${exp} no es legal en ${lesson.id}/${step.id}. Legales: ${[...legalKeys].join(', ')}`
+            );
+          }
+        }
+      }
+    }
+
     // Golpe 2x1 step 1 -> forced reply -> step 2 captures 2
     const step1 = CHECKERS_LESSONS[0].steps[0];
     let st = {

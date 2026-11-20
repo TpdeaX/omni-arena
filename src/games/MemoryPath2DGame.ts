@@ -4,8 +4,10 @@ import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
 import {
   createAcademyLayout,
+  createSectionTutorialEl,
   renderDifficultyBadge,
   renderExplanationBox,
+  SectionTutorialInfo,
 } from '../ui/AcademyKit';
 import {
   evaluateMemoryRecall,
@@ -40,6 +42,7 @@ export class MemoryPath2DGame implements MiniGame {
 
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private explainEl!: HTMLDivElement;
   private actionBoxEl!: HTMLDivElement;
 
@@ -98,10 +101,11 @@ export class MemoryPath2DGame implements MiniGame {
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
 
+    this.tutorialSlotEl = document.createElement('div');
     this.explainEl = document.createElement('div');
     this.actionBoxEl = document.createElement('div');
     this.actionBoxEl.className = 'oa-academy-card';
-    this.sideEl.append(this.explainEl, this.actionBoxEl);
+    this.sideEl.append(this.tutorialSlotEl, this.explainEl, this.actionBoxEl);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -152,8 +156,70 @@ export class MemoryPath2DGame implements MiniGame {
     ]);
   }
 
+  private updateSectionTutorial(): void {
+    let info: SectionTutorialInfo;
+    if (this.phase === 'prep') {
+      info = {
+        id: 'memorypath:prep',
+        sectionName: 'Preparar Palacio Mental (Loci)',
+        steps: [
+          'Elige cuántos símbolos codificar al inicio (3 a 6) o modo Progresivo (escala hasta 10 estancias).',
+          'Cada ronda consta de 3 fases: Codificación espacial, Interferencia activa y Evocación en mapa vacío.',
+          'En Práctica puedes desplegar la historia mnemotécnica sugerida para entrenar el Método de Loci.',
+        ],
+        tip: 'Imagina cada símbolo interactuando de forma exagerada con el mobiliario de su sala para fijarlo en memoria episódica.',
+      };
+    } else if (this.subPhase === 'encode') {
+      info = {
+        id: 'memorypath:encode',
+        sectionName: 'Fase 1 · Codificación Espacial',
+        steps: [
+          'Recorre las salas iluminadas en orden y asocia cada símbolo con el nombre y posición de su estancia.',
+          'Crea una micro-historia visual que conecte los objetos entre sí siguiendo una ruta por el plano.',
+          'Pulsa "Ya lo memoricé" (Espacio o Enter) cuando estés listo para pasar a la fase siguiente.',
+        ],
+        tip: 'En Práctica pulsa "Ver historia Loci" en el panel derecho para leer una asociación mnemotécnica lista.',
+      };
+    } else if (this.subPhase === 'interference') {
+      info = {
+        id: 'memorypath:interference',
+        sectionName: 'Fase 2 · Interferencia Cognitiva',
+        steps: [
+          'Resuelve el reto rápido (aritmética o color Stroop) con clic o teclas 1–4.',
+          'Esta tarea limpia el bucle fonológico de corto plazo y obliga a recuperar la huella espacial real.',
+          'Responde con precisión antes de pasar a reconstruir el palacio.',
+        ],
+        tip: 'En retos Stroop, fíjate en lo que pide la pregunta (color de la tinta vs palabra escrita).',
+      };
+    } else if (this.subPhase === 'recall') {
+      info = {
+        id: 'memorypath:recall',
+        sectionName: 'Fase 3 · Evocación en el Palacio',
+        steps: [
+          'Selecciona un símbolo de la paleta inferior y haz clic en la sala del plano donde estaba.',
+          'Al colocar un símbolo, el selector avanza automáticamente al siguiente libre para que reconstruyas rápido.',
+          'Cuando ubiques todos los símbolos, pulsa "Comprobar recuerdo" (Enter).',
+        ],
+        tip: 'Si dudas de una sala, haz clic sobre una sala ya ocupada para reemplazar o corregir su símbolo.',
+      };
+    } else {
+      info = {
+        id: 'memorypath:review',
+        sectionName: 'Fase 4 · Revisión del Recuerdo',
+        steps: [
+          'Revisa en verde los aciertos exactos y en ámbar/rojo las estancias intercambiadas.',
+          'Observa la ruta Loci completa en la explicación lateral para reforzar los vínculos que fallaron.',
+          'Pulsa Siguiente (Enter o Espacio) para avanzar al próximo palacio.',
+        ],
+        tip: 'Los errores por intercambio de sala cercana se corrigen anclando cada objeto a un rasgo único de la habitación.',
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrep(): void {
     this.phase = 'prep';
+    this.updateSectionTutorial();
     this.updateControlsHint();
     this.stageEl.innerHTML = '';
 
@@ -501,6 +567,7 @@ export class MemoryPath2DGame implements MiniGame {
   }
 
   private renderBoard(): void {
+    this.updateSectionTutorial();
     this.stageEl.innerHTML = '';
 
     const wrap = document.createElement('div');

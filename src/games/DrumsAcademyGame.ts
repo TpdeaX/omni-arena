@@ -1,7 +1,7 @@
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { DrumPieceId, GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox } from '../ui/AcademyKit';
+import { createAcademyLayout, createSectionTutorialEl, renderExplanationBox, SectionTutorialInfo } from '../ui/AcademyKit';
 import {
   buildGrooveTimeline,
   DRUM_GROOVES,
@@ -107,6 +107,7 @@ export class DrumsAcademyGame implements MiniGame {
   private padButtons = new Map<DrumPieceId, HTMLButtonElement>();
   private padFlashTimers = new Map<DrumPieceId, number>();
   private feedbackEl: HTMLSpanElement | null = null;
+  private tutorialHostEl: HTMLDivElement | null = null;
   private explainHostEl: HTMLDivElement | null = null;
   private statsCardEl: HTMLDivElement | null = null;
 
@@ -147,7 +148,7 @@ export class DrumsAcademyGame implements MiniGame {
           : 'BATERÍA · RETO',
       accent: '#E11D48',
       timeLeftSec: null,
-      subStat: 'Kit de 8 piezas · 12 ritmos',
+      subStat: `Kit de ${DRUM_PIECES.length} piezas · ${DRUM_GROOVES.length} ritmos`,
     });
 
     this.loadCustomLanesFromGroove(this.grooveIdx);
@@ -257,7 +258,22 @@ export class DrumsAcademyGame implements MiniGame {
       'info'
     );
     card.appendChild(ex);
-    this.sideEl.appendChild(card);
+
+    const tutWrap = document.createElement('div');
+    tutWrap.className = 'oa-drums-dyn-card';
+    tutWrap.appendChild(
+      createSectionTutorialEl({
+        id: 'drums:prep',
+        sectionName: 'Tutorial: Reto de Batería',
+        steps: [
+          `Selecciona uno de los ${DRUM_GROOVES.length} ritmos (Rock, Festejo, Cumbia, Samba, Vals 3/4, Jazz, Punk...) y ajusta los BPM.`,
+          'Al iniciar, sigue los pads iluminados en dorado durante 4 compases.',
+          'Los golpes fallidos rompen el combo pero nunca detienen el groove.',
+        ],
+        tip: 'Usa Espacio (Bombo), F (Caja) y J/K (Hi-Hat) como núcleo de casi todos los ritmos.',
+      })
+    );
+    this.sideEl.append(tutWrap, card);
 
     this.syncControlsBar();
   }
@@ -328,6 +344,10 @@ export class DrumsAcademyGame implements MiniGame {
     stageCard.append(topToolbar, modeToolbar, seqHost, kitGrid);
     this.stageEl.appendChild(stageCard);
 
+    const tutorialHost = document.createElement('div');
+    tutorialHost.className = 'oa-drums-dyn-card';
+    this.tutorialHostEl = tutorialHost;
+
     const explainCard = document.createElement('div');
     explainCard.className = 'oa-academy-card oa-drums-dyn-card';
     const explainHost = document.createElement('div');
@@ -338,7 +358,7 @@ export class DrumsAcademyGame implements MiniGame {
     statsCard.className = 'oa-academy-card oa-drums-dyn-card';
     this.statsCardEl = statsCard;
 
-    this.sideEl.append(explainCard, statsCard);
+    this.sideEl.append(tutorialHost, explainCard, statsCard);
 
     this.renderTabs();
     this.updateStatsCard();
@@ -348,7 +368,7 @@ export class DrumsAcademyGame implements MiniGame {
     const kit = document.createElement('div');
     kit.className = 'oa-drums-kit';
     kit.setAttribute('role', 'group');
-    kit.setAttribute('aria-label', 'Kit de batería de 8 piezas');
+    kit.setAttribute('aria-label', `Kit de batería de ${DRUM_PIECES.length} piezas`);
 
     // Visual order: top row cymbals & toms, bottom row snare, hi-hat, kick
     const orderedIds: DrumPieceId[] = [
@@ -391,9 +411,9 @@ export class DrumsAcademyGame implements MiniGame {
 
     const tabs: { id: DrumTab; label: string }[] = [
       { id: 'free', label: '1. Kit Libre' },
-      { id: 'grooves', label: '2. 12 Ritmos' },
+      { id: 'grooves', label: `2. ${DRUM_GROOVES.length} Ritmos` },
       { id: 'guided', label: '3. Tocar Guiado' },
-      { id: 'independence', label: '4. Independencia' },
+      { id: 'independence', label: `4. Independencia (${DRUM_INDEPENDENCE.length})` },
     ];
 
     tabs.forEach((t) => {
@@ -438,6 +458,55 @@ export class DrumsAcademyGame implements MiniGame {
     } else {
       this.renderIndependenceTab();
     }
+    this.renderSectionTutorial();
+  }
+
+  private renderSectionTutorial(): void {
+    if (!this.tutorialHostEl) return;
+    const map: Record<DrumTab, SectionTutorialInfo> = {
+      free: {
+        id: 'drums:free',
+        sectionName: 'Tutorial: Kit Libre y Grabador',
+        steps: [
+          'Toca con teclado (Espacio Bombo, F Caja, J/K Hi-Hat, D/S Toms, R/U Platos) o pulsa los pads.',
+          'Pulsa Grabar bucle (2 comp.) para registrar tu ritmo sobre 8 pulsos con metrónomo automático.',
+          'Reproduce o limpia el bucle cuando quieras probar nuevas ideas.',
+        ],
+        tip: 'Sostén un pulso firme en J (Hi-Hat) antes de añadir bombo y caja.',
+      },
+      grooves: {
+        id: 'drums:grooves',
+        sectionName: `Tutorial: ${DRUM_GROOVES.length} Ritmos por Género`,
+        steps: [
+          `Explora ${DRUM_GROOVES.length} patrones (Rock, Festejo, Cumbia, Samba, Vals 3/4, Jazz, Punk...).`,
+          'Pulsa Escuchar ritmo para ver el secuenciador avanzar en compases binarios o ternarios.',
+          'Haz clic en las celdas de la parrilla para editar golpes/acentos y luego pulsa Probar este ritmo ahora.',
+        ],
+        tip: 'Cada clic alterna silencio -> golpe suave -> acento (punto blanco) para dar dinámica real.',
+      },
+      guided: {
+        id: 'drums:guided',
+        sectionName: 'Tutorial: Tocar Guiado',
+        steps: [
+          'Golpea cada pad iluminado en dorado cuando llegue su turno en la parrilla.',
+          'Alterna entre Modo: Esperar golpe (paso a paso) y Modo: A tempo.',
+          'Ajusta la velocidad (0.6x / 0.8x / 1.0x) o los BPM arriba si necesitas practicar lento.',
+        ],
+        tip: 'En Modo Esperar golpe, el cursor espera a que completes todas las piezas del paso actual.',
+      },
+      independence: {
+        id: 'drums:independence',
+        sectionName: `Tutorial: ${DRUM_INDEPENDENCE.length} Ejercicios de Independencia`,
+        steps: [
+          `Selecciona uno de los ${DRUM_INDEPENDENCE.length} ejercicios para disociar manos y pie.`,
+          'Pulsa Escuchar ejercicio para oír el patrón ostinato y las respuestas.',
+          `Imita cada ejercicio sobre los ${DRUM_PIECES.length} pads inferiores cuidando acentos y notas fantasma.`,
+        ],
+        tip: 'Domina primero la mano del plato (Ride o Hi-Hat) antes de incorporar la caja y el bombo.',
+      },
+    };
+    this.tutorialHostEl.innerHTML = '';
+    this.tutorialHostEl.appendChild(createSectionTutorialEl(map[this.activeTab]));
   }
 
   private renderFreeTab(): void {
@@ -495,7 +564,7 @@ export class DrumsAcademyGame implements MiniGame {
 
     const head = document.createElement('div');
     head.className = 'oa-explain-heading';
-    head.textContent = 'Kit Libre de 8 piezas (latencia cero)';
+    head.textContent = `Kit Libre de ${DRUM_PIECES.length} piezas (latencia cero)`;
     const body = document.createElement('p');
     body.className = 'oa-explain-body';
     body.textContent = this.loopRecording
@@ -568,7 +637,7 @@ export class DrumsAcademyGame implements MiniGame {
     head.className = 'oa-explain-heading';
     head.textContent = `${g.title} · ${g.genre} (${g.meterLabel})`;
     this.seqHostEl!.appendChild(head);
-    this.renderStepGrid(this.seqHostEl!, g.steps, this.customLanes, true, this.groovePlayStep);
+    this.renderStepGrid(this.seqHostEl!, g.steps, this.customLanes, true, this.groovePlayStep, g.beatsPerBar);
 
     if (this.explainHostEl) {
       renderExplanationBox(this.explainHostEl, `${g.title} (${g.level})`, g.tip, 'info');
@@ -655,7 +724,7 @@ export class DrumsAcademyGame implements MiniGame {
     this.seqHostEl!.appendChild(head);
 
     const activeStep = this.guidedWaitMode ? this.waitStepIndex : Math.max(0, this.guidedLastStep % g.steps);
-    this.renderStepGrid(this.seqHostEl!, g.steps, g.lanes, false, activeStep);
+    this.renderStepGrid(this.seqHostEl!, g.steps, g.lanes, false, activeStep, g.beatsPerBar);
     this.refreshTargetPads();
 
     if (this.explainHostEl) {
@@ -712,7 +781,7 @@ export class DrumsAcademyGame implements MiniGame {
     head.className = 'oa-explain-heading';
     head.textContent = `${ex.title} · ${ex.focus}`;
     this.seqHostEl!.appendChild(head);
-    this.renderStepGrid(this.seqHostEl!, ex.steps, ex.lanes, false, this.groovePlayStep);
+    this.renderStepGrid(this.seqHostEl!, ex.steps, ex.lanes, false, this.groovePlayStep, ex.beatsPerBar);
 
     if (this.explainHostEl) {
       renderExplanationBox(this.explainHostEl, ex.focus, ex.explanation, 'info');
@@ -724,7 +793,8 @@ export class DrumsAcademyGame implements MiniGame {
     steps: 12 | 16,
     lanes: Partial<Record<DrumPieceId, string | string[]>>,
     editable: boolean,
-    playheadStep: number
+    playheadStep: number,
+    beatsPerBar: 3 | 4 = 4
   ): void {
     const scroll = document.createElement('div');
     scroll.className = 'oa-drums-grid-scroll';
@@ -732,7 +802,7 @@ export class DrumsAcademyGame implements MiniGame {
     table.className = 'oa-drums-seq-table';
     table.style.setProperty('--drum-steps', String(steps));
 
-    const beatEvery = steps === 16 ? 4 : 3;
+    const beatEvery = Math.max(1, Math.round(steps / beatsPerBar));
 
     for (const pieceDef of DRUM_PIECES) {
       const laneData = lanes[pieceDef.id];
@@ -1049,11 +1119,17 @@ export class DrumsAcademyGame implements MiniGame {
 
     // Metronome
     if (this.metronomeEnabled) {
+      const metroBeats =
+        this.activeTab === 'grooves' || this.activeTab === 'guided'
+          ? DRUM_GROOVES[this.grooveIdx].beatsPerBar
+          : this.activeTab === 'independence'
+            ? DRUM_INDEPENDENCE[this.indepIdx].beatsPerBar
+            : 4;
       const beatDur = 60 / (this.bpm * this.tempoScale);
       this.metroTimerSec += dt;
       if (this.metroTimerSec >= beatDur) {
         this.metroTimerSec -= beatDur;
-        this.metroBeatCount = (this.metroBeatCount + 1) % 4;
+        this.metroBeatCount = (this.metroBeatCount + 1) % metroBeats;
         const accent = this.metroBeatCount === 0;
         synthAudio.playMetronomeClick(accent);
         this.metroWidget?.flashBeat(accent);

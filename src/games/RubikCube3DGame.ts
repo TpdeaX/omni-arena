@@ -3,7 +3,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { synthAudio } from '../audio/SynthAudio';
 import { Icons } from '../icons';
 import { GameContext, MiniGame, RunMetrics } from '../types';
-import { createAcademyLayout, renderExplanationBox, renderLessonStepper } from '../ui/AcademyKit';
+import {
+  createAcademyLayout,
+  createSectionTutorialEl,
+  renderExplanationBox,
+  renderLessonStepper,
+  SectionTutorialInfo,
+} from '../ui/AcademyKit';
 import {
   applyMove,
   applyMoves,
@@ -138,6 +144,7 @@ export class RubikCube3DGame implements MiniGame {
   // DOM refs
   private stageEl!: HTMLDivElement;
   private sideEl!: HTMLElement;
+  private tutorialSlotEl!: HTMLDivElement;
   private canvasWrapEl: HTMLDivElement | null = null;
   private statusPillEl: HTMLSpanElement | null = null;
   private movesPillEl: HTMLSpanElement | null = null;
@@ -172,6 +179,8 @@ export class RubikCube3DGame implements MiniGame {
     );
     this.stageEl = layout.stageEl;
     this.sideEl = layout.sideEl;
+    this.tutorialSlotEl = document.createElement('div');
+    this.sideEl.appendChild(this.tutorialSlotEl);
 
     this.selectedChallengeLevel =
       ctx.difficulty === 'chill'
@@ -243,9 +252,66 @@ export class RubikCube3DGame implements MiniGame {
     }
   }
 
+  private lastTutorialKey = '';
+
+  private updateSectionTutorial(): void {
+    const key =
+      this.challengePhase === 'prep'
+        ? 'prep'
+        : this.challengePhase === 'inspection'
+          ? 'inspection'
+          : this.exampleActive
+            ? `example:${this.activeLessonId}`
+            : `phase:${this.activeLessonId}`;
+    if (key === this.lastTutorialKey) return;
+    this.lastTutorialKey = key;
+
+    let info: SectionTutorialInfo;
+    if (this.challengePhase === 'prep') {
+      info = {
+        id: 'rubik:prep',
+        sectionName: 'Preparar Reto de Rubik 3D',
+        steps: [
+          'Elige la longitud de mezcla (8, 14 o 20 giros) según tu experiencia.',
+          'Al empezar dispones de 15 segundos de inspección para orbitar el cubo y planear la Cruz Blanca.',
+          'El cronómetro arranca en cuanto hagas tu primer giro o al concluir la inspección.',
+        ],
+        tip: 'Activa "Mostrar letras de caras" si estás aprendiendo la notación oficial U D L R F B.',
+      };
+    } else if (this.challengePhase === 'inspection') {
+      info = {
+        id: 'rubik:inspection',
+        sectionName: 'Fase de Inspección (15 s)',
+        steps: [
+          'Arrastra el fondo del visor 3D (o usa las flechas) para inspeccionar todas las caras sin girar piezas.',
+          'Localiza el centro blanco y las 4 aristas blancas para planificar tus primeros giros.',
+          'Pulsa una tecla de cara (U/D/L/R/F/B) o "Empezar cronómetro ya" cuando estés listo.',
+        ],
+        tip: 'Pulsa V en cualquier momento para regresar a la vista isométrica estándar.',
+      };
+    } else {
+      const lesson =
+        BEGINNER_PHASE_LESSONS.find((l) => l.id === this.activeLessonId) ?? BEGINNER_PHASE_LESSONS[0];
+      info = {
+        id: `rubik:${lesson.id}`,
+        sectionName: this.exampleActive
+          ? `Demostración: ${lesson.title}`
+          : `Guía Rubik: ${lesson.title}`,
+        steps: [
+          'Usa las teclas U, D, L, R, F, B (o los botones inferiores) para girar cada cara 90° en sentido horario.',
+          'Mantén Shift o pulsa el botón apóstrofe (\') para invertir el giro en sentido antihorario.',
+          'Sigue los tokens del algoritmo de esta fase o reproduce el ejemplo animado para verlo en cámara lenta.',
+        ],
+        tip: lesson.tip,
+      };
+    }
+    this.tutorialSlotEl.replaceChildren(createSectionTutorialEl(info));
+  }
+
   private renderPrepScreen(): void {
     this.stageEl.innerHTML = '';
     this.sideEl.querySelectorAll('.oa-rubik-dyn-card').forEach((n) => n.remove());
+    this.updateSectionTutorial();
 
     const prep = document.createElement('div');
     prep.className = 'oa-rp-prep-card';
@@ -1097,6 +1163,7 @@ export class RubikCube3DGame implements MiniGame {
   }
 
   private renderLessonSection(): void {
+    this.updateSectionTutorial();
     if (!this.stepperHostEl || !this.lessonBodyEl) return;
 
     renderLessonStepper(

@@ -43,8 +43,8 @@ export function renderRadarSvg(
     const [lx, ly] = pointAt(i, 1.24);
     const anchor = Math.abs(lx - cx) < 10 ? 'middle' : lx > cx ? 'start' : 'end';
     labelNodes += `
-      <text x="${lx.toFixed(1)}" y="${(ly - 5).toFixed(1)}" text-anchor="${anchor}" fill="var(--ink-primary)" font-family="Chakra Petch, sans-serif" font-size="10.5" font-weight="700">${meta.short}</text>
-      <text x="${lx.toFixed(1)}" y="${(ly + 9).toFixed(1)}" text-anchor="${anchor}" fill="${meta.accent}" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">${val}</text>
+      <text x="${lx.toFixed(1)}" y="${(ly - 5).toFixed(1)}" text-anchor="${anchor}" fill="var(--ink-primary)" font-family="Archivo, sans-serif" font-size="11" font-weight="700">${meta.short}</text>
+      <text x="${lx.toFixed(1)}" y="${(ly + 10).toFixed(1)}" text-anchor="${anchor}" fill="var(--isom-course, #c084fc)" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">${val}</text>
     `;
   });
 
@@ -52,7 +52,7 @@ export function renderRadarSvg(
     <svg class="oa-radar-svg" viewBox="-32 -6 ${size + 64} ${size + 12}" width="${size + 36}" height="${size}" role="img" aria-label="Gráfico radar de 5 habilidades">
       ${ringPaths}
       ${spokeLines}
-      <polygon points="${valuePts.join(' ')}" fill="rgba(0, 180, 216, 0.18)" stroke="var(--accent-cyan)" stroke-width="2" />
+      <polygon points="${valuePts.join(' ')}" fill="var(--isom-course-soft, rgba(123, 44, 191, 0.14))" stroke="var(--isom-course, var(--accent-cyan))" stroke-width="2" />
       ${vertexDots}
       ${labelNodes}
     </svg>

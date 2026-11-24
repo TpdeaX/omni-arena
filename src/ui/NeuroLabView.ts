@@ -72,7 +72,7 @@ function renderEvolutionChartSvg(history: readonly NeuroHistoryEntry[]): string 
   return `
     <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Evolución del NeuroScore">
       ${gridLines}
-      ${pts.length > 1 ? `<polygon points="${area}" fill="rgba(0,229,255,0.12)"/><polyline points="${poly}" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5"/>` : ''}
+      ${pts.length > 1 ? `<polygon points="${area}" fill="var(--isom-course-soft, rgba(123,44,191,0.12))"/><polyline points="${poly}" fill="none" stroke="var(--isom-course, var(--accent-cyan))" stroke-width="2.5"/>` : ''}
       ${dots}
     </svg>
   `;

@@ -6,9 +6,9 @@
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 5px;
-  background: rgba(123, 97, 255, 0.16);
-  border: 1px solid var(--accent-violet);
-  color: var(--accent-violet);
+  background: var(--isom-course-soft);
+  border: 1px solid var(--isom-course);
+  color: var(--isom-course);
   letter-spacing: 0.04em;
 }
 
@@ -76,9 +76,9 @@
   max-width: 420px;
   min-height: 56px;
   padding: 12px 20px;
-  border-radius: 10px;
-  border: 2px solid var(--accent-cyan);
-  background: rgba(0, 229, 255, 0.12);
+  border-radius: 8px;
+  border: 2px solid var(--isom-course);
+  background: var(--isom-course-soft);
   color: var(--ink-primary);
   display: flex;
   flex-direction: column;
@@ -88,7 +88,7 @@
 }
 
 .oa-neuro-big-btn:hover {
-  background: rgba(0, 229, 255, 0.2);
+  background: var(--isom-course-ring);
 }
 
 .oa-neuro-big-btn:active {

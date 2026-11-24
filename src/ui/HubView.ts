@@ -138,7 +138,12 @@ export class HubView {
     window.removeEventListener('keydown', this.onKeyDown);
 
     const profile = profileStore.get();
-    document.documentElement.setAttribute('data-theme', profile.settings.theme ?? 'night');
+    const theme = profile.settings.theme ?? 'night';
+    document.documentElement.setAttribute('data-theme', theme);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'day' ? '#FAFBF8' : '#0F1311');
+    }
     document.documentElement.setAttribute(
       'data-motion',
       profile.settings.reduceMotion ? 'reduced' : 'normal'
@@ -187,13 +192,24 @@ export class HubView {
     const totalSecRanked = circuitCount * 15;
     const rankedDurationLabel = `${Math.floor(totalSecRanked / 60)}m ${String(totalSecRanked % 60).padStart(2, '0')}s`;
 
+    const formatLabel = (raw: string): string => {
+      const cleaned = raw.trim();
+      if (!cleaned) return '';
+      if (cleaned !== cleaned.toUpperCase()) return cleaned;
+      const lower = cleaned.toLowerCase();
+      return lower
+        .replace(/^(\S)/, (m) => m.toUpperCase())
+        .replace(/\(ia\)/gi, '(IA)')
+        .replace(/\b(2d|3d|iq|ai)\b/gi, (m) => m.toUpperCase());
+    };
+
     const difficultyPills = DIFFICULTY_ORDER.map((dId) => {
       const meta = DIFFICULTY_META[dId];
       const active = dId === activeDiff;
       return `
         <button type="button" class="oa-diff-pill ${active ? 'is-active' : ''}" data-diff="${dId}" style="--diff-accent: ${meta.accent}">
-          <span>${meta.label}</span>
-          <em>${meta.short}</em>
+          <span>${formatLabel(meta.label)}</span>
+          <em>${formatLabel(meta.short)}</em>
         </button>
       `;
     }).join('');
@@ -237,50 +253,53 @@ export class HubView {
 
     this.root.innerHTML = `
       ${renderEcoSwitchBar('arena')}
-      <div class="oa-hub">
-        <header class="oa-topbar">
+      <header class="oa-topbar oa-topbar-flush">
+        <div class="oa-topbar-inner">
           <div class="oa-brand">
-            <span class="oa-brand-mark">${Icons.omni(22)}</span>
+            <span class="oa-brand-mark">${Icons.omni(20)}</span>
             <span class="oa-brand-name">OMNI ARENA</span>
-            <span class="oa-brand-tag">${countAll} DISCIPLINAS · 2D + 3D</span>
+            <span class="oa-brand-tag">${countAll} disciplinas · 2D + 3D</span>
           </div>
           <div class="oa-topbar-right">
             <button type="button" class="oa-top-btn" id="oa-hub-tutorial" title="Tutorial del Hub, zonas, dificultades y modo infinito">
-              ${Icons.bookOpen(16)}<span>Tutorial del Hub</span>
+              ${Icons.bookOpen(15)}<span>Guía</span>
             </button>
             <button type="button" class="oa-top-btn ${cloudReady ? 'is-live' : ''}" id="oa-hub-cloud" title="Sincronización Supabase y respaldos">
-              ${Icons.cloud(16)}<span>${cloudReady ? `Nube · ${cloudCfg.spaceCode}` : 'Nube'}</span>
+              ${Icons.cloud(15)}<span>${cloudReady ? `Supabase · ${cloudCfg.spaceCode}` : 'Supabase'}</span>
             </button>
             <button type="button" class="oa-top-btn" id="oa-hub-theme" title="Cambiar modo día/noche">
-              ${profile.settings.theme === 'day' ? Icons.sun(16) : Icons.moon(16)}<span>Tema: ${
+              ${profile.settings.theme === 'day' ? Icons.moon(15) : Icons.sun(15)}<span>${
                 profile.settings.theme === 'day' ? 'Día' : 'Noche'
               }</span>
             </button>
             <button type="button" class="oa-top-btn" id="oa-hub-mute" aria-pressed="${
               profile.settings.muted ? 'true' : 'false'
             }" title="Activar o silenciar sonido">
-              ${profile.settings.muted ? Icons.volumeOff(16) : Icons.volumeOn(16)}<span>Sonido: ${
-                profile.settings.muted ? 'No' : 'Sí'
+              ${profile.settings.muted ? Icons.volumeOff(15) : Icons.volumeOn(15)}<span>${
+                profile.settings.muted ? 'Silencio' : 'Audio'
               }</span>
             </button>
             <button type="button" class="oa-top-btn" id="oa-hub-settings" title="Ajustes de juego">
-              ${Icons.sliders(16)}<span>Ajustes</span>
+              ${Icons.sliders(15)}<span>Ajustes</span>
             </button>
-            <div class="oa-streak-pill" title="Racha diaria">${Icons.flame(16)}<span>${profile.dailyStreak} DÍAS</span></div>
-            <div class="oa-lvl-pill">NV ${profile.level} · ${xpPct}%</div>
+            <div class="oa-streak-pill" title="Racha diaria">${Icons.flame(14)}<span>${profile.dailyStreak}d</span></div>
+            <div class="oa-lvl-pill">Nv ${profile.level} · ${xpPct}%</div>
+            <a class="oa-sos-btn" href="${resolveCompanionUrl('atelier', 'calm?sos=1')}" title="Abrir contención inmediata SOS Calma">SOS Calma</a>
           </div>
-        </header>
+        </div>
+      </header>
 
+      <div class="oa-hub">
         <section class="oa-command-grid">
           <div class="oa-hero-deck">
             <div class="oa-hero-copy">
-              <h1>ENTRENA Y DOMINA TODAS LAS DIMENSIONES</h1>
+              <h1>Entrena y domina todas las dimensiones</h1>
               <p>${countAll} disciplinas entre Academias Guiadas de instrumentos reales, IQ, lógica y estrategia (${countAcademy}) y pruebas rápidas 2D/3D (${circuitCount}).</p>
             </div>
 
             <div class="oa-diff-block">
               <div class="oa-diff-head">
-                <span>DIFICULTAD DE ENTRENAMIENTO</span>
+                <span class="oa-diff-title">Dificultad de entrenamiento</span>
                 <span class="oa-diff-desc">${diffInfo.desc}</span>
               </div>
               <div class="oa-diff-pills oa-diff-pills-5">${difficultyPills}</div>
@@ -289,33 +308,30 @@ export class HubView {
             <div class="oa-hero-actions">
               <button type="button" class="oa-launch-primary" data-open-guide="gauntlet">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">2D + 3D · ${circuitCount} PRUEBAS</span>
-                  <strong>CIRCUITO TOTAL</strong>
-                  <span>Rotación cada 15s sin perder tu racha</span>
+                  <strong>Circuito Total</strong>
+                  <span>Rotación cada 15s · ${circuitCount} pruebas 2D/3D</span>
                 </div>
                 <span class="oa-launch-go">${Icons.play(20)}</span>
               </button>
 
               <button type="button" class="oa-launch-secondary" data-open-guide="ranked">
                 <div class="oa-launch-meta">
-                  <span class="oa-launch-dim">${circuitCount} PRUEBAS · ${rankedDurationLabel}</span>
-                  <strong>PRUEBA CLASIFICATORIA</strong>
-                  <span>Calibra tus 5 ejes de habilidad</span>
+                  <strong>Prueba Clasificatoria</strong>
+                  <span>Calibra tus 5 ejes · ${circuitCount} pruebas (${rankedDurationLabel})</span>
                 </div>
                 <span class="oa-launch-go">${Icons.trophy(18)}</span>
               </button>
 
               <button type="button" class="oa-launch-neurolab" id="oa-open-neurolab">
                 <div class="oa-launch-neurolab-left">
-                  <span class="oa-launch-neurolab-icon">${Icons.neuroLab(22)}</span>
+                  <span class="oa-launch-neurolab-icon">${Icons.neuroLab(20)}</span>
                   <div class="oa-launch-neurolab-meta">
-                    <span class="oa-launch-dim">NEURONATION++ · 4 PILARES · CURSOS 14/28 DÍAS</span>
-                    <strong>LABORATORIO NEUROLAB</strong>
-                    <small>Sesión diaria inteligente (${neuroDailyDone}/4), diagnóstico, micro-niveles 1–300 y correlación vitalidad</small>
+                    <strong>Laboratorio NeuroLab</strong>
+                    <small>Sesión diaria (${neuroDailyDone}/4) · 4 pilares cognitivos · cursos 14/28 días</small>
                   </div>
                 </div>
                 <div class="oa-launch-neurolab-right">
-                  <span class="oa-nl-score-chip">NEURO ${neuro.neuroScore}</span>
+                  <span class="oa-nl-score-chip">Neuro ${neuro.neuroScore}</span>
                   <span class="oa-launch-go">${Icons.arrowRight(18)}</span>
                 </div>
               </button>
@@ -324,8 +340,8 @@ export class HubView {
 
           <aside class="oa-radar-panel">
             <div class="oa-radar-head">
-              <div>
-                <span class="oa-radar-label">ÍNDICE GLOBAL</span>
+              <div class="oa-radar-title-row">
+                <h2 class="oa-radar-heading">Radar de 5 ejes</h2>
                 <div class="oa-radar-score">${overall} <span style="color:${rank.color}">${rank.grade}</span></div>
               </div>
               <span class="oa-rank-caption">${rank.label}</span>
@@ -334,12 +350,12 @@ export class HubView {
               ${renderRadarSvg(profile.ratings, 250)}
             </div>
             <div class="oa-daily-bar">
-              <span>CIRCUITO DIARIO (${profile.dailyCompletedIds.length}/3)</span>
+              <span>Circuito diario (${profile.dailyCompletedIds.length}/3)</span>
               <div class="oa-daily-pills">
                 ${triad
                   .map((id) => {
                     const done = profile.dailyCompletedIds.includes(id);
-                    return `<button type="button" class="oa-triad-chip ${done ? 'is-done' : ''}" data-open-guide="${id}">${GAME_CATALOG[id].title}</button>`;
+                    return `<button type="button" class="oa-triad-chip ${done ? 'is-done' : ''}" data-open-guide="${id}">${formatLabel(GAME_CATALOG[id].title)}</button>`;
                   })
                   .join('')}
               </div>
@@ -349,7 +365,7 @@ export class HubView {
 
         <section class="oa-pulse-sec" aria-label="Pulso del Ecosistema">
           <div class="oa-sec-head">
-            <h2>PULSO DEL ECOSISTEMA</h2>
+            <h2>Pulso del Ecosistema</h2>
           </div>
           <div class="oa-pulse-grid" id="oa-pulse-grid">
             ${this.renderPulseCards(this.pulseData, profile, overall, rank, cloudReady)}
@@ -358,7 +374,7 @@ export class HubView {
 
         <section class="oa-disciplines-sec">
           <div class="oa-sec-head oa-sec-head-wrap">
-            <h2>DISCIPLINAS DE ENTRENAMIENTO (${countAll} MODOS)</h2>
+            <h2>Disciplinas de entrenamiento (${countAll} modos)</h2>
             <div class="oa-catalog-controls">
               <div class="oa-filter-tabs" role="tablist" aria-label="Categorías de disciplinas">
                 ${tabsHtml}

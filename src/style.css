@@ -1,39 +1,91 @@
+/* =========================================================================
+   OMNI ECOSISTEMA — CURSO ISOM DESIGN SYSTEM (OMNI ARENA + NEUROLAB)
+   ========================================================================= */
+
 :root,
 :root[data-theme='night'] {
-  --bg-void: #0b0e14;
-  --bg-panel: #131822;
-  --bg-elevated: #1a2130;
-  --border-subtle: #252f42;
-  --border-strong: #34435e;
-  --ink-primary: #f2f5f9;
-  --ink-secondary: #a2b1c7;
-  --ink-muted: #6f8099;
-  --accent-cyan: #00e5ff;
-  --accent-cyan-ink: #081018;
-  --accent-red: #ff4d38;
-  --accent-gold: #ffb800;
-  --accent-lime: #a6ff00;
-  --accent-violet: #7b61ff;
-  --font-display: 'Chakra Petch', system-ui, sans-serif;
-  --font-body: 'Barlow', system-ui, sans-serif;
+  color-scheme: dark;
+
+  --isom-ground: #0f1311;
+  --isom-ground-alt: #131916;
+  --isom-surface: #18201c;
+  --isom-surface-soft: #212c26;
+  --isom-border: #2b3730;
+  --isom-border-strong: #3e5045;
+  --isom-ink: #eef2ec;
+  --isom-ink-2: #b8c5ba;
+  --isom-ink-muted: #8ea092;
+  --isom-course: #c084fc;
+  --isom-course-hover: #d1a3fd;
+  --isom-course-ink: #160824;
+  --isom-course-soft: rgba(192, 132, 252, 0.16);
+  --isom-course-ring: rgba(192, 132, 252, 0.24);
+
+  --domain-atelier-swatch: #eab308;
+  --domain-unu-swatch: #7ba66a;
+  --domain-arena-ink: #84c5f0;
+  --domain-arena-bg: #152633;
+  --domain-arena-swatch: #5fa7d6;
+
+  --bg-void: var(--isom-ground);
+  --bg-panel: var(--isom-surface);
+  --bg-elevated: var(--isom-surface-soft);
+  --border-subtle: var(--isom-border);
+  --border-strong: var(--isom-border-strong);
+  --ink-primary: var(--isom-ink);
+  --ink-secondary: var(--isom-ink-2);
+  --ink-muted: var(--isom-ink-muted);
+  --accent-cyan: var(--isom-course);
+  --accent-cyan-ink: var(--isom-course-ink);
+  --accent-red: #f87171;
+  --accent-gold: #fbbf24;
+  --accent-lime: #4ade80;
+  --accent-violet: #60b0e5;
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-condensed: 'Barlow Condensed', 'Archivo', system-ui, sans-serif;
+  --font-body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 :root[data-theme='day'] {
-  --bg-void: #f1f4f8;
-  --bg-panel: #ffffff;
-  --bg-elevated: #e9eef5;
-  --border-subtle: #dde4ee;
-  --border-strong: #c2cede;
-  --ink-primary: #141c2b;
-  --ink-secondary: #435066;
-  --ink-muted: #66758c;
-  --accent-cyan: #0284c7;
-  --accent-cyan-ink: #ffffff;
-  --accent-red: #dc2626;
-  --accent-gold: #d97706;
-  --accent-lime: #15803d;
-  --accent-violet: #6d28d9;
+  color-scheme: light;
+
+  --isom-ground: #fafbf8;
+  --isom-ground-alt: #f3f5f0;
+  --isom-surface: #ffffff;
+  --isom-surface-soft: #edf1ea;
+  --isom-border: #d8dfd4;
+  --isom-border-strong: #bac6b5;
+  --isom-ink: #182019;
+  --isom-ink-2: #445247;
+  --isom-ink-muted: #5d6d61;
+  --isom-course: #7b2cbf;
+  --isom-course-hover: #6721a4;
+  --isom-course-ink: #ffffff;
+  --isom-course-soft: #f5ecfe;
+  --isom-course-ring: rgba(123, 44, 191, 0.16);
+
+  --domain-atelier-swatch: #c89d3c;
+  --domain-unu-swatch: #4d6b4a;
+  --domain-arena-ink: #1d4a6b;
+  --domain-arena-bg: #e6f1f8;
+  --domain-arena-swatch: #335c7d;
+
+  --bg-void: var(--isom-ground);
+  --bg-panel: var(--isom-surface);
+  --bg-elevated: var(--isom-ground-alt);
+  --border-subtle: var(--isom-border);
+  --border-strong: var(--isom-border-strong);
+  --ink-primary: var(--isom-ink);
+  --ink-secondary: var(--isom-ink-2);
+  --ink-muted: var(--isom-ink-muted);
+  --accent-cyan: var(--isom-course);
+  --accent-cyan-ink: var(--isom-course-ink);
+  --accent-red: #b91c1c;
+  --accent-gold: #9a6b12;
+  --accent-lime: #2d6a4f;
+  --accent-violet: #245b82;
 }
 
 *,
@@ -42,42 +94,52 @@
   box-sizing: border-box;
 }
 
+html {
+  accent-color: var(--isom-course);
+  scrollbar-color: var(--isom-border-strong) var(--isom-ground);
+  scrollbar-width: thin;
+}
+
+@supports not (scrollbar-color: auto) {
+  html {
+    scrollbar-width: auto;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 4px;
+  }
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100%;
+  min-height: 100dvh;
   background: var(--bg-void);
   color: var(--ink-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   touch-action: manipulation;
+  caret-color: var(--isom-course);
 }
 
 ::selection {
-  background: rgba(0, 229, 255, 0.28);
-  color: #ffffff;
+  background: var(--isom-course-soft);
+  color: var(--ink-primary);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-cyan);
+  outline: 2px solid var(--isom-course);
   outline-offset: 2px;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-void);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 4px;
 }
 
 button,
@@ -251,8 +313,8 @@ button {
 
 .oa-diamond-badge {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -260,19 +322,17 @@ button {
 
 .oa-diamond-ring {
   position: absolute;
-  inset: 4px;
-  border-radius: 8px;
-  transform: rotate(45deg);
-  border: 4px solid var(--em-accent, var(--accent-cyan));
-  border-right-color: var(--border-strong);
-  border-bottom-color: var(--border-strong);
-  background: var(--bg-void);
+  inset: 0;
+  border-radius: 6px;
+  transform: none;
+  border: 1.5px solid var(--domain-arena-swatch);
+  background: var(--domain-arena-bg);
 }
 
 .oa-diamond-core {
   position: relative;
   z-index: 1;
-  color: var(--em-accent, var(--accent-cyan));
+  color: var(--domain-arena-ink);
   display: grid;
   place-items: center;
 }
@@ -2105,20 +2165,14 @@ button {
 /* ==================== ECO SWITCH BAR & HUB ENHANCEMENTS ==================== */
 
 .eco-switch {
-  --eco-bg: var(--bg-panel);
-  --eco-ink: var(--ink-primary);
-  --eco-ink-muted: var(--ink-secondary);
-  --eco-accent: var(--accent-cyan);
-  --eco-accent-ink: var(--accent-cyan-ink);
-  --eco-border: var(--border-subtle);
-  height: 40px;
-  background: var(--eco-bg);
-  border-bottom: 1px solid var(--eco-border);
+  min-height: 44px;
+  background: var(--isom-surface);
+  border-bottom: 1px solid var(--isom-border);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 4px 16px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -2130,43 +2184,82 @@ button {
 .eco-switch-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 4px 12px;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 6px;
+  border: 1px solid transparent;
   text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--eco-ink-muted);
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--isom-ink-2);
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background-color 0.14s ease, color 0.14s ease;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 .eco-switch-link:hover {
-  color: var(--eco-ink);
-  background: var(--bg-elevated);
+  color: var(--isom-ink);
+  background: var(--isom-surface-soft);
 }
 
 .eco-switch-link.is-current {
-  background: var(--eco-accent);
-  color: var(--eco-accent-ink);
+  background: var(--isom-course-soft);
+  border-color: var(--isom-course);
+  color: var(--isom-course);
   pointer-events: none;
 }
 
-@media (max-width: 420px) {
+.eco-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.eco-swatch.is-dir {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--isom-course);
+  background: var(--isom-course-soft);
+}
+
+.eco-swatch.is-atelier {
+  background: var(--domain-atelier-swatch);
+}
+
+.eco-swatch.is-unu {
+  background: var(--domain-unu-swatch);
+}
+
+.eco-swatch.is-arena {
+  background: var(--domain-arena-swatch);
+}
+
+.eco-label-short {
+  display: none;
+}
+
+@media (max-width: 720px) {
   .eco-switch {
-    justify-content: center;
+    padding: 4px 8px;
     gap: 4px;
-    padding: 0 6px;
   }
   .eco-switch-link {
-    min-height: 40px;
-    padding: 4px 8px;
+    padding: 0 9px;
+    gap: 5px;
     font-size: 0.78rem;
   }
-  .eco-label-ext {
+  .eco-label-full {
     display: none;
+  }
+  .eco-label-short {
+    display: inline;
   }
 }
 
@@ -3239,5 +3332,221 @@ button {
 @media (max-width: 640px) {
   .oa-hub-tutorial-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== CURSO ISOM STAGE & POLISH OVERRIDES ==================== */
+/* Keep 2D/3D game stage dark even in day mode so hardcoded Canvas/Three.js games preserve full contrast */
+.oa-stage-host,
+#oa-stage-host {
+  color-scheme: dark;
+  background: #0d1210;
+  color: #eef2ec;
+}
+
+/* Flush full-width ISOM app bar matching Directorio and Atelier */
+.oa-topbar-flush {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: 100%;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 1.5px solid var(--isom-border) !important;
+  padding: 0 !important;
+  background: var(--isom-surface);
+}
+
+.oa-topbar-inner {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 9px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.oa-sos-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-red);
+  background: var(--accent-red);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+:root[data-theme='night'] .oa-sos-btn {
+  color: #240707;
+}
+
+.oa-hub {
+  max-width: 1360px;
+  padding: 20px 24px 48px;
+}
+
+.oa-hero-deck,
+.oa-radar-panel,
+.oa-mode-card,
+.oa-pulse-card,
+.oa-modal {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* Flatten nested difficulty block into a hairline-separated section (zero nested card) */
+.oa-diff-block {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid var(--isom-border) !important;
+  border-bottom: 1px solid var(--isom-border) !important;
+  border-radius: 0 !important;
+  padding: 14px 0 !important;
+}
+
+.oa-diff-title {
+  font-family: var(--font-display) !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: var(--ink-primary) !important;
+  text-transform: none !important;
+}
+
+.oa-diff-pill {
+  --diff-accent: var(--isom-course);
+  border-radius: 6px !important;
+  background: var(--isom-ground-alt) !important;
+}
+
+.oa-diff-pill span {
+  font-family: var(--font-body) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+}
+
+.oa-diff-pill.is-active {
+  border-color: var(--isom-course) !important;
+  background: var(--isom-course-soft) !important;
+  box-shadow: none !important;
+}
+
+.oa-diff-pill.is-active span,
+.oa-diff-pill.is-active em {
+  color: var(--isom-course) !important;
+}
+
+/* Calm ISOM NeuroLab launch strip (replaces loud neon-blue slab) */
+.oa-launch-neurolab {
+  background: var(--isom-ground-alt) !important;
+  border: 1.5px solid var(--domain-arena-swatch) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.oa-launch-neurolab:hover {
+  border-color: var(--isom-course) !important;
+}
+
+.oa-launch-neurolab-icon {
+  background: var(--domain-arena-bg) !important;
+  color: var(--domain-arena-ink) !important;
+  border: 1px solid var(--domain-arena-swatch) !important;
+  border-radius: 6px !important;
+}
+
+.oa-launch-primary,
+.oa-launch-secondary {
+  border-radius: 8px !important;
+  padding: 14px 16px !important;
+}
+
+.oa-launch-meta strong,
+.oa-launch-neurolab-meta strong {
+  font-family: var(--font-display) !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: none !important;
+}
+
+.oa-hero-copy h1 {
+  font-size: clamp(1.45rem, 2.2vw, 1.95rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  text-transform: none !important;
+}
+
+.oa-sec-head h2,
+.oa-radar-heading {
+  margin: 0;
+  font-family: var(--font-display) !important;
+  font-size: 1.06rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: none !important;
+}
+
+.oa-radar-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.oa-daily-bar > span {
+  font-family: var(--font-display) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  color: var(--ink-secondary) !important;
+}
+
+.oa-triad-chip {
+  font-family: var(--font-body) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  border-radius: 6px !important;
+}
+
+.oa-mode-card:hover {
+  border-color: var(--isom-course);
+}
+
+@media (max-width: 720px) {
+  .oa-topbar-inner {
+    padding: 10px 14px;
+  }
+  .oa-hub {
+    padding: 16px 14px 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .oa-hero-deck,
+  .oa-mode-card,
+  .oa-topbar,
+  .eco-switch-link.is-current {
+    border: 1px solid CanvasText;
   }
 }

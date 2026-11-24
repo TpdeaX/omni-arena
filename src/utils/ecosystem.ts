@@ -41,17 +41,6 @@ const APP_CONFIG: Record<
   arena: { port: 5175, route: 'omni-arena', label: 'OMNI ARENA', shortPrefix: 'OMNI ' },
 };
 
-const ECO_SVGS: Record<EcoAppId, string> = {
-  directorio:
-    '<svg class="oa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-  atelier:
-    '<svg class="oa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-  unumbral:
-    '<svg class="oa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 10 12 5 2 10 12 15 22 10"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-  arena:
-    '<svg class="oa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 19 6 22 12 19 18 12 22 5 18 2 12 5 6 12 2"/><circle cx="12" cy="12" r="4"/></svg>',
-};
-
 function isLocalOrPrivateHost(hostname: string): boolean {
   if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
   if (/^10\./.test(hostname) || /^192\.168\./.test(hostname)) return true;
@@ -163,6 +152,20 @@ export function resolveCompanionUrl(
   return `${baseUrl}${query}${hashPart}`;
 }
 
+const SWATCH_CLASS: Record<EcoAppId, string> = {
+  directorio: 'is-dir',
+  atelier: 'is-atelier',
+  unumbral: 'is-unu',
+  arena: 'is-arena',
+};
+
+const SHORT_LABEL: Record<EcoAppId, string> = {
+  directorio: 'Directorio',
+  atelier: 'Atelier',
+  unumbral: 'UNUmbral',
+  arena: 'Arena',
+};
+
 export function renderEcoSwitchBar(currentApp: EcoAppId): string {
   const order: EcoAppId[] = ['directorio', 'atelier', 'unumbral', 'arena'];
   const links = order
@@ -170,17 +173,9 @@ export function renderEcoSwitchBar(currentApp: EcoAppId): string {
       const cfg = APP_CONFIG[app];
       const isCurrent = app === currentApp;
       const href = resolveCompanionUrl(app);
-      let labelHtml = cfg.label;
-      if (cfg.shortPrefix) {
-        const rest = cfg.label.slice(cfg.shortPrefix.length);
-        labelHtml = `<span class="eco-label-ext">${cfg.shortPrefix}</span>${rest}`;
-      } else if (cfg.shortSuffix) {
-        const base = cfg.label.slice(0, cfg.label.length - cfg.shortSuffix.length);
-        labelHtml = `${base}<span class="eco-label-ext">${cfg.shortSuffix}</span>`;
-      }
       return `<a class="eco-switch-link${isCurrent ? ' is-current' : ''}" data-eco-app="${app}"${
         isCurrent ? ' aria-current="page"' : ''
-      } href="${href}">${ECO_SVGS[app]}<span>${labelHtml}</span></a>`;
+      } href="${href}"><span class="eco-swatch ${SWATCH_CLASS[app]}" aria-hidden="true"></span><span class="eco-label-full">${cfg.label}</span><span class="eco-label-short">${SHORT_LABEL[app]}</span></a>`;
     })
     .join('');
   return `<nav class="eco-switch" aria-label="Aplicaciones del ecosistema">${links}</nav>`;

@@ -1,11 +1,11 @@
 {
   "name": "OMNI ARENA · 2D/3D Skill Lab",
   "short_name": "OMNI ARENA",
-  "description": "Entrenador multigénero 2D y 3D con 26 disciplinas, academias guiadas y dificultad dinámica.",
+  "description": "Entrenador multigénero 2D y 3D con 40 disciplinas, 22 academias guiadas y NeuroNation++ Lab.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0B0E14",
-  "theme_color": "#0B0E14",
+  "background_color": "#FAFBF8",
+  "theme_color": "#FAFBF8",
   "orientation": "any",
   "icons": [
     {

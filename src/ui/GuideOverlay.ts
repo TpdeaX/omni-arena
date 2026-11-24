@@ -81,6 +81,20 @@ export function getModeIconSvg(id: GameModeId, size = 22): string {
       return Icons.logicseq(size);
     case 'memorypath2d':
       return Icons.memorypath(size);
+    case 'mackworth2d':
+      return Icons.mackworth(size);
+    case 'chainmath2d':
+      return Icons.chainMath(size);
+    case 'colorcraze2d':
+      return Icons.colorCraze(size);
+    case 'mot2d':
+      return Icons.mot(size);
+    case 'pathfinder2d':
+      return Icons.pathfinder(size);
+    case 'symbolspeed2d':
+      return Icons.symbolSpeed(size);
+    case 'verbal2d':
+      return Icons.verbal(size);
     default:
       return Icons.omni(size);
   }

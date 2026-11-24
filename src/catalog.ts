@@ -138,6 +138,14 @@ export const ACADEMY_IDS: StandaloneGameId[] = [
   'nonogram2d',
   'logicseq2d',
   'memorypath2d',
+  // NeuroLab (7 disciplinas científicas)
+  'mackworth2d',
+  'chainmath2d',
+  'colorcraze2d',
+  'mot2d',
+  'pathfinder2d',
+  'symbolspeed2d',
+  'verbal2d',
 ];
 
 export const STANDALONE_IDS: StandaloneGameId[] = [...ACADEMY_IDS, ...CIRCUIT_IDS];
@@ -991,6 +999,357 @@ export const GAME_CATALOG: Record<GameModeId, GameDescriptor> = {
       },
       practice: 'Consejos mnemotécnicos en cada ronda y tiempo libre de codificación.',
       challenge: 'Rondas progresivas de 3 a 10 estancias con interferencia activa.',
+    },
+  },
+
+  // ==================== 7 DISCIPLINAS NEUROLAB (NEURONATION++) ====================
+  mackworth2d: {
+    id: 'mackworth2d',
+    title: 'RELOJ DE MACKWORTH',
+    subtitle: 'Vigilancia sostenida y detección de doble salto',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'reflex',
+    accent: '#0EA5E9',
+    accentSoft: 'rgba(14, 165, 233, 0.14)',
+    controlsPC: 'Espacio / Enter o Clic en el botón Detectar',
+    controlsTouch: 'Toca la esfera o el botón Detectar doble salto',
+    description:
+      'Prueba clásica de vigilancia sostenida: sigue la aguja luminosa alrededor de 18 a 24 nodos y reacciona al instante cuando ejecute un doble salto.',
+    keywords: ['mackworth', 'reloj', 'vigilancia', 'atencion', 'neurolab', 'neuronation', 'clockwise'],
+    guide: {
+      objective: 'Detecta cada doble salto de la aguja luminosa con la menor latencia posible sin cometer falsas alarmas.',
+      howToPlay: [
+        'Observa el reloj circular: la aguja avanza un nodo por pulso en sentido horario.',
+        'Cuando la aguja salte dos espacios de golpe, pulsa Espacio o toca la pantalla de inmediato.',
+        'Evita pulsar en pasos normales: cada falsa alarma rompe tu racha y descuenta un escudo.',
+      ],
+      sectionTutorials: [
+        { name: 'Vigilancia Sostenida', tip: 'Mantén la mirada relajada en el centro del reloj para captar el ritmo constante con visión periférica.' },
+        { name: 'Ritmo Progresivo', tip: 'A mayor intensidad aumentan los nodos (de 18 a 24) y se reduce el intervalo entre pulsos.' },
+      ],
+      controls: [
+        { keys: ['Espacio', 'Clic'], touch: 'Tocar esfera / botón', action: 'Reportar doble salto', tone: 'primary' },
+        { keys: ['Esc'], touch: 'Pausa', action: 'Pausar sesión' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#0EA5E9',
+            '<circle cx="160" cy="90" r="56" fill="none" stroke="var(--border-strong)" stroke-width="2"/><circle cx="160" cy="34" r="5" fill="var(--ink-muted)"/><circle cx="198" cy="48" r="5" fill="var(--ink-muted)"/><circle cx="216" cy="90" r="7" fill="#0EA5E9"/><line x1="160" y1="90" x2="210" y2="90" stroke="#0EA5E9" stroke-width="3"/><text x="160" y="164" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">Paso normal: avanza 1 nodo (no pulsar)</text>',
+            'En pasos normales de 1 nodo debes mantener la calma y esperar.'
+          ),
+          makeFrame(
+            '#0EA5E9',
+            '<circle cx="160" cy="90" r="56" fill="none" stroke="var(--border-strong)" stroke-width="2"/><circle cx="198" cy="48" r="5" fill="var(--ink-muted)" stroke="#F59E0B" stroke-dasharray="2 2"/><circle cx="216" cy="90" r="5" fill="none" stroke="#EF4444" stroke-width="2"/><circle cx="198" cy="132" r="8" fill="#22C55E"/><path d="M198 48 A56 56 0 0 1 198 132" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-dasharray="5 3"/><text x="160" y="164" text-anchor="middle" fill="#22C55E" font-size="11" font-weight="700">DOBLE SALTO: PULSA ESPACIO YA</text>',
+            'Cuando omite un nodo y avanza 2 espacios, responde en milisegundos.'
+          ),
+        ],
+      },
+      practice: 'Resalta suavemente el nodo omitido tras cada evento sin perder escudos.',
+      challenge: '65s oficiales (o Infinito) midiendo latencia en ms y precisión sostenida.',
+    },
+  },
+
+  chainmath2d: {
+    id: 'chainmath2d',
+    title: 'REACCIÓN EN CADENA',
+    subtitle: 'Cálculo mental encadenado en memoria de trabajo',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#F59E0B',
+    accentSoft: 'rgba(245, 158, 11, 0.14)',
+    controlsPC: 'Teclas 1–4 o Clic para elegir resultado · Espacio siguiente paso (práctica)',
+    controlsTouch: 'Toca la opción correcta al final de la cadena',
+    description:
+      'Retén el número inicial y actualiza tu total mentalmente a través de cadenas de sumas, restas y multiplicaciones a velocidad creciente.',
+    keywords: ['calculo', 'cadena', 'matematicas', 'aritmetica', 'memoria', 'neurolab', 'chain'],
+    guide: {
+      objective: 'Mantén el acumulado mental durante toda la secuencia de operaciones y selecciona el resultado final sin dudar.',
+      howToPlay: [
+        'Observa el número semilla al principio de cada cadena.',
+        'Aplica cada operación secuencial (+, -, ×) manteniendo únicamente el resultado parcial en tu cabeza.',
+        'Cuando termine la cadena, elige la respuesta exacta entre las 4 opciones (teclas 1 a 4 o clic).',
+      ],
+      sectionTutorials: [
+        { name: 'Actualización Mental', tip: 'Reemplaza el número anterior en cuanto calcules el nuevo parcial para no saturar tu memoria.' },
+        { name: 'Escala de Cadena', tip: 'Con cada ronda crecen los pasos (de 3 hasta 7 operaciones) y la cadencia de aparición.' },
+      ],
+      controls: [
+        { keys: ['1..4', 'Clic'], touch: 'Tocar opción', action: 'Confirmar resultado final', tone: 'primary' },
+        { keys: ['Espacio'], touch: 'Botón Siguiente', action: 'Avanzar paso manual en práctica' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#F59E0B',
+            '<rect x="34" y="54" width="56" height="56" rx="8" fill="var(--bg-panel)" stroke="#F59E0B" stroke-width="2"/><text x="62" y="88" text-anchor="middle" fill="var(--ink-primary)" font-size="18" font-weight="700">14</text><text x="114" y="88" text-anchor="middle" fill="#00E5FF" font-size="16" font-weight="700">+7</text><text x="166" y="88" text-anchor="middle" fill="#EF4444" font-size="16" font-weight="700">-5</text><text x="220" y="88" text-anchor="middle" fill="#22C55E" font-size="16" font-weight="700">×2</text><text x="274" y="88" text-anchor="middle" fill="#F59E0B" font-size="18" font-weight="700">= ?</text>',
+            'Actualiza paso a paso: 14 -> 21 -> 16 -> 32.'
+          ),
+          makeFrame(
+            '#F59E0B',
+            '<rect x="44" y="42" width="106" height="40" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="97" y="67" text-anchor="middle" fill="var(--ink-primary)" font-size="14" font-weight="700">1 · 30</text><rect x="170" y="42" width="106" height="40" rx="8" fill="rgba(34,197,94,0.18)" stroke="#22C55E" stroke-width="2"/><text x="223" y="67" text-anchor="middle" fill="#22C55E" font-size="14" font-weight="700">2 · 32</text><rect x="44" y="94" width="106" height="40" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="97" y="119" text-anchor="middle" fill="var(--ink-primary)" font-size="14" font-weight="700">3 · 34</text><rect x="170" y="94" width="106" height="40" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="223" y="119" text-anchor="middle" fill="var(--ink-primary)" font-size="14" font-weight="700">4 · 28</text>',
+            'Al cerrar la cadena responde rápido con las teclas 1 a 4.'
+          ),
+        ],
+      },
+      practice: 'Avance pausado con botón paso a paso y repaso de cada operación si fallas.',
+      challenge: '65s oficiales o Modo Infinito escalando longitud de cadena y velocidad.',
+    },
+  },
+
+  colorcraze2d: {
+    id: 'colorcraze2d',
+    title: 'LOCURA DE COLOR',
+    subtitle: 'Efecto Stroop, cambio de reglas e inhibición Go/No-Go',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#EC4899',
+    accentSoft: 'rgba(236, 72, 153, 0.14)',
+    controlsPC: 'Teclas 1–4 para responder · Espacio para inhibir (No-Go)',
+    controlsTouch: 'Toca la opción según la regla o el botón Inhibir',
+    description:
+      'Entrena flexibilidad cognitiva e inhibición de impulsos: alterna al vuelo entre Color de Tinta, Palabra, Forma y bloqueos Go/No-Go.',
+    keywords: ['stroop', 'color', 'inhibicion', 'reglas', 'flexibilidad', 'gonogo', 'neurolab'],
+    guide: {
+      objective: 'Obedece la regla activa del cartel superior al milisegundo y frena el impulso cuando aparezca la alerta No-Go.',
+      howToPlay: [
+        'Mira siempre el cartel de regla arriba: puede pedir COLOR DE TINTA, PALABRA, FORMA o NO TOQUES SI ES ROJO.',
+        'La regla cambia en medio de la ronda con un aviso sonoro y visual: adapta tu respuesta al instante.',
+        'Cuando aplique Go/No-Go y el estímulo sea rojo, pulsa Espacio (Inhibir) en lugar de elegir un color.',
+      ],
+      sectionTutorials: [
+        { name: 'Costo de Cambio (Switch Cost)', tip: 'Cada cambio de regla exige desconectar el criterio anterior; medimos tu latencia extra en cambios.' },
+        { name: 'Inhibición Go/No-Go', tip: 'Si el cartel indica NO TOQUES SI ES ROJO y el estímulo tiene tinta o borde rojo, frena y pulsa Inhibir.' },
+      ],
+      controls: [
+        { keys: ['1..4', 'Clic'], touch: 'Botones de respuesta', action: 'Responder según la regla activa', tone: 'primary' },
+        { keys: ['Espacio'], touch: 'Botón Inhibir', action: 'Frenar respuesta en estímulo No-Go', tone: 'danger' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#EC4899',
+            '<rect x="64" y="22" width="192" height="28" rx="6" fill="#EC4899"/><text x="160" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">REGLA: COLOR DE TINTA</text><rect x="96" y="64" width="128" height="62" rx="10" fill="var(--bg-panel)" stroke="#0EA5E9" stroke-width="2.5"/><text x="160" y="102" text-anchor="middle" fill="#0EA5E9" font-size="22" font-weight="700">ROJO</text><text x="160" y="156" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">Respuesta correcta: AZUL (la tinta, no la palabra)</text>',
+            'En modo Color de Tinta ignora lo que lees y elige el color visible.'
+          ),
+          makeFrame(
+            '#EC4899',
+            '<rect x="44" y="22" width="232" height="28" rx="6" fill="#DC2626"/><text x="160" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">REGLA: NO TOQUES SI ES ROJO</text><polygon points="160,62 196,122 124,122" fill="rgba(239,68,68,0.22)" stroke="#EF4444" stroke-width="2.5"/><text x="160" y="110" text-anchor="middle" fill="#EF4444" font-size="12" font-weight="700">VERDE</text><text x="160" y="156" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="700">Es rojo: pulsa ESPACIO (Inhibir)</text>',
+            'En bloqueos Go/No-Go frena el reflejo automático al ver el estímulo prohibido.'
+          ),
+        ],
+      },
+      practice: 'Feedback inmediato explicando cada cambio de regla sin descontar escudos.',
+      challenge: '65s oficiales (o Infinito) midiendo precisión, latencia y costo de cambio.',
+    },
+  },
+
+  mot2d: {
+    id: 'mot2d',
+    title: 'RASTREO MÚLTIPLE',
+    subtitle: 'Seguimiento visual simultáneo (MOT / Shuffler)',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'aim',
+    accent: '#10B981',
+    accentSoft: 'rgba(16, 185, 129, 0.14)',
+    controlsPC: 'Clic sobre las esferas objetivo al detenerse',
+    controlsTouch: 'Toca las esferas que seguiste cuando se detengan',
+    description:
+      'Sigue simultáneamente de 3 a 6 esferas marcadas entre 8 y 14 discos en movimiento elástico y señálalas todas cuando se detengan.',
+    keywords: ['mot', 'rastreo', 'shuffler', 'atencion', 'dividida', 'tracking', 'neurolab'],
+    guide: {
+      objective: 'No pierdas de vista las esferas objetivo mientras rebotan mezcladas con distractores idénticos y márcalas al final.',
+      howToPlay: [
+        'Fase 1 (2.5s): entre 3 y 6 esferas se iluminan en dorado con anillo objetivo.',
+        'Fase 2 (5–7s): todas adoptan el mismo aspecto y rebotan por la arena a velocidad creciente.',
+        'Fase 3: al frenar, haz clic o toca únicamente las esferas originales.',
+      ],
+      sectionTutorials: [
+        { name: 'Centroide Visual', tip: 'En lugar de saltar ojo por ojo, agrupa los objetivos como los vértices de un polígono imaginario y mira su centro.' },
+        { name: 'Escalado MOT', tip: 'Cada ronda acertada incrementa el número de objetivos (hasta 6) y la velocidad de rebote.' },
+      ],
+      controls: [
+        { keys: ['Clic'], touch: 'Tocar esferas', action: 'Seleccionar objetivos originales', tone: 'primary' },
+        { keys: ['Esc'], touch: 'Pausa', action: 'Pausar rastreo' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#10B981',
+            '<circle cx="96" cy="70" r="14" fill="#10B981" stroke="#F59E0B" stroke-width="3"/><circle cx="192" cy="60" r="14" fill="#10B981" stroke="#F59E0B" stroke-width="3"/><circle cx="152" cy="122" r="14" fill="#10B981" stroke="#F59E0B" stroke-width="3"/><circle cx="230" cy="112" r="13" fill="var(--bg-panel)" stroke="var(--border-strong)" stroke-width="2"/><circle cx="78" cy="124" r="13" fill="var(--bg-panel)" stroke="var(--border-strong)" stroke-width="2"/><text x="160" y="162" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">1. Memoriza las esferas iluminadas (2.5s)</text>',
+            'Al inicio se iluminan las esferas que debes rastrear.'
+          ),
+          makeFrame(
+            '#10B981',
+            '<circle cx="114" cy="86" r="13" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><circle cx="176" cy="74" r="13" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><circle cx="164" cy="126" r="13" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><circle cx="222" cy="108" r="13" fill="var(--bg-panel)" stroke="#00E5FF" stroke-width="2"/><path d="M96 70 Q130 50 114 86 M192 60 Q210 90 176 74" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="4 3"/><text x="160" y="162" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">2. Síguelas en movimiento y señálalas al frenar</text>',
+            'Todas se vuelven iguales durante el movimiento; márcalas al parar.'
+          ),
+        ],
+      },
+      practice: 'Velocidad moderada y revelación visual clara sin perder escudos.',
+      challenge: 'Rondas oficiales de 70s o Modo Infinito subiendo esferas y rapidez.',
+    },
+  },
+
+  pathfinder2d: {
+    id: 'pathfinder2d',
+    title: 'BUSCADOR DE RUTAS',
+    subtitle: 'Secuencia visoespacial Corsi directa e inversa',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#6366F1',
+    accentSoft: 'rgba(99, 102, 241, 0.14)',
+    controlsPC: 'Clic en los nodos en orden directo o inverso',
+    controlsTouch: 'Toca los nodos siguiendo el sentido indicado',
+    description:
+      'Versión avanzada de los bloques de Corsi: memoriza rutas conectadas sobre cuadrículas 4×4 y 5×5 alternando orden directo e inverso.',
+    keywords: ['corsi', 'rutas', 'pathfinder', 'memoria', 'espacial', 'inverso', 'neurolab'],
+    guide: {
+      objective: 'Reproduce la ruta iluminada en el orden exacto (directo o inverso) ignorando los destellos distractores.',
+      howToPlay: [
+        'Comprueba el indicador superior: ORDEN DIRECTO (del primero al último) u ORDEN INVERSO (del último al primero).',
+        'Observa cómo se enciende la ruta nodo a nodo sobre la cuadrícula 4×4 o 5×5.',
+        'Ignora los destellos rojos distractores de niveles altos y toca los nodos de la ruta real en el orden pedido.',
+      ],
+      sectionTutorials: [
+        { name: 'Orden Directo vs Inverso', tip: 'En orden inverso visualiza el trazado como una figura geométrica y recórrela desde el punto final hacia atrás.' },
+        { name: 'Filtro de Distractores', tip: 'A partir de niveles intermedios aparecen nodos rojos breves: no pertenecen a la ruta conectada.' },
+      ],
+      controls: [
+        { keys: ['Clic'], touch: 'Tocar nodos', action: 'Trazar secuencia en orden', tone: 'primary' },
+        { keys: ['R'], touch: 'Botón Repetir (práctica)', action: 'Volver a ver la ruta en práctica' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#6366F1',
+            '<g stroke="#6366F1" stroke-width="2.5" fill="none"><path d="M96 56 L160 56 L160 108 L224 108"/></g><circle cx="96" cy="56" r="14" fill="#6366F1"/><text x="96" y="60" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">1</text><circle cx="160" cy="56" r="14" fill="#6366F1"/><text x="160" y="60" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">2</text><circle cx="160" cy="108" r="14" fill="#6366F1"/><text x="160" y="112" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">3</text><circle cx="224" cy="108" r="14" fill="#00E5FF"/><text x="224" y="112" text-anchor="middle" fill="#081018" font-size="11" font-weight="700">4</text><text x="160" y="156" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">Directo: 1-2-3-4 · Inverso: 4-3-2-1</text>',
+            'Observa el recorrido conectado y respeta el sentido de la ronda.'
+          ),
+          makeFrame(
+            '#6366F1',
+            '<rect x="44" y="28" width="232" height="30" rx="6" fill="rgba(245,158,11,0.18)" stroke="#F59E0B"/><text x="160" y="48" text-anchor="middle" fill="#F59E0B" font-size="12" font-weight="700">MODO: ORDEN INVERSO</text><circle cx="110" cy="104" r="14" fill="var(--bg-panel)" stroke="#EF4444" stroke-width="2"/><text x="110" y="108" text-anchor="middle" fill="#EF4444" font-size="11" font-weight="700">X</text><text x="194" y="108" text-anchor="middle" fill="var(--ink-primary)" font-size="11">Ignora destellos rojos</text>',
+            'En niveles superiores aparecen destellos rojos para entrenar tu foco.'
+          ),
+        ],
+      },
+      practice: 'Permite repetir la secuencia con la tecla R y no descuenta escudos.',
+      challenge: 'Rondas crecientes de 4 a 9 nodos con alternancia directo/inverso.',
+    },
+  },
+
+  symbolspeed2d: {
+    id: 'symbolspeed2d',
+    title: 'VELOCIDAD DE SÍMBOLOS',
+    subtitle: 'Búsqueda de símbolos WAIS y fusión de formas',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'reflex',
+    accent: '#06B6D4',
+    accentSoft: 'rgba(6, 182, 212, 0.14)',
+    controlsPC: 'Teclas 1–6 para elegir símbolo · 0 / Espacio para Ninguno',
+    controlsTouch: 'Toca el símbolo idéntico o el botón Ninguno',
+    description:
+      'Entrena velocidad de procesamiento visual: compara 2 símbolos geométricos objetivo contra 5 o 6 candidatos o fusiona dos mitades en milisegundos.',
+    keywords: ['simbolos', 'wais', 'velocidad', 'procesamiento', 'formas', 'fusion', 'neurolab'],
+    guide: {
+      objective: 'Identifica en milisegundos qué candidato coincide exactamente con un objetivo o con la fusión de las dos piezas superiores.',
+      howToPlay: [
+        'En Emparejamiento WAIS: compara los 2 símbolos objetivo de arriba con la fila inferior y elige el idéntico (o pulsa Ninguno si ninguno coincide).',
+        'En Fusión de Formas: combina mentalmente las dos capas superiores (exterior + interior) y marca el resultado exacto abajo.',
+        'Responde con teclado (1–6 y 0/Espacio) o clic/toque para maximizar tu velocidad en milisegundos.',
+      ],
+      sectionTutorials: [
+        { name: 'Emparejamiento WAIS', tip: 'Escanea primero el rasgo más distintivo (forma externa o muesca) para descartar rápido los distractores.' },
+        { name: 'Fusión de Formas', tip: 'Comprueba la silueta exterior y luego verifica la orientación y relleno del núcleo interior.' },
+      ],
+      controls: [
+        { keys: ['1..6', 'Clic'], touch: 'Tocar candidato', action: 'Seleccionar símbolo coincidente', tone: 'primary' },
+        { keys: ['0', 'Espacio'], touch: 'Botón Ninguno', action: 'Indicar que no hay coincidencia' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#06B6D4',
+            '<rect x="92" y="26" width="52" height="44" rx="8" fill="var(--bg-panel)" stroke="#06B6D4" stroke-width="2"/><polygon points="118,34 132,62 104,62" fill="none" stroke="#06B6D4" stroke-width="2.5"/><rect x="176" y="26" width="52" height="44" rx="8" fill="var(--bg-panel)" stroke="#06B6D4" stroke-width="2"/><circle cx="202" cy="48" r="12" fill="none" stroke="#06B6D4" stroke-width="2.5"/><line x1="36" y1="86" x2="284" y2="86" stroke="var(--border-subtle)"/><rect x="52" y="100" width="44" height="44" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><rect x="108" y="100" width="44" height="44" rx="8" fill="rgba(34,197,94,0.18)" stroke="#22C55E" stroke-width="2"/><polygon points="130,108 144,136 116,136" fill="none" stroke="#22C55E" stroke-width="2.5"/><rect x="164" y="100" width="44" height="44" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/><rect x="220" y="100" width="44" height="44" rx="8" fill="var(--bg-panel)" stroke="var(--border-strong)"/>',
+            'Compara los 2 objetivos superiores con la fila inferior.'
+          ),
+          makeFrame(
+            '#06B6D4',
+            '<rect x="76" y="30" width="52" height="46" rx="8" fill="var(--bg-panel)" stroke="#06B6D4" stroke-width="2"/><rect x="90" y="42" width="24" height="22" fill="none" stroke="#06B6D4" stroke-width="2.5"/><text x="160" y="58" text-anchor="middle" fill="var(--ink-primary)" font-size="18" font-weight="700">+</text><rect x="192" y="30" width="52" height="46" rx="8" fill="var(--bg-panel)" stroke="#06B6D4" stroke-width="2"/><circle cx="218" cy="53" r="6" fill="#06B6D4"/><text x="160" y="114" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">FUSIÓN EXACTA</text><rect x="134" y="122" width="52" height="40" rx="8" fill="rgba(34,197,94,0.16)" stroke="#22C55E" stroke-width="2"/><rect x="148" y="131" width="24" height="22" fill="none" stroke="#22C55E" stroke-width="2"/><circle cx="160" cy="142" r="5" fill="#22C55E"/>',
+            'En rondas de Fusión une mentalmente las dos figuras en una sola.'
+          ),
+        ],
+      },
+      practice: 'Entrena discriminación visual y fusión sin penalización de vidas.',
+      challenge: '60s oficiales o Infinito midiendo velocidad de procesamiento en ms.',
+    },
+  },
+
+  verbal2d: {
+    id: 'verbal2d',
+    title: 'FLUIDEZ VERBAL',
+    subtitle: 'Clasificación rápida, semántica y cadenas léxicas en español',
+    dimension: '2D',
+    category: 'academy',
+    academyGroup: 'neuro',
+    supportsInfinite: true,
+    axis: 'logic',
+    accent: '#8B5CF6',
+    accentSoft: 'rgba(139, 92, 246, 0.14)',
+    controlsPC: 'Teclas 1–4 o Flechas Izq/Der (Sí/No) · Clic en tarjetas',
+    controlsTouch: 'Toca la opción o desliza / pulsa Sí y No',
+    description:
+      'Agilidad léxica en español con más de 160 palabras curadas en 3 mecánicas rotativas: clasificación por regla, intruso/sinónimo/antónimo y cadenas de palabras.',
+    keywords: ['verbal', 'fluidez', 'palabras', 'sinonimos', 'antonimos', 'lexico', 'espanol', 'neurolab'],
+    guide: {
+      objective: 'Activa tu acceso léxico respondiendo rápido a reglas fonéticas, relaciones semánticas y cadenas verbales en español.',
+      howToPlay: [
+        'Clasificación rápida: decide si la palabra cumple la regla (letra inicial, final, categoría semántica o número de sílabas).',
+        'Semántica relámpago: elige entre 4 tarjetas el sinónimo, antónimo o intruso de la serie.',
+        'Cadena léxica: selecciona la palabra que enlaza con la última letra o sílaba de la palabra anterior.',
+      ],
+      sectionTutorials: [
+        { name: 'Reglas Fonéticas y Silábicas', tip: 'Lee en bloque sin subvocalizar en exceso para ganar 100–200 ms por decisión.' },
+        { name: 'Semántica y Cadenas', tip: 'En Intruso identifica primero el rasgo común de 3 palabras; en Cadenas fija tu vista en el final de la palabra guía.' },
+      ],
+      controls: [
+        { keys: ['1..4', 'Clic'], touch: 'Tocar tarjeta', action: 'Elegir palabra correcta', tone: 'primary' },
+        { keys: ['Izq / Der', 'S / N'], touch: 'Botones Sí / No', action: 'Clasificar en rondas binarias' },
+      ],
+      example: {
+        frames: [
+          makeFrame(
+            '#8B5CF6',
+            '<rect x="44" y="24" width="232" height="28" rx="6" fill="#8B5CF6"/><text x="160" y="42" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">REGLA: TIENE 3 SÍLABAS</text><text x="160" y="96" text-anchor="middle" fill="var(--ink-primary)" font-size="22" font-weight="700">BRÚJULA</text><rect x="66" y="122" width="84" height="32" rx="6" fill="rgba(34,197,94,0.18)" stroke="#22C55E"/><text x="108" y="142" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">SÍ (Izq)</text><rect x="170" y="122" width="84" height="32" rx="6" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="212" y="142" text-anchor="middle" fill="var(--ink-secondary)" font-size="12" font-weight="700">NO (Der)</text>',
+            'Clasifica cada palabra según la regla activa en milisegundos.'
+          ),
+          makeFrame(
+            '#8B5CF6',
+            '<rect x="44" y="24" width="232" height="28" rx="6" fill="var(--bg-panel)" stroke="#8B5CF6"/><text x="160" y="42" text-anchor="middle" fill="#8B5CF6" font-size="11" font-weight="700">CADENA LÉXICA: LÁMPARA -> ...</text><rect x="44" y="72" width="108" height="36" rx="6" fill="rgba(34,197,94,0.18)" stroke="#22C55E"/><text x="98" y="95" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700">1 · RADAR</text><rect x="168" y="72" width="108" height="36" rx="6" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="222" y="95" text-anchor="middle" fill="var(--ink-primary)" font-size="12">2 · BOSQUE</text><rect x="44" y="118" width="108" height="36" rx="6" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="98" y="141" text-anchor="middle" fill="var(--ink-primary)" font-size="12">3 · NUBE</text><rect x="168" y="118" width="108" height="36" rx="6" fill="var(--bg-panel)" stroke="var(--border-strong)"/><text x="222" y="141" text-anchor="middle" fill="var(--ink-primary)" font-size="12">4 · TORRE</text>',
+            'Alterna entre clasificación, sinónimos/intrusos y cadenas léxicas.'
+          ),
+        ],
+      },
+      practice: 'Explica el criterio al responder sin descontar escudos.',
+      challenge: '65s oficiales o Infinito midiendo fluidez verbal y velocidad en ms.',
     },
   },
 

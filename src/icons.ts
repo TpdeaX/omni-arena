@@ -284,4 +284,60 @@ export const Icons = {
       '<polygon points="22 10 12 5 2 10 12 15 22 10"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
       s
     ),
+  // --- NeuroLab (NeuroNation++) ---
+  neuroLab: (s = 20) =>
+    svgWrap(
+      '<path d="M9.5 4A3.5 3.5 0 0 0 6 7.5c0 .7.2 1.3.5 1.9A3.5 3.5 0 0 0 5 12.5c0 1.4.8 2.6 2 3.2V19a2 2 0 0 0 2 2h1V4h-.5z"/><path d="M14.5 4A3.5 3.5 0 0 1 18 7.5c0 .7-.2 1.3-.5 1.9A3.5 3.5 0 0 1 19 12.5c0 1.4-.8 2.6-2 3.2V19a2 2 0 0 1-2 2h-1V4h.5z"/><circle cx="9" cy="11" r="1" fill="currentColor"/><circle cx="15" cy="11" r="1" fill="currentColor"/>',
+      s
+    ),
+  mackworth: (s = 20) =>
+    svgWrap(
+      '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/><circle cx="12" cy="3" r="1" fill="currentColor"/><circle cx="21" cy="12" r="1" fill="currentColor"/>',
+      s
+    ),
+  chainMath: (s = 20) =>
+    svgWrap(
+      '<rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="13" width="7" height="7" rx="1.5"/><path d="M10 7.5h4.5a3 3 0 0 1 3 3V13"/><line x1="6.5" y1="5.8" x2="6.5" y2="9.2"/><line x1="4.8" y1="7.5" x2="8.2" y2="7.5"/><line x1="15.8" y1="16.5" x2="19.2" y2="16.5"/>',
+      s
+    ),
+  colorCraze: (s = 20) =>
+    svgWrap(
+      '<circle cx="9" cy="9" r="5"/><polygon points="15 10 21 20 9 20"/>',
+      s
+    ),
+  mot: (s = 20) =>
+    svgWrap(
+      '<circle cx="7" cy="7" r="2.5" fill="currentColor"/><circle cx="17" cy="8" r="2.5"/><circle cx="8" cy="17" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5" fill="currentColor"/><path d="M9.5 7.5l5 .5"/><path d="M16 10.5l-6.5 5"/>',
+      s
+    ),
+  pathfinder: (s = 20) =>
+    svgWrap(
+      '<circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h10l-5 7-7 7h12"/>',
+      s
+    ),
+  symbolSpeed: (s = 20) =>
+    svgWrap(
+      '<polygon points="7 4 11 10 3 10"/><rect x="14" y="4" width="6" height="6" rx="1"/><line x1="3" y1="14" x2="21" y2="14"/><polygon points="12 16 15 21 9 21"/>',
+      s
+    ),
+  verbal: (s = 20) =>
+    svgWrap(
+      '<path d="M4 5h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/>',
+      s
+    ),
+  heartPulse: (s = 18) =>
+    svgWrap(
+      '<polyline points="2 12 6 12 9 5 14 19 17 12 22 12"/>',
+      s
+    ),
+  clock: (s = 18) =>
+    svgWrap(
+      '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>',
+      s
+    ),
+  layers: (s = 18) =>
+    svgWrap(
+      '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+      s
+    ),
 };

@@ -9,6 +9,8 @@ import {
 import type {
   DifficultyId,
   GameModeId,
+  NeuroPillar,
+  NeuroProfile,
   PlayerProfile,
   RunMetrics,
   SkillAxis,
@@ -16,6 +18,13 @@ import type {
   ThemeMode,
   UserSettings,
 } from '../types.ts';
+import {
+  applyDiagnosticBaseline,
+  applyRunToNeuroProfile,
+  defaultNeuroProfile,
+  markCourseDayCompleted,
+  normalizeNeuroProfile,
+} from './NeuroStore.ts';
 
 const STORAGE_KEY = 'omni_arena_profile_v1';
 const ECO_THEME_KEY = 'umbral-theme';
@@ -176,6 +185,7 @@ export function defaultProfile(): PlayerProfile {
       academySubFilter: 'all',
       skipGuideFor: {},
     },
+    neuro: defaultNeuroProfile(),
     updatedAt: 0,
   };
 }
@@ -217,6 +227,7 @@ export function normalizeProfile(parsed: Partial<PlayerProfile> | null | undefin
     settings: mergedSettings,
     history: parsedHistory,
     dailyCompletedIds: Array.isArray(parsed.dailyCompletedIds) ? parsed.dailyCompletedIds : [],
+    neuro: normalizeNeuroProfile(parsed.neuro),
     updatedAt: Number(parsed.updatedAt) || 0,
   };
 }
@@ -441,6 +452,41 @@ export class ProfileStore {
     this.save();
   }
 
+  public getNeuro(): NeuroProfile {
+    const norm = normalizeNeuroProfile(this.profile.neuro);
+    this.profile.neuro = norm;
+    return norm;
+  }
+
+  public saveDiagnosticBaseline(
+    results: Partial<Record<NeuroPillar, { score: number; accuracy?: number; avgReactionMs?: number }>>
+  ): NeuroProfile {
+    const next = applyDiagnosticBaseline(this.getNeuro(), results);
+    this.profile.neuro = next;
+    this.save();
+    return next;
+  }
+
+  public markNeuroActivePauseDone(): NeuroProfile {
+    const curr = this.getNeuro();
+    this.profile.neuro = {
+      ...curr,
+      dailyPlan: {
+        ...curr.dailyPlan,
+        activePauseDone: true,
+      },
+    };
+    this.save();
+    return this.profile.neuro;
+  }
+
+  public completeNeuroCourseDay(courseId: string, dayNumber: number): NeuroProfile {
+    const next = markCourseDayCompleted(this.getNeuro(), courseId, dayNumber);
+    this.profile.neuro = next;
+    this.save();
+    return next;
+  }
+
   public recordPracticeRun(durationSec: number): { xpEarned: number; leveledUp: boolean } {
     const xpEarned = Math.min(60, Math.max(5, Math.round(durationSec * 0.8)));
     this.profile.xp += xpEarned;
@@ -566,6 +612,14 @@ export class ProfileStore {
       durationSec: Math.round(metrics.durationSec),
     });
     this.profile.history = this.profile.history.slice(0, 25);
+
+    // Sync cognitive metrics into NeuroLab profile (pillars, micro-levels 1..300, daily plan & history)
+    const neuroUpdate = applyRunToNeuroProfile(
+      normalizeNeuroProfile(this.profile.neuro),
+      metrics,
+      today
+    );
+    this.profile.neuro = neuroUpdate.next;
 
     this.save();
 

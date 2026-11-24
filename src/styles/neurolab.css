@@ -1,0 +1,1027 @@
+/* ==================== NEUROLAB (NEURONATION++) STYLES ==================== */
+
+.oa-neuro-session-pill {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(123, 97, 255, 0.16);
+  border: 1px solid var(--accent-violet);
+  color: var(--accent-violet);
+  letter-spacing: 0.04em;
+}
+
+/* ==================== 7 NEUROLAB GAMES UI ==================== */
+
+.oa-neuro-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.oa-neuro-canvas-layout {
+  width: 100%;
+  max-width: 720px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.oa-neuro-top-strip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+}
+
+.oa-neuro-canvas-wrap {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  flex: 1;
+  min-height: 240px;
+}
+
+.oa-mot-wrap canvas {
+  border-radius: 12px;
+  border: 1.5px solid var(--border-strong);
+  cursor: pointer;
+}
+
+.oa-neuro-canvas {
+  display: block;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.oa-neuro-action-bar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.oa-neuro-big-btn {
+  width: 100%;
+  max-width: 420px;
+  min-height: 56px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 2px solid var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.12);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: transform 0.1s ease, background 0.14s ease;
+}
+
+.oa-neuro-big-btn:hover {
+  background: rgba(0, 229, 255, 0.2);
+}
+
+.oa-neuro-big-btn:active {
+  transform: scale(0.98);
+}
+
+.oa-neuro-big-btn strong {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.oa-neuro-big-btn span {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--ink-secondary);
+}
+
+.oa-neuro-board {
+  max-width: 680px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Chain Math */
+.oa-chain-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.oa-chain-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-strong);
+}
+
+.oa-chain-dot.is-done {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.oa-chain-dot.is-active {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  transform: scale(1.2);
+}
+
+.oa-chain-card {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.oa-chain-card.is-feedback-good {
+  border-color: #22c55e;
+}
+
+.oa-chain-card.is-feedback-bad {
+  border-color: var(--accent-red);
+}
+
+.oa-chain-label {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-secondary);
+}
+
+.oa-chain-token {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
+  font-weight: 700;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
+.oa-chain-token.is-seed {
+  color: var(--accent-cyan);
+}
+
+.oa-chain-token.is-question {
+  color: var(--ink-primary);
+}
+
+.oa-chain-feedback {
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  color: var(--ink-primary);
+  line-height: 1.45;
+}
+
+/* Shared Options Grid */
+.oa-neuro-options-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.oa-neuro-options-grid.is-binary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.oa-neuro-opt-btn {
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: border-color 0.14s ease, transform 0.1s ease, background 0.14s ease;
+}
+
+.oa-neuro-opt-btn:hover {
+  border-color: var(--opt-accent, var(--accent-cyan));
+  background: var(--bg-panel);
+}
+
+.oa-neuro-opt-btn:active {
+  transform: scale(0.98);
+}
+
+.oa-neuro-opt-btn kbd {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-secondary);
+}
+
+.oa-neuro-opt-btn.is-yes:hover {
+  border-color: #22c55e;
+}
+
+.oa-neuro-opt-btn.is-no:hover {
+  border-color: var(--accent-red);
+}
+
+/* Color Craze */
+.oa-craze-banner {
+  --rule-accent: #ec4899;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  border: 2px solid var(--rule-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.oa-craze-banner.is-flash {
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
+}
+
+.oa-craze-rule-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: var(--rule-accent);
+}
+
+.oa-craze-banner strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.oa-craze-banner small {
+  font-size: 0.82rem;
+  color: var(--ink-secondary);
+}
+
+.oa-craze-stimulus {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+}
+
+.oa-craze-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.oa-craze-feedback {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  min-height: 20px;
+  color: var(--ink-secondary);
+}
+
+.oa-craze-feedback.is-good {
+  color: #22c55e;
+}
+
+.oa-craze-feedback.is-bad {
+  color: var(--accent-red);
+}
+
+.oa-neuro-inhibit-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 2px solid var(--accent-red);
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.oa-neuro-inhibit-btn strong {
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  letter-spacing: 0.05em;
+}
+
+.oa-neuro-inhibit-btn span {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-secondary);
+}
+
+.oa-sym-none-btn {
+  border-color: var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.oa-sym-none-btn:hover {
+  border-color: var(--accent-cyan);
+}
+
+/* Pathfinder Corsi */
+.oa-path-grid {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  display: grid;
+  gap: 10px;
+}
+
+.oa-path-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  transition: transform 0.1s ease, background 0.14s ease, border-color 0.14s ease;
+}
+
+.oa-path-cell:hover:not(:disabled) {
+  border-color: var(--accent-cyan);
+}
+
+.oa-path-cell.is-lit {
+  background: #6366f1;
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.oa-path-cell.is-trail {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: #6366f1;
+}
+
+.oa-path-cell.is-distractor {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.oa-path-cell.is-picked {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.oa-path-cell.is-reveal {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.oa-mem-pill.is-warn {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.oa-neuro-foot-row {
+  display: flex;
+  justify-content: center;
+}
+
+/* Symbol Speed */
+.oa-sym-targets {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--accent-cyan);
+}
+
+.oa-sym-target-card {
+  width: 78px;
+  height: 78px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  display: grid;
+  place-items: center;
+}
+
+.oa-sym-plus {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.oa-sym-candidates {
+  display: grid;
+  gap: 10px;
+}
+
+.oa-sym-cand-btn {
+  position: relative;
+  min-height: 86px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: border-color 0.14s ease, transform 0.1s ease;
+}
+
+.oa-sym-cand-btn:hover {
+  border-color: var(--accent-cyan);
+  background: var(--bg-panel);
+}
+
+.oa-sym-cand-btn kbd {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-muted);
+}
+
+/* Verbal Fluency */
+.oa-verbal-card {
+  padding: 28px 20px;
+  border-radius: 14px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--accent-violet);
+  text-align: center;
+}
+
+.oa-verbal-word {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+}
+
+/* ==================== HUB NEUROLAB HERO BANNER ==================== */
+
+.oa-launch-neurolab {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--accent-violet);
+  background: linear-gradient(135deg, rgba(123, 97, 255, 0.16), rgba(0, 229, 255, 0.09));
+  color: var(--ink-primary);
+  text-align: left;
+  transition: border-color 0.16s ease, transform 0.14s ease, background 0.16s ease;
+}
+
+.oa-launch-neurolab:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.oa-launch-neurolab-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.oa-launch-neurolab-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(123, 97, 255, 0.22);
+  border: 1px solid var(--accent-violet);
+  color: var(--accent-violet);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.oa-launch-neurolab-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oa-launch-neurolab-meta span.oa-launch-dim {
+  color: var(--accent-violet);
+}
+
+.oa-launch-neurolab-meta strong {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  letter-spacing: 0.03em;
+}
+
+.oa-launch-neurolab-meta small {
+  font-size: 0.84rem;
+  color: var(--ink-secondary);
+}
+
+.oa-launch-neurolab-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.oa-nl-score-chip {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-cyan);
+}
+
+/* ==================== NEUROLAB DASHBOARD VIEW ==================== */
+
+.oa-nl-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.oa-nl-hero {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 18px;
+}
+
+.oa-nl-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oa-nl-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  letter-spacing: 0.02em;
+}
+
+.oa-nl-hero-sub {
+  margin: 0;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.oa-nl-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.oa-nl-score-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.oa-nl-score-val {
+  font-family: var(--font-display);
+  font-size: 2.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-cyan);
+}
+
+.oa-nl-pillars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.oa-nl-pillar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.oa-nl-pillar-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.oa-nl-pillar-bar {
+  height: 9px;
+  border-radius: 99px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.oa-nl-pillar-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+}
+
+.oa-nl-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.oa-nl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.oa-nl-tab.is-active {
+  border-color: var(--accent-cyan);
+  background: var(--bg-elevated);
+  color: var(--accent-cyan);
+}
+
+/* Daily Plan Steps */
+.oa-nl-daily-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.oa-nl-step-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.oa-nl-step-card.is-done {
+  border-color: #22c55e;
+}
+
+.oa-nl-step-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.oa-nl-step-card h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.96rem;
+}
+
+.oa-nl-step-meta {
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+/* 7 Disciplines Grid */
+.oa-nl-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.oa-nl-game-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oa-nl-game-card:hover {
+  border-color: var(--tile-accent, var(--accent-cyan));
+}
+
+.oa-nl-game-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.oa-nl-lvl-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-cyan);
+}
+
+.oa-nl-game-card h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.oa-nl-game-card p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-secondary);
+  line-height: 1.4;
+}
+
+.oa-nl-game-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Courses */
+.oa-nl-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.oa-nl-course-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--course-accent, var(--accent-cyan));
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oa-nl-course-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.oa-nl-course-head h3 {
+  margin: 0 0 3px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.oa-nl-course-head small {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--course-accent, var(--accent-cyan));
+}
+
+.oa-nl-course-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+  line-height: 1.45;
+}
+
+.oa-nl-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.oa-nl-day-cell {
+  min-height: 34px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.oa-nl-day-cell.is-done {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.oa-nl-day-cell.is-next {
+  border-color: var(--course-accent, var(--accent-cyan));
+  color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--course-accent, var(--accent-cyan));
+}
+
+/* Telemetry & Vitality */
+.oa-nl-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.oa-nl-kpi {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oa-nl-kpi span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.oa-nl-kpi strong {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  color: var(--ink-primary);
+}
+
+.oa-nl-chart-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.oa-nl-insights {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--ink-secondary);
+  line-height: 1.45;
+}
+
+/* Active Micro-Pause Modal */
+.oa-pause-breath-modal {
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.oa-breath-ring {
+  width: 152px;
+  height: 152px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-cyan);
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.24), rgba(0, 229, 255, 0.04));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.6s ease;
+}
+
+.oa-breath-ring strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+.oa-breath-ring span {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--ink-secondary);
+}
+
+/* Transfer Mode (Active Recall) */
+.oa-transfer-stage {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oa-transfer-card {
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oa-transfer-deck {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+}
+
+.oa-transfer-q {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.oa-transfer-a {
+  margin: 0;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border-left: 3px solid #22c55e;
+  color: var(--ink-primary);
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .oa-nl-hero,
+  .oa-nl-courses-grid {
+    grid-template-columns: 1fr;
+  }
+  .oa-nl-daily-grid,
+  .oa-nl-telemetry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .oa-sym-candidates {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .oa-nl-daily-grid {
+    grid-template-columns: 1fr;
+  }
+  .oa-launch-neurolab {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,3 +1,4 @@
+import '../styles/neurolab.css';
 import {
   ACADEMY_IDS,
   AXIS_META,
@@ -52,12 +53,14 @@ const TAB_ORDER: { id: HubTabId; label: string }[] = [
 
 const ACADEMY_SUB_ORDER: { id: AcademySubFilter; label: string }[] = [
   { id: 'all', label: 'Todas' },
+  { id: 'neuro', label: 'NeuroLab' },
   { id: 'music', label: 'Música e Instrumentos' },
   { id: 'iq', label: 'IQ y Lógica' },
   { id: 'strategy', label: 'Estrategia y 3D' },
 ];
 
 const ACADEMY_GROUP_LABELS: Record<Exclude<AcademySubFilter, 'all'>, string> = {
+  neuro: 'NeuroLab · Cognición',
   music: 'Instrumento · Música Real',
   iq: 'IQ · Razonamiento',
   strategy: 'Estrategia · Tablero / 3D',
@@ -96,6 +99,7 @@ function matchesTab(
 export class HubView {
   private root: HTMLElement;
   private onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void;
+  private onOpenNeuroLab?: () => void;
   private activeModal: 'none' | 'settings' | 'cloud' | 'tutorial' = 'none';
   private activeGuide: GuideOverlay | null = null;
   private searchQuery = '';
@@ -105,10 +109,12 @@ export class HubView {
 
   constructor(
     root: HTMLElement,
-    onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void
+    onLaunch: (modeId: GameModeId, practiceMode?: boolean, infiniteMode?: boolean) => void,
+    onOpenNeuroLab?: () => void
   ) {
     this.root = root;
     this.onLaunch = onLaunch;
+    this.onOpenNeuroLab = onOpenNeuroLab;
   }
 
   public destroy(): void {
@@ -168,10 +174,14 @@ export class HubView {
 
     const academySubCounts: Record<AcademySubFilter, number> = {
       all: countAcademy,
+      neuro: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'neuro').length,
       music: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'music').length,
       iq: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'iq').length,
       strategy: ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'strategy').length,
     };
+
+    const neuro = profileStore.getNeuro();
+    const neuroDailyDone = neuro.dailyPlan.steps.filter((s) => s.completed).length;
 
     const circuitCount = CIRCUIT_IDS.length;
     const totalSecRanked = circuitCount * 15;
@@ -293,6 +303,21 @@ export class HubView {
                   <span>Calibra tus 5 ejes de habilidad</span>
                 </div>
                 <span class="oa-launch-go">${Icons.trophy(18)}</span>
+              </button>
+
+              <button type="button" class="oa-launch-neurolab" id="oa-open-neurolab">
+                <div class="oa-launch-neurolab-left">
+                  <span class="oa-launch-neurolab-icon">${Icons.neuroLab(22)}</span>
+                  <div class="oa-launch-neurolab-meta">
+                    <span class="oa-launch-dim">NEURONATION++ · 4 PILARES · CURSOS 14/28 DÍAS</span>
+                    <strong>LABORATORIO NEUROLAB</strong>
+                    <small>Sesión diaria inteligente (${neuroDailyDone}/4), diagnóstico, micro-niveles 1–300 y correlación vitalidad</small>
+                  </div>
+                </div>
+                <div class="oa-launch-neurolab-right">
+                  <span class="oa-nl-score-chip">NEURO ${neuro.neuroScore}</span>
+                  <span class="oa-launch-go">${Icons.arrowRight(18)}</span>
+                </div>
               </button>
             </div>
           </div>
@@ -458,8 +483,8 @@ export class HubView {
                 <p>El Circuito Total y la Prueba Clasificatoria rotan cada 15 s entre 18 pruebas rápidas 2D/3D. Completa las 3 disciplinas del Circuito Diario para mantener tu racha.</p>
               </div>
               <div class="oa-hub-tutorial-card">
-                <div class="oa-hub-tutorial-card-head">${Icons.graduation(18)}<span>2. 15 Academias Guiadas</span></div>
-                <p>Aprende paso a paso en Música (Piano, Batería, Cuerdas, Ensamble), Estrategia/3D (Ajedrez, Damas, Póker, Rubik) e IQ/Lógica (Raven, Sudoku, Hanói, Rotación 3D, Nonogramas, Series y Palacio Mental).</p>
+                <div class="oa-hub-tutorial-card-head">${Icons.graduation(18)}<span>2. ${countAcademy} Academias Guiadas + NeuroLab</span></div>
+                <p>Aprende paso a paso en NeuroLab (7 disciplinas científicas), Música (Piano, Batería, Cuerdas, Ensamble), Estrategia/3D (Ajedrez, Damas, Póker, Rubik) e IQ/Lógica (Raven, Sudoku, Hanói, Rotación 3D, Nonogramas, Series y Palacio Mental).</p>
               </div>
               <div class="oa-hub-tutorial-card">
                 <div class="oa-hub-tutorial-card-head">${Icons.bolt(18)}<span>3. Destreza 2D y Acción 3D</span></div>
@@ -757,6 +782,12 @@ export class HubView {
     window.addEventListener('keydown', this.onKeyDown);
     this.bindPulseCloudButtons();
     this.bindGridEvents();
+
+    this.root.querySelector('#oa-open-neurolab')?.addEventListener('click', () => {
+      synthAudio.ensure();
+      synthAudio.uiClick();
+      this.onOpenNeuroLab?.();
+    });
 
     this.root.querySelectorAll<HTMLButtonElement>('[data-open-guide]').forEach((btn) => {
       btn.addEventListener('click', () => {

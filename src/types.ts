@@ -8,7 +8,7 @@ export type GameCategory = 'academy' | 'dexterity2d' | 'action3d' | 'circuit';
 
 export type HubTabId = 'academy' | 'dexterity2d' | 'action3d' | 'all';
 
-export type AcademySubFilter = 'all' | 'music' | 'iq' | 'strategy';
+export type AcademySubFilter = 'all' | 'neuro' | 'music' | 'iq' | 'strategy';
 
 export type InstrumentTimbre =
   | 'piano'
@@ -66,6 +66,14 @@ export type GameModeId =
   | 'nonogram2d'
   | 'logicseq2d'
   | 'memorypath2d'
+  // NeuroLab (7 disciplinas científicas NeuroNation++)
+  | 'mackworth2d'
+  | 'chainmath2d'
+  | 'colorcraze2d'
+  | 'mot2d'
+  | 'pathfinder2d'
+  | 'symbolspeed2d'
+  | 'verbal2d'
   // Circuitos
   | 'gauntlet'
   | 'ranked';
@@ -161,6 +169,50 @@ export interface UserSettings {
   skipGuideFor?: Partial<Record<GameModeId, boolean>>;
 }
 
+export type NeuroPillar = 'memory' | 'attention' | 'speed' | 'reasoning';
+
+export type NeuroPillarScores = Record<NeuroPillar, number>;
+
+export interface NeuroHistoryEntry {
+  day: string;
+  neuroScore: number;
+  pillars: NeuroPillarScores;
+  avgReactionMs: number;
+  p90ReactionMs: number;
+  sessions: number;
+}
+
+export interface NeuroDailyStep {
+  modeId: StandaloneGameId;
+  pillar: NeuroPillar;
+  completed: boolean;
+  score?: number;
+  reactionMs?: number;
+}
+
+export interface NeuroDailyPlan {
+  day: string;
+  steps: NeuroDailyStep[];
+  activePauseDone: boolean;
+}
+
+export interface NeuroCourseProgress {
+  startedAt: number;
+  completedDays: number[];
+  currentLevel: number;
+}
+
+export interface NeuroProfile {
+  pillars: NeuroPillarScores;
+  neuroScore: number;
+  baselineCompleted: boolean;
+  history: NeuroHistoryEntry[];
+  dailyPlan: NeuroDailyPlan;
+  courses: Record<string, NeuroCourseProgress>;
+  microLevelByMode: Record<string, number>;
+  reactionHistoryMs?: number[];
+}
+
 export interface PlayerProfile {
   xp: number;
   level: number;
@@ -173,6 +225,7 @@ export interface PlayerProfile {
   lastPlayedDay: string;
   dailyCompletedIds: StandaloneGameId[];
   settings: UserSettings;
+  neuro?: NeuroProfile;
   updatedAt: number;
 }
 

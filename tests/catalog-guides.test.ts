@@ -10,14 +10,14 @@ import {
 } from '../src/catalog.ts';
 import type { GameModeId } from '../src/types.ts';
 
-test('GAME_CATALOG: exactamente 35 entradas con howToPlay >= 3, controles, frames, sin emojis', () => {
+test('GAME_CATALOG: exactamente 42 entradas con howToPlay >= 3, controles, frames, sin emojis', () => {
   const emojiRe = /\p{Extended_Pictographic}/u;
   const entries = Object.entries(GAME_CATALOG) as [GameModeId, (typeof GAME_CATALOG)[GameModeId]][];
 
-  assert.equal(ACADEMY_IDS.length, 15, 'Debe haber 15 academias guiadas');
+  assert.equal(ACADEMY_IDS.length, 22, 'Debe haber 22 academias guiadas (15 base + 7 NeuroLab)');
   assert.equal(CIRCUIT_IDS.length, 18, 'Debe haber 18 pruebas rápidas en circuito');
-  assert.equal(STANDALONE_IDS.length, 33, 'Debe haber 33 modos individuales');
-  assert.equal(entries.length, 35, `GAME_CATALOG debe tener 35 entradas (33 modos + 2 circuitos), hay ${entries.length}`);
+  assert.equal(STANDALONE_IDS.length, 40, 'Debe haber 40 modos individuales');
+  assert.equal(entries.length, 42, `GAME_CATALOG debe tener 42 entradas (40 modos + 2 circuitos), hay ${entries.length}`);
 
   for (const [id, desc] of entries) {
     assert.equal(desc.id, id);

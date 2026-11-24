@@ -24,6 +24,13 @@ export const ACADEMY_SHIELD_IDS = new Set<GameModeId>([
   'nonogram2d',
   'logicseq2d',
   'memorypath2d',
+  'mackworth2d',
+  'chainmath2d',
+  'colorcraze2d',
+  'mot2d',
+  'pathfinder2d',
+  'symbolspeed2d',
+  'verbal2d',
 ]);
 
 const DIFFICULTY_ORDER: DifficultyId[] = [
@@ -42,6 +49,10 @@ export interface GameShellCallbacks {
 export interface GameShellStartOptions {
   practiceMode?: boolean;
   infiniteMode?: boolean;
+  durationOverrideSec?: number;
+  sessionBadge?: string;
+  exitLabel?: string;
+  onSessionComplete?: (metrics: RunMetrics) => void;
 }
 
 export class GameShell {
@@ -87,6 +98,9 @@ export class GameShell {
   private practiceMode = false;
   private infiniteMode = false;
   private isAcademy = false;
+  private durationOverrideSec: number | null = null;
+  private onSessionComplete: ((metrics: RunMetrics) => void) | null = null;
+  private exitLabel = 'VOLVER AL HUB';
 
   private hudState: HudState = {
     score: 0,
@@ -141,6 +155,15 @@ export class GameShell {
       desc.category !== 'circuit' &&
       Boolean(desc.supportsInfinite) &&
       Boolean(options?.infiniteMode);
+    this.durationOverrideSec =
+      typeof options?.durationOverrideSec === 'number' && options.durationOverrideSec > 0
+        ? options.durationOverrideSec
+        : null;
+    this.onSessionComplete = options?.onSessionComplete ?? null;
+    this.exitLabel = options?.exitLabel ?? 'VOLVER AL HUB';
+    const sessionBadgeHtml = options?.sessionBadge
+      ? `<span class="oa-neuro-session-pill">${options.sessionBadge}</span>`
+      : '';
     this.difficulty = profile.settings.difficulty ?? 'adaptive';
     this.pendingPauseDiff = this.difficulty;
     this.pendingPauseInfinite = this.infiniteMode;
@@ -200,6 +223,7 @@ export class GameShell {
             <span class="oa-hud-phase" id="oa-hud-phase">${desc.title}</span>
             <span class="oa-hud-sub" id="oa-hud-sub"></span>
           </div>
+          ${sessionBadgeHtml}
           ${this.practiceMode ? '<span class="oa-practice-badge">PRÁCTICA</span>' : ''}
           ${
             this.infiniteMode
@@ -280,7 +304,7 @@ export class GameShell {
                 : ''
             }
             <button type="button" class="oa-btn" id="oa-pause-guide-btn">${Icons.help(16)}<span>VER GUÍA</span></button>
-            <button type="button" class="oa-btn oa-btn-ghost" id="oa-quit-btn">${Icons.arrowLeft(16)}<span>SALIR AL HUB</span></button>
+            <button type="button" class="oa-btn oa-btn-ghost" id="oa-quit-btn">${Icons.arrowLeft(16)}<span>${this.exitLabel}</span></button>
           </div>
         </div>
       </div>
@@ -614,6 +638,23 @@ export class GameShell {
         }
       }
       this.runner?.update(dt, this.totalActiveTime);
+      if (this.durationOverrideSec !== null && !this.finished) {
+        const left = Math.max(0, this.durationOverrideSec - this.totalActiveTime);
+        this.hudState.timeLeftSec = left;
+        this.renderHud();
+        if (left <= 0) {
+          const partial = this.runner
+            ? this.runner.getMetrics()
+            : {
+                score: this.hudState.score,
+                maxCombo: this.hudState.combo,
+                survived: true,
+                axisPerformances: {},
+              };
+          this.handleFinish({ ...partial, survived: true });
+          return;
+        }
+      }
     }
 
     this.rafId = requestAnimationFrame(this.loop);
@@ -816,6 +857,13 @@ export class GameShell {
       meetsInfiniteMinimum(durationSec, fullMetrics.hits ?? 0, fullMetrics.puzzlesSolved ?? 0);
 
     const summary = profileStore.recordRun(fullMetrics);
+    if (this.onSessionComplete) {
+      const cb = this.onSessionComplete;
+      this.onSessionComplete = null;
+      this.destroy();
+      cb(fullMetrics);
+      return;
+    }
     const desc = GAME_CATALOG[this.modeId];
     const diffMeta = DIFFICULTY_META[this.difficulty];
 
@@ -888,7 +936,7 @@ export class GameShell {
 
         <div class="oa-modal-actions">
           <button type="button" class="oa-btn oa-btn-primary" id="oa-debrief-retry">${Icons.refresh(16)}<span>JUGAR DE NUEVO</span></button>
-          <button type="button" class="oa-btn" id="oa-debrief-hub">${Icons.arrowLeft(16)}<span>VOLVER AL HUB</span></button>
+          <button type="button" class="oa-btn" id="oa-debrief-hub">${Icons.arrowLeft(16)}<span>${this.exitLabel}</span></button>
         </div>
       </div>
     `;

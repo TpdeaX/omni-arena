@@ -35,6 +35,13 @@ import { SpatialRotation3DGame } from './SpatialRotation3DGame';
 import { StringsAcademyGame } from './StringsAcademyGame';
 import { SudokuGuide2DGame } from './SudokuGuide2DGame';
 import { TwinStick2DGame } from './TwinStick2DGame';
+import { MackworthClock2DGame } from './MackworthClock2DGame';
+import { ChainMath2DGame } from './ChainMath2DGame';
+import { ColorCraze2DGame } from './ColorCraze2DGame';
+import { MultipleObjectTrack2DGame } from './MultipleObjectTrack2DGame';
+import { Pathfinder2DGame } from './Pathfinder2DGame';
+import { SymbolSpeed2DGame } from './SymbolSpeed2DGame';
+import { VerbalFluency2DGame } from './VerbalFluency2DGame';
 
 // Alternating 3D / 2D sequence across the 18 fast circuit disciplines
 const ALTERNATING_CIRCUIT: StandaloneGameId[] = [
@@ -130,6 +137,21 @@ export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame
       return new LogicSeq2DGame(isSlice);
     case 'memorypath2d':
       return new MemoryPath2DGame(isSlice);
+    // 7 Disciplinas NeuroLab (NeuroNation++)
+    case 'mackworth2d':
+      return new MackworthClock2DGame(isSlice);
+    case 'chainmath2d':
+      return new ChainMath2DGame(isSlice);
+    case 'colorcraze2d':
+      return new ColorCraze2DGame(isSlice);
+    case 'mot2d':
+      return new MultipleObjectTrack2DGame(isSlice);
+    case 'pathfinder2d':
+      return new Pathfinder2DGame(isSlice);
+    case 'symbolspeed2d':
+      return new SymbolSpeed2DGame(isSlice);
+    case 'verbal2d':
+      return new VerbalFluency2DGame(isSlice);
   }
 }
 

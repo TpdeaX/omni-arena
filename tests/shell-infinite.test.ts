@@ -14,15 +14,17 @@ import {
 } from '../src/state/ProfileStore.ts';
 import type { GameModeId } from '../src/types.ts';
 
-test('catalog counts: 33 standalone, 15 academies (4 music, 7 iq, 4 strategy), 18 circuit', () => {
-  assert.equal(ACADEMY_IDS.length, 15);
+test('catalog counts: 40 standalone, 22 academies (7 neuro, 4 music, 7 iq, 4 strategy), 18 circuit', () => {
+  assert.equal(ACADEMY_IDS.length, 22);
   assert.equal(CIRCUIT_IDS.length, 18);
-  assert.equal(STANDALONE_IDS.length, 33);
+  assert.equal(STANDALONE_IDS.length, 40);
 
+  const neuroIds = ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'neuro');
   const musicIds = ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'music');
   const iqIds = ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'iq');
   const strategyIds = ACADEMY_IDS.filter((id) => GAME_CATALOG[id].academyGroup === 'strategy');
 
+  assert.equal(neuroIds.length, 7);
   assert.equal(musicIds.length, 4);
   assert.equal(iqIds.length, 7);
   assert.equal(strategyIds.length, 4);
@@ -31,7 +33,7 @@ test('catalog counts: 33 standalone, 15 academies (4 music, 7 iq, 4 strategy), 1
   for (const id of CIRCUIT_IDS) {
     assert.equal(GAME_CATALOG[id].supportsInfinite, true, `${id} should support infinite`);
   }
-  for (const id of ['piano2d', 'drums2d', 'strings2d', 'band2d', 'raven2d', 'sudoku2d', 'spatial3d', 'nonogram2d', 'logicseq2d', 'memorypath2d'] as GameModeId[]) {
+  for (const id of ['piano2d', 'drums2d', 'strings2d', 'band2d', 'raven2d', 'sudoku2d', 'spatial3d', 'nonogram2d', 'logicseq2d', 'memorypath2d', 'mackworth2d', 'chainmath2d', 'colorcraze2d', 'mot2d', 'pathfinder2d', 'symbolspeed2d', 'verbal2d'] as GameModeId[]) {
     assert.equal(GAME_CATALOG[id].supportsInfinite, true, `${id} should support infinite`);
   }
   for (const id of ['chess2d', 'checkers2d', 'poker2d', 'rubik3d', 'hanoi2d'] as GameModeId[]) {

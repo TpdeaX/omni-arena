@@ -1,4 +1,4 @@
-const CACHE_NAME = 'omni-arena-v8';
+const CACHE_NAME = 'omni-arena-v9';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {

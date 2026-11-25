@@ -43,6 +43,21 @@ export const AXIS_META: Record<
   },
 };
 
+// Para qué sirve cada eje, en una frase (sin cifras de mejora: es entrenamiento, no una promesa).
+export const AXIS_BENEFIT: Record<SkillAxis, string> = {
+  aim: 'afina la precisión de tu pulso y tu mirada cuando hay prisa.',
+  rhythm: 'entrena el sentido del pulso y la coordinación entre lo que oyes y lo que haces.',
+  logic: 'ejercita la memoria de trabajo y el razonamiento: retener datos y decidir con claridad.',
+  reflex: 'acorta el tiempo entre ver algo y reaccionar, para esquivar y bloquear a tiempo.',
+  agility: 'mejora la orientación en el espacio y los cambios de dirección rápidos en 3D.',
+};
+
+export function axisTrainLine(axis: GameDescriptor['axis']): string {
+  return axis === 'all'
+    ? 'Entrena: los cinco ejes del perfil, una prueba tras otra.'
+    : `Entrena: ${AXIS_META[axis].label} — ${AXIS_BENEFIT[axis]}`;
+}
+
 export const DIFFICULTY_META: Record<
   DifficultyId,
   {

@@ -1,4 +1,4 @@
-import { CIRCUIT_IDS, GAME_CATALOG } from '../catalog';
+import { axisTrainLine, GAME_CATALOG } from '../catalog';
 import { synthAudio } from '../audio/SynthAudio';
 import { GameContext, MiniGame, RunMetrics, SkillAxis, StandaloneGameId } from '../types';
 import { renderControlHintRow } from '../ui/GuideOverlay';
@@ -8,6 +8,7 @@ import { BlitzStacker2DGame } from './BlitzStacker2DGame';
 import { BulletHell2DGame } from './BulletHell2DGame';
 import { CheckersAcademyGame } from './CheckersAcademyGame';
 import { ChessAcademyGame } from './ChessAcademyGame';
+import { buildCircuitOrder, FIXED_CIRCUIT_ORDER } from './circuitOrder';
 import { DrumsAcademyGame } from './DrumsAcademyGame';
 import { DualNBack2DGame } from './DualNBack2DGame';
 import { FlashParry2DGame } from './FlashParry2DGame';
@@ -42,31 +43,6 @@ import { MultipleObjectTrack2DGame } from './MultipleObjectTrack2DGame';
 import { Pathfinder2DGame } from './Pathfinder2DGame';
 import { SymbolSpeed2DGame } from './SymbolSpeed2DGame';
 import { VerbalFluency2DGame } from './VerbalFluency2DGame';
-
-// Alternating 3D / 2D sequence across the 18 fast circuit disciplines
-const ALTERNATING_CIRCUIT: StandaloneGameId[] = [
-  'aim3d',
-  'schulte2d',
-  'flight3d',
-  'track2d',
-  'parkour3d',
-  'pulse2d',
-  'cube3d',
-  'nback2d',
-  'runner3d',
-  'parry2d',
-  'rhythm2d',
-  'sniper2d',
-  'memory2d',
-  'bullet2d',
-  'snake2d',
-  'tetris2d',
-  'twinstick2d',
-  'puzzle2d',
-];
-
-const SEQUENCE: StandaloneGameId[] =
-  ALTERNATING_CIRCUIT.length === CIRCUIT_IDS.length ? ALTERNATING_CIRCUIT : [...CIRCUIT_IDS];
 
 export function createMiniGame(id: StandaloneGameId, isSlice: boolean): MiniGame {
   switch (id) {
@@ -161,6 +137,8 @@ export class GauntletOrchestrator {
   private ctx!: GameContext;
   private isRanked: boolean;
   private readonly sliceDuration = 15;
+  // Ranked keeps the fixed order (comparable calibrations); the free circuit shuffles per run.
+  private readonly order: StandaloneGameId[];
 
   private activeGame: MiniGame | null = null;
   private shiftBannerEl: HTMLDivElement | null = null;
@@ -170,6 +148,8 @@ export class GauntletOrchestrator {
   private phaseIndex = 0;
   private phaseElapsed = 0;
   private shiftCooldown = 0;
+  // First cycle: the banner waits for "Listo" (no countdown) so the player can read it.
+  private waitForReady = false;
   private totalElapsed = 0;
   private paused = false;
   private destroyed = false;
@@ -184,6 +164,7 @@ export class GauntletOrchestrator {
 
   constructor(isRanked: boolean) {
     this.isRanked = isRanked;
+    this.order = isRanked ? FIXED_CIRCUIT_ORDER : buildCircuitOrder();
   }
 
   public mount(ctx: GameContext): void {
@@ -226,10 +207,11 @@ export class GauntletOrchestrator {
       this.activeGame = null;
     }
 
-    const modeId = SEQUENCE[idx % SEQUENCE.length];
+    const modeId = this.order[idx % this.order.length];
     const desc = GAME_CATALOG[modeId];
 
     this.shiftCooldown = TRANSITION_WAIT_SEC;
+    this.waitForReady = idx < this.order.length;
     synthAudio.shiftTransition();
     this.ctx.setControls?.(desc.guide.controls);
 
@@ -240,7 +222,7 @@ export class GauntletOrchestrator {
         .map((c) => renderControlHintRow(c, this.ctx.isTouch))
         .join('');
       const reduceMotion = Boolean(this.ctx.settings.reduceMotion);
-      const ringSvg = reduceMotion
+      const ringSvg = reduceMotion || this.waitForReady
         ? ''
         : `<svg width="34" height="34" viewBox="0 0 36 36" aria-hidden="true">
             <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border-strong)" stroke-width="3"/>
@@ -251,13 +233,18 @@ export class GauntletOrchestrator {
         <div class="oa-shift-dim">${desc.dimension}</div>
         <div class="oa-shift-title">${desc.title}</div>
         <p class="oa-shift-goal">${desc.guide.objective}</p>
+        <span class="oa-train-line">${axisTrainLine(desc.axis)}</span>
         <div class="oa-guide-hints">${topControls}</div>
         <div class="oa-shift-actions">
           <button type="button" class="oa-btn oa-btn-primary oa-shift-ready-btn" id="oa-shift-ready">
             ${this.ctx.isTouch ? 'Listo (Tocar)' : 'Listo (Espacio)'}
           </button>
           ${ringSvg}
-          <span class="oa-shift-countdown" id="oa-shift-cd">${TRANSITION_WAIT_SEC}s</span>
+          <span class="oa-shift-countdown" id="oa-shift-cd">${
+            this.waitForReady
+              ? `${this.ctx.isTouch ? 'Toca' : 'Pulsa'} Listo cuando estés`
+              : `${TRANSITION_WAIT_SEC}s`
+          }</span>
         </div>
       `;
       this.shiftBannerEl.classList.remove('is-hidden');
@@ -295,14 +282,14 @@ export class GauntletOrchestrator {
       this.ctx.container.appendChild(this.shiftBannerEl);
     }
 
-    const cycle = Math.floor(idx / SEQUENCE.length) + 1;
-    const prefix = this.isRanked ? `FASE ${idx + 1}/${SEQUENCE.length}` : `CICLO ${cycle}`;
+    const cycle = Math.floor(idx / this.order.length) + 1;
+    const prefix = this.isRanked ? `FASE ${idx + 1}/${this.order.length}` : `CICLO ${cycle}`;
     this.ctx.setHud({
       phaseLabel: `${prefix} · ${desc.title}`,
       dimension: desc.dimension as '2D' | '3D',
       accent: desc.accent,
       timeLeftSec: this.isRanked
-        ? Math.max(0, SEQUENCE.length * this.sliceDuration - this.totalElapsed)
+        ? Math.max(0, this.order.length * this.sliceDuration - this.totalElapsed)
         : this.sliceDuration,
     });
   }
@@ -358,6 +345,7 @@ export class GauntletOrchestrator {
     if (this.paused || this.destroyed) return;
 
     if (this.shiftCooldown > 0) {
+      if (this.waitForReady) return;
       this.shiftCooldown = Math.max(0, this.shiftCooldown - dt);
       if (this.countdownTextEl) {
         this.countdownTextEl.textContent = `${Math.ceil(this.shiftCooldown)}s`;
@@ -376,7 +364,7 @@ export class GauntletOrchestrator {
     this.totalElapsed += dt;
 
     if (this.isRanked) {
-      const totalGoal = SEQUENCE.length * this.sliceDuration;
+      const totalGoal = this.order.length * this.sliceDuration;
       this.ctx.setHud({ timeLeftSec: Math.max(0, totalGoal - this.totalElapsed) });
       if (this.totalElapsed >= totalGoal) {
         this.ctx.finish(this.buildFinalMetrics(true));

@@ -1,5 +1,5 @@
 import { synthAudio } from '../audio/SynthAudio';
-import { DIFFICULTY_META, GAME_CATALOG } from '../catalog';
+import { axisTrainLine, DIFFICULTY_META, GAME_CATALOG } from '../catalog';
 import { Icons } from '../icons';
 import { profileStore } from '../state/ProfileStore';
 import { ControlHint, DifficultyId, GameModeId } from '../types';
@@ -198,7 +198,7 @@ export class GuideOverlay {
           </button>
         </div>
 
-        <p class="oa-guide-objective"><strong>Objetivo:</strong> ${desc.guide.objective}</p>
+        <p class="oa-guide-objective"><strong>Objetivo:</strong> ${desc.guide.objective}<span class="oa-train-line">${axisTrainLine(desc.axis)}</span></p>
 
         <div class="oa-guide-columns">
           <section class="oa-guide-box" aria-label="Ejemplo visual">

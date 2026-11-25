@@ -1199,12 +1199,15 @@ button {
 .oa-stage-puzzle {
   display: grid;
   place-items: center;
+  align-items: safe center;
+  overflow-y: auto;
   padding: 20px;
   background: radial-gradient(circle at 50% 25%, #161e2e 0%, #090c12 72%);
 }
 
 .oa-puzzle-board {
   width: min(520px, 100%);
+  color: var(--ink-primary);
   background: var(--bg-panel);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
@@ -1254,7 +1257,7 @@ button {
 
 .oa-pz-btn:hover {
   border-color: var(--accent-gold);
-  background: #232d40;
+  background: color-mix(in srgb, var(--bg-elevated) 88%, var(--ink-primary));
 }
 
 .oa-pz-key {
@@ -2806,6 +2809,14 @@ button {
   color: var(--ink-primary);
 }
 
+.oa-train-line {
+  display: block;
+  max-width: 520px;
+  margin-top: 4px;
+  font-size: 0.86rem;
+  color: var(--ink-secondary);
+}
+
 .oa-shift-actions {
   margin-top: 10px;
   display: flex;
@@ -2827,6 +2838,14 @@ button {
 
 .oa-touch-tetris {
   grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-height: 760px) {
+  .oa-nback-grid {
+    max-width: 200px;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -3342,6 +3361,24 @@ button {
   color-scheme: dark;
   background: #0d1210;
   color: #eef2ec;
+}
+
+/* Las tarjetas y textos del escenario usan tokens: en modo día eran claros sobre fondo oscuro (texto invisible). */
+:root[data-theme='day'] .oa-stage-host {
+  --bg-void: #0f1311;
+  --bg-panel: #18201c;
+  --bg-elevated: #212c26;
+  --border-subtle: #2b3730;
+  --border-strong: #3e5045;
+  --ink-primary: #eef2ec;
+  --ink-secondary: #b8c5ba;
+  --ink-muted: #8ea092;
+  --accent-cyan: #c084fc;
+  --accent-cyan-ink: #160824;
+  --accent-red: #f87171;
+  --accent-gold: #fbbf24;
+  --accent-lime: #4ade80;
+  --accent-violet: #60b0e5;
 }
 
 /* Flush full-width ISOM app bar matching Directorio and Atelier */
